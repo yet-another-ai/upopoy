@@ -27,3 +27,7 @@ frontend/src/assets/vue.svg
 
 # Mise
 .mise.local.toml
+
+
+# APM dependencies
+apm_modules/

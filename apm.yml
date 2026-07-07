@@ -1,0 +1,23 @@
+name: upopoy
+version: 1.0.0
+description: APM project for upopoy
+author: Delton Ding
+targets:
+- agent-skills
+dependencies:
+  apm:
+  - anthropics/skills/skills/frontend-design
+  - anthropics/skills/skills/skill-creator
+  - vueuse/skills
+  - antfu/skills/skills/vue
+  - antfu/skills/skills/vite
+  - antfu/skills/skills/pnpm
+  - antfu/skills/skills/pinia
+  - antfu/skills/skills/vue-best-practices
+  - antfu/skills/skills/vue-router-best-practices
+  - antfu/skills/skills/vueuse-functions
+  - antfu/skills/skills/vue-testing-best-practices
+  mcp:
+  - io.github.microsoft/playwright-mcp
+includes: auto
+scripts: {}

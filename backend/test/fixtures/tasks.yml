@@ -1,0 +1,22 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  project: one
+  task_status: one
+  title: Draft landing-free app shell
+  description: Keep the first screen focused on work.
+  position: 0
+
+two:
+  project: one
+  task_status: two
+  title: Wire board API
+  description: Return grouped task columns.
+  position: 0
+
+three:
+  project: one
+  task_status: three
+  title: Ship initial demo
+  description: Verify create and move flows.
+  position: 0

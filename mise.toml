@@ -1,0 +1,61 @@
+[tools]
+ruby = "4.0.5"
+node = "24"
+
+[settings]
+experimental = true
+
+[tasks.backend]
+description = "Run the Rails API server"
+dir = "backend"
+run = "ruby bin/rails server -p 3001"
+
+[tasks.frontend]
+description = "Run the Vite frontend"
+dir = "frontend"
+run = "pnpm dev --host 0.0.0.0"
+
+[tasks.dev]
+description = "Run backend and frontend together"
+depends = ["backend", "frontend"]
+
+[tasks.test]
+description = "Run backend, frontend unit, and frontend integration tests"
+run = [
+  "cd backend && bundle exec rspec",
+  "cd frontend && pnpm test",
+]
+
+[tasks.lint]
+description = "Run backend and frontend linters"
+run = [
+  "cd backend && bundle exec rubocop",
+  "cd frontend && pnpm lint && pnpm format:check",
+]
+
+[tasks.format]
+description = "Auto-format backend and frontend code"
+run = [
+  "cd backend && bundle exec rubocop -A",
+  "cd frontend && pnpm format",
+]
+
+[tasks.backend-test]
+description = "Run backend RSpec tests"
+dir = "backend"
+run = "bundle exec rspec"
+
+[tasks.backend-lint]
+description = "Run backend RuboCop"
+dir = "backend"
+run = "bundle exec rubocop"
+
+[tasks.frontend-test]
+description = "Run frontend type checks, unit tests, and Playwright tests"
+dir = "frontend"
+run = "pnpm test"
+
+[tasks.frontend-lint]
+description = "Run frontend ESLint and Prettier checks"
+dir = "frontend"
+run = "pnpm lint && pnpm format:check"

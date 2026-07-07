@@ -1,0 +1,18 @@
+# Omakase Ruby styling for Rails
+inherit_gem: { rubocop-rails-omakase: rubocop.yml }
+
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - "bin/**/*"
+    - "db/schema.rb"
+    - "vendor/**/*"
+
+RSpec/ExampleLength:
+  Max: 12
+
+RSpec/MultipleExpectations:
+  Max: 8

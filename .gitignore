@@ -1,0 +1,29 @@
+.DS_Store
+
+# Rails
+backend/.bundle/
+backend/.kamal/secrets
+backend/config/master.key
+backend/coverage/
+backend/log/*
+!backend/log/.keep
+backend/storage/*
+!backend/storage/.keep
+backend/tmp/*
+!backend/tmp/.keep
+!backend/tmp/pids/
+!backend/tmp/pids/.keep
+!backend/tmp/storage/
+!backend/tmp/storage/.keep
+
+# Frontend
+.pnpm-store/
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+frontend/src/assets/hero.png
+frontend/src/assets/vite.svg
+frontend/src/assets/vue.svg
+
+# Mise
+.mise.local.toml

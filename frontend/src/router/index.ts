@@ -27,6 +27,33 @@ const routes = [
     component: { template: '<span />' },
   },
   {
+    path: '/users',
+    name: 'users',
+    component: { template: '<span />' },
+  },
+  {
+    path: '/users/:userId',
+    name: 'user-profile',
+    component: { template: '<span />' },
+    props: true,
+  },
+  {
+    path: '/groups',
+    name: 'groups',
+    component: { template: '<span />' },
+  },
+  {
+    path: '/groups/new',
+    name: 'group-new',
+    component: { template: '<span />' },
+  },
+  {
+    path: '/groups/:groupId',
+    name: 'group-detail',
+    component: { template: '<span />' },
+    props: true,
+  },
+  {
     path: '/tasks/:taskId',
     name: 'task-detail',
     component: { template: '<span />' },

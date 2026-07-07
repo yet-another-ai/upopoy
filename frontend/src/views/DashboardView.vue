@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FolderKanbanIcon, KanbanIcon } from '@lucide/vue'
+import { FolderKanbanIcon, KanbanIcon, UsersRoundIcon } from '@lucide/vue'
 import { RouterLink } from 'vue-router'
 </script>
 
@@ -42,6 +42,23 @@ import { RouterLink } from 'vue-router'
         <span class="grid gap-1">
           <span class="text-lg font-semibold">Kanban</span>
           <span class="text-muted-foreground text-sm">Projects, tasks, and fixed workflow.</span>
+        </span>
+      </RouterLink>
+
+      <RouterLink
+        :to="{ name: 'users' }"
+        class="border-border bg-card text-card-foreground hover:border-primary/40 hover:bg-accent focus-visible:ring-ring grid min-h-36 gap-4 rounded-lg border p-5 transition outline-none focus-visible:ring-2"
+        aria-label="Open User and Groups"
+      >
+        <span
+          class="bg-primary text-primary-foreground grid size-12 place-items-center rounded-md"
+          aria-hidden="true"
+        >
+          <UsersRoundIcon class="size-6" />
+        </span>
+        <span class="grid gap-1">
+          <span class="text-lg font-semibold">Users & Groups</span>
+          <span class="text-muted-foreground text-sm">Manage groups and memberships.</span>
         </span>
       </RouterLink>
     </div>

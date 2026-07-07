@@ -9,6 +9,26 @@ export interface Project {
 export interface User {
   id: number
   email: string
+  display_name: string | null
+  title: string | null
+  bio: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ManagedUser extends User {
+  group_ids: number[]
+  groups_count: number
+}
+
+export interface Group {
+  id: number
+  name: string
+  description: string | null
+  parent_group_id: number | null
+  parent_group_name: string | null
+  user_ids: number[]
+  users_count: number
   created_at: string
   updated_at: string
 }
@@ -82,6 +102,37 @@ export interface Board {
 export interface ProjectInput {
   name: string
   description?: string
+}
+
+export interface GroupInput {
+  name: string
+  description?: string
+  parent_group_id?: number | null
+  user_ids?: number[]
+}
+
+export interface UserProfileInput {
+  email: string
+  display_name?: string
+  title?: string
+  bio?: string
+}
+
+export interface UserPaginationMeta {
+  current_page: number
+  total_pages: number
+  total_count: number
+  per_page: number
+}
+
+export interface PaginatedUsers {
+  users: ManagedUser[]
+  meta: UserPaginationMeta
+}
+
+export interface UserListParams {
+  page?: number
+  perPage?: number
 }
 
 export interface TaskInput {
@@ -190,6 +241,15 @@ function errorMessage(data: unknown) {
   return 'Request failed'
 }
 
+function userListPath(params: UserListParams = {}) {
+  const searchParams = new URLSearchParams()
+  if (params.page) searchParams.set('page', String(params.page))
+  if (params.perPage) searchParams.set('per_page', String(params.perPage))
+
+  const query = searchParams.toString()
+  return query ? `/api/v1/users?${query}` : '/api/v1/users'
+}
+
 export const api = {
   listAuthProviders: () => request<AuthProvider[]>('/api/v1/auth/providers'),
   signUp: (input: AuthInput) => requestAuth('/api/v1/auth/signup', input),
@@ -199,6 +259,28 @@ export const api = {
       method: 'DELETE',
     }),
   me: () => request<AuthResponse>('/api/v1/auth/me'),
+  listUsers: (params?: UserListParams) => request<PaginatedUsers>(userListPath(params)),
+  getUser: (userId: number) => request<ManagedUser>(`/api/v1/users/${userId}`),
+  updateUser: (userId: number, user: UserProfileInput) =>
+    request<ManagedUser>(`/api/v1/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ user }),
+    }),
+  listGroups: () => request<Group[]>('/api/v1/groups'),
+  createGroup: (group: GroupInput) =>
+    request<Group>('/api/v1/groups', {
+      method: 'POST',
+      body: JSON.stringify({ group }),
+    }),
+  updateGroup: (groupId: number, group: GroupInput) =>
+    request<Group>(`/api/v1/groups/${groupId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ group }),
+    }),
+  deleteGroup: (groupId: number) =>
+    request<void>(`/api/v1/groups/${groupId}`, {
+      method: 'DELETE',
+    }),
   listProjects: () => request<Project[]>('/api/v1/projects'),
   createProject: (project: ProjectInput) =>
     request<Project>('/api/v1/projects', {

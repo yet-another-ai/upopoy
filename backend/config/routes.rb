@@ -18,6 +18,9 @@ Rails.application.routes.draw do
         get "auth/me", to: "users/current_user#show"
       end
 
+      resources :users, only: [ :index, :show, :update ]
+      resources :groups
+
       resources :projects do
         member do
           get :board

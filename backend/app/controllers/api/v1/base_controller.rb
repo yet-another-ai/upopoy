@@ -42,6 +42,38 @@ module Api
         }
       end
 
+      def managed_user_payload(user)
+        user_payload(user).merge(
+          group_ids: user.group_ids,
+          groups_count: user.group_ids.size
+        )
+      end
+
+      def group_payload(group)
+        user_ids = group.user_ids
+
+        {
+          id: group.id,
+          name: group.name,
+          description: group.description,
+          parent_group_id: group.parent_group_id,
+          parent_group_name: group.parent_group&.name,
+          user_ids:,
+          users_count: user_ids.size,
+          created_at: group.created_at,
+          updated_at: group.updated_at
+        }
+      end
+
+      def pagination_payload(collection)
+        {
+          current_page: collection.current_page,
+          total_pages: collection.total_pages,
+          total_count: collection.total_count,
+          per_page: collection.limit_value
+        }
+      end
+
       def render_errors(record)
         render json: { errors: record.errors.to_hash(true) }, status: :unprocessable_entity
       end

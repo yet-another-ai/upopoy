@@ -1,0 +1,114 @@
+<script setup lang="ts">
+import { computed, reactive, watch } from 'vue'
+import { SaveIcon } from '@lucide/vue'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import type { Group, ManagedUser, UserProfileInput } from '@/services/api'
+
+const props = defineProps<{
+  user: ManagedUser | null
+  groups: readonly Group[]
+  saving: boolean
+}>()
+
+const emit = defineEmits<{
+  saveUserProfile: [payload: { userId: number; input: UserProfileInput }]
+}>()
+
+const form = reactive({
+  email: '',
+  displayName: '',
+  title: '',
+  bio: '',
+})
+
+const groupNames = computed(
+  () => new Map(props.groups.map((group) => [group.id, group.name] as const)),
+)
+const memberships = computed(() => {
+  if (!props.user) return []
+
+  return props.user.group_ids
+    .map((groupId) => groupNames.value.get(groupId))
+    .filter((name): name is string => Boolean(name))
+})
+
+watch(
+  () => props.user,
+  (user) => {
+    form.email = user?.email ?? ''
+    form.displayName = user?.display_name ?? ''
+    form.title = user?.title ?? ''
+    form.bio = user?.bio ?? ''
+  },
+  { immediate: true },
+)
+
+function submitProfile() {
+  if (!props.user || !form.email.trim()) return
+
+  emit('saveUserProfile', {
+    userId: props.user.id,
+    input: {
+      email: form.email.trim(),
+      display_name: form.displayName.trim(),
+      title: form.title.trim(),
+      bio: form.bio.trim(),
+    },
+  })
+}
+</script>
+
+<template>
+  <Card class="rounded-lg shadow-none">
+    <CardHeader>
+      <CardTitle class="text-base">Profile</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <form v-if="props.user" class="grid gap-4" @submit.prevent="submitProfile">
+        <div class="grid gap-1.5">
+          <Label for="user-email">Email</Label>
+          <Input id="user-email" v-model="form.email" type="email" />
+        </div>
+
+        <div class="grid gap-1.5">
+          <Label for="user-display-name">Display name</Label>
+          <Input id="user-display-name" v-model="form.displayName" placeholder="Grace Hopper" />
+        </div>
+
+        <div class="grid gap-1.5">
+          <Label for="user-title">Title</Label>
+          <Input id="user-title" v-model="form.title" placeholder="Product lead" />
+        </div>
+
+        <div class="grid gap-1.5">
+          <Label for="user-bio">Bio</Label>
+          <Textarea id="user-bio" v-model="form.bio" rows="5" />
+        </div>
+
+        <div class="grid gap-2">
+          <p class="text-sm font-medium">Groups</p>
+          <div class="flex flex-wrap gap-1.5">
+            <Badge v-for="groupName in memberships" :key="groupName" variant="secondary">
+              {{ groupName }}
+            </Badge>
+            <span v-if="memberships.length === 0" class="text-muted-foreground text-xs">
+              No groups
+            </span>
+          </div>
+        </div>
+
+        <Button type="submit" :disabled="props.saving">
+          <SaveIcon />
+          Save profile
+        </Button>
+      </form>
+
+      <p v-else class="text-muted-foreground text-sm">Select a user to edit their profile.</p>
+    </CardContent>
+  </Card>
+</template>

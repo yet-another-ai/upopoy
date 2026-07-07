@@ -48,10 +48,11 @@ RSpec.configure do |config|
 
   config.before do
     SearchDocument.delete_all
-    GroupMembership.delete_all
-    Group.delete_all
     Task.delete_all
     Project.delete_all
+    GroupHierarchy.delete_all
+    GroupMembership.delete_all
+    Group.delete_all
     OauthIdentity.delete_all
     User.delete_all
   end

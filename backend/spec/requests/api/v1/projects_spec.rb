@@ -16,6 +16,19 @@ RSpec.describe "Api::V1::Projects", type: :request do
       expect(json_response.pluck("name")).to eq([ "Newer", "Older" ])
     end
 
+    it "lists projects in descendant groups" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+      project = create(:project, group: child, name: "Child Board")
+
+      get "/api/v1/projects", headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.pluck("id")).to include(project.id)
+    end
+
     it "requires authentication" do
       get "/api/v1/projects"
 
@@ -28,21 +41,31 @@ RSpec.describe "Api::V1::Projects", type: :request do
       user = create(:user)
       group = create(:group)
       create(:group_membership, user:, group:)
+      project_params = { name: "AI Ops", description: "Agent-managed work.", group_id: group.id }
 
       post "/api/v1/projects",
-           params: {
-             project: {
-               name: "AI Ops",
-               description: "Agent-managed work.",
-               group_id: group.id
-             }
-           },
+           params: { project: project_params },
            headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:created)
       expect(json_response["name"]).to eq("AI Ops")
-      expect(Project.find(json_response["id"]).user).to eq(user)
-      expect(Project.find(json_response["id"]).group).to eq(group)
+      project = Project.find(json_response["id"])
+      expect(project.user).to eq(user)
+      expect(project.group).to eq(group)
+    end
+
+    it "creates a project in a descendant group" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+
+      post "/api/v1/projects",
+           params: { project: { name: "Inherited Ops", group_id: child.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:created)
+      expect(Project.find(json_response["id"]).group).to eq(child)
     end
 
     it "does not create a project in a group the user does not belong to" do
@@ -77,6 +100,19 @@ RSpec.describe "Api::V1::Projects", type: :request do
       expect(response).to have_http_status(:ok)
       expect(json_response["id"]).to eq(project.id)
       expect(json_response["group_id"]).to eq(project.group_id)
+    end
+
+    it "returns a project when the requester belongs to an ancestor group" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+      project = create(:project, group: child)
+
+      get "/api/v1/projects/#{project.id}", headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["id"]).to eq(project.id)
     end
 
     it "does not return another user's project" do

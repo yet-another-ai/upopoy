@@ -16,10 +16,26 @@ class Group < ApplicationRecord
   has_many :group_memberships, dependent: :destroy
   has_many :users, through: :group_memberships
   has_many :projects, dependent: :destroy
+  has_many :ancestor_group_hierarchies,
+           class_name: "GroupHierarchy",
+           foreign_key: :descendant_group_id,
+           dependent: :destroy,
+           inverse_of: :descendant_group
+  has_many :ancestors, through: :ancestor_group_hierarchies, source: :ancestor_group
+  has_many :descendant_group_hierarchies,
+           class_name: "GroupHierarchy",
+           foreign_key: :ancestor_group_id,
+           dependent: :destroy,
+           inverse_of: :ancestor_group
+  has_many :descendants, through: :descendant_group_hierarchies, source: :descendant_group
 
   validates :name, presence: true
   validate :parent_group_cannot_be_self
   validate :parent_group_cannot_create_cycle
+
+  after_create :rebuild_group_hierarchies
+  after_update :rebuild_group_hierarchies, if: :saved_change_to_parent_group_id?
+  after_destroy :rebuild_group_hierarchies
 
   def search_title
     name
@@ -65,5 +81,9 @@ class Group < ApplicationRecord
 
       ancestor = ancestor.parent_group
     end
+  end
+
+  def rebuild_group_hierarchies
+    GroupHierarchy.rebuild!
   end
 end

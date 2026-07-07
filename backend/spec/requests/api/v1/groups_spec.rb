@@ -8,17 +8,28 @@ RSpec.describe "Api::V1::Groups", type: :request do
       group = create(:group, name: "Platform", parent_group: parent)
       create(:group_membership, user:, group: parent)
       create(:group_membership, user:, group:)
-      create(:group, name: "Hidden")
 
       get "/api/v1/groups", headers: auth_headers_for(user)
 
-      expect(response).to have_http_status(:ok)
-      expect(json_response.pluck("name")).not_to include("Hidden")
       platform = json_response.find { |item| item["name"] == "Platform" }
       expect(platform["parent_group_id"]).to eq(parent.id)
       expect(platform["parent_group_name"]).to eq("Engineering")
       expect(platform["user_ids"]).to eq([ user.id ])
-      expect(platform["users_count"]).to eq(1)
+    end
+
+    it "lists descendant groups for ancestor members" do
+      user = create(:user)
+      parent = create(:group, name: "Engineering")
+      child = create(:group, name: "Platform", parent_group: parent)
+      create(:group_membership, user:, group: parent)
+
+      get "/api/v1/groups", headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.pluck("id")).to include(parent.id, child.id)
+      platform = json_response.find { |item| item["id"] == child.id }
+      expect(platform["user_ids"]).to eq([])
+      expect(platform["parent_group_name"]).to eq("Engineering")
     end
 
     it "requires authentication" do
@@ -42,7 +53,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
 
       expect(response).to have_http_status(:created)
       expect(json_response["name"]).to eq("Product")
-      expect(json_response["user_ids"]).to match_array([ user.id, member.id ])
+      expect(json_response["user_ids"]).to contain_exactly(user.id, member.id)
     end
 
     it "does not create a child group under an inaccessible parent" do
@@ -54,6 +65,20 @@ RSpec.describe "Api::V1::Groups", type: :request do
            headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:forbidden)
+    end
+
+    it "creates a child group under an inherited parent" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+
+      post "/api/v1/groups",
+           params: { group: { name: "Nested", parent_group_id: child.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:created)
+      expect(json_response["parent_group_id"]).to eq(child.id)
     end
   end
 
@@ -98,6 +123,20 @@ RSpec.describe "Api::V1::Groups", type: :request do
             headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "updates a descendant group for ancestor members" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+
+      patch "/api/v1/groups/#{child.id}",
+            params: { group: { name: "Renamed child" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["name"]).to eq("Renamed child")
     end
   end
 

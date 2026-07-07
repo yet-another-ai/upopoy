@@ -18,6 +18,14 @@ class User < ApplicationRecord
   has_many :groups, through: :group_memberships
   has_many :oauth_identities, dependent: :destroy
 
+  def accessible_group_ids
+    @accessible_group_ids ||= GroupHierarchy.accessible_group_ids_for(self).pluck(:descendant_group_id)
+  end
+
+  def can_access_group?(group_id)
+    group_id.present? && accessible_group_ids.include?(group_id)
+  end
+
   def self.from_omniauth(auth)
     identity = OauthIdentity.find_by(provider: auth.provider, uid: auth.uid)
     return identity.user if identity

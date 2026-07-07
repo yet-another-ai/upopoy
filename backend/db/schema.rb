@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_07_164000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_08_002000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -22,6 +22,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_164000) do
     t.integer "singleton_guard", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["singleton_guard"], name: "index_application_settings_on_singleton_guard", unique: true
+  end
+
+  create_table "group_hierarchies", force: :cascade do |t|
+    t.bigint "ancestor_group_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "depth", null: false
+    t.bigint "descendant_group_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ancestor_group_id", "descendant_group_id"], name: "index_group_hierarchies_on_ancestor_and_descendant", unique: true
+    t.index ["descendant_group_id"], name: "index_group_hierarchies_on_descendant_group_id"
   end
 
   create_table "group_memberships", force: :cascade do |t|
@@ -124,6 +134,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_164000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "group_hierarchies", "groups", column: "ancestor_group_id", on_delete: :cascade
+  add_foreign_key "group_hierarchies", "groups", column: "descendant_group_id", on_delete: :cascade
   add_foreign_key "group_memberships", "groups", on_delete: :cascade
   add_foreign_key "group_memberships", "users", on_delete: :cascade
   add_foreign_key "groups", "groups", column: "parent_group_id", on_delete: :nullify

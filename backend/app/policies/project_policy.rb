@@ -27,7 +27,7 @@ class ProjectPolicy < ApplicationPolicy
     def resolve
       return scope.none if user.blank?
 
-      scope.joins(group: :group_memberships).where(group_memberships: { user_id: user.id })
+      scope.where(group_id: GroupHierarchy.accessible_group_ids_for(user))
     end
   end
 
@@ -36,6 +36,6 @@ class ProjectPolicy < ApplicationPolicy
   def group_member?
     return false if user.blank? || record.group_id.blank?
 
-    user.group_ids.include?(record.group_id)
+    user.can_access_group?(record.group_id)
   end
 end

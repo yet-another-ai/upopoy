@@ -23,8 +23,7 @@ class TaskPolicy < ApplicationPolicy
     def resolve
       return scope.none if user.blank?
 
-      scope.joins(project: { group: :group_memberships })
-        .where(group_memberships: { user_id: user.id })
+      scope.joins(:project).where(projects: { group_id: GroupHierarchy.accessible_group_ids_for(user) })
     end
   end
 
@@ -34,6 +33,6 @@ class TaskPolicy < ApplicationPolicy
     return false if user.blank?
 
     group_id = record.project&.group_id
-    group_id.present? && user.group_ids.include?(group_id)
+    user.can_access_group?(group_id)
   end
 end

@@ -23,6 +23,18 @@ RSpec.describe User, type: :model do
     expect(user.groups).to contain_exactly(group)
   end
 
+  it "inherits access to descendant groups" do
+    user = create(:user)
+    parent = create(:group)
+    child = create(:group, parent_group: parent)
+    grandchild = create(:group, parent_group: child)
+
+    create(:group_membership, user:, group: parent)
+
+    expect(user.accessible_group_ids).to contain_exactly(parent.id, child.id, grandchild.id)
+    expect(user.can_access_group?(grandchild.id)).to be(true)
+  end
+
   it "creates a user from an OmniAuth payload" do
     auth = OmniAuth::AuthHash.new(
       provider: "developer",

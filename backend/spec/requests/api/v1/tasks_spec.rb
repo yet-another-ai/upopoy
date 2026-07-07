@@ -14,6 +14,20 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       expect(json_response.pluck("title")).to eq([ "First task" ])
     end
 
+    it "lists tasks in descendant group projects" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+      project = create(:project, group: child)
+      create(:task, project:, title: "Inherited task")
+
+      get "/api/v1/projects/#{project.id}/tasks", headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response.pluck("title")).to eq([ "Inherited task" ])
+    end
+
     it "does not list another user's project tasks" do
       project = create(:project)
 
@@ -48,6 +62,21 @@ RSpec.describe "Api::V1::Tasks", type: :request do
         "status" => "in_progress",
         "priority" => "high"
       )
+    end
+
+    it "creates a task in a descendant group project" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+      project = create(:project, group: child)
+
+      post "/api/v1/projects/#{project.id}/tasks",
+           params: { task: task_params },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:created)
+      expect(json_response["title"]).to eq("Draft MCP API")
     end
   end
 

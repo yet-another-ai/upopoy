@@ -71,5 +71,17 @@ RSpec.describe SearchDocument, type: :model do
       expect(slugs).to include("user:#{user.id}", "project:#{visible_project.id}")
       expect(slugs).not_to include("project:#{hidden_project.id}")
     end
+
+    it "returns documents for descendant groups" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+      project = create(:project, group: child, name: "Visible child project")
+
+      slugs = described_class.visible_to(user).pluck(:resource_slug)
+
+      expect(slugs).to include("project:#{project.id}")
+    end
   end
 end

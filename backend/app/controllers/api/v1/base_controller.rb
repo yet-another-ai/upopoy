@@ -54,7 +54,7 @@ module Api
       def group_payload(group)
         user_ids = group.user_ids
         parent_group_visible = group.parent_group_id.present? &&
-          current_user.group_ids.include?(group.parent_group_id)
+          current_user.can_access_group?(group.parent_group_id)
 
         {
           id: group.id,

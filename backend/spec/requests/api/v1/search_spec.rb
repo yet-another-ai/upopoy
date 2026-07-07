@@ -22,7 +22,6 @@ RSpec.describe "Api::V1::Search", type: :request do
       owner = create(:user)
       create(:group_membership, user: owner, group:)
       project = create(:project, user: owner, group:, name: "Apollo", description: "Moonshot roadmap")
-      create(:task, project:, title: "Draft MCP API", description: "Keep resources clear.")
       create(:project, name: "Other Apollo")
 
       get "/api/v1/search", params: { q: "Apollo" }, headers: auth_headers_for(user)
@@ -31,6 +30,23 @@ RSpec.describe "Api::V1::Search", type: :request do
       slugs = json_response["results"].pluck("slug")
       expect(slugs).to include("project:#{project.id}")
       expect(slugs).not_to include(SearchDocument.find_by(title: "Other Apollo").resource_slug)
+    end
+
+    it "searches resources in descendant groups" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+      project = create(:project, group: child, name: "Nested Apollo")
+      task = create(:task, project:, title: "Nested Apollo task")
+
+      get "/api/v1/search", params: { q: "Nested Apollo" }, headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["results"].pluck("slug")).to include(
+        "project:#{project.id}",
+        "task:#{task.id}"
+      )
     end
 
     it "includes global users and member groups for authenticated users" do

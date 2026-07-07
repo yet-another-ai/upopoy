@@ -21,19 +21,9 @@ class SearchDocument < ApplicationRecord
   scope :visible_to, lambda { |user|
     return none if user.blank?
 
-    where(
-      <<~SQL.squish,
-        (search_documents.user_id IS NULL AND search_documents.group_id IS NULL)
-        OR search_documents.user_id = :user_id
-        OR EXISTS (
-          SELECT 1
-          FROM group_memberships
-          WHERE group_memberships.group_id = search_documents.group_id
-            AND group_memberships.user_id = :user_id
-        )
-      SQL
-      user_id: user.id
-    )
+    where(user_id: nil, group_id: nil)
+      .or(where(user_id: user.id))
+      .or(where(group_id: GroupHierarchy.accessible_group_ids_for(user)))
   }
 
   scope :of_resource_type, ->(resource_type) { where(resource_type:) if resource_type.present? }

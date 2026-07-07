@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, shallowRef } from 'vue'
+import { onMounted, shallowRef, watch } from 'vue'
 import AuthForm from '@/components/auth/AuthForm.vue'
-import { api, type AuthInput, type AuthProvider } from '@/services/api'
+import { api, type AuthInput, type AuthProvider, type AuthSettings } from '@/services/api'
 
 defineProps<{
   loading: boolean
@@ -15,19 +15,44 @@ const emit = defineEmits<{
 
 const mode = shallowRef<'login' | 'signup'>('login')
 const providers = shallowRef<AuthProvider[]>([])
+const authSettings = shallowRef<AuthSettings>({
+  registration_enabled: true,
+  email_login_enabled: true,
+})
 
 function submitAuth(input: AuthInput) {
+  if (!authSettings.value.email_login_enabled) return
+  if (mode.value === 'signup' && !authSettings.value.registration_enabled) return
+
   if (mode.value === 'login') emit('login', input)
   else emit('signup', input)
 }
 
+function changeMode(nextMode: 'login' | 'signup') {
+  if (nextMode === 'signup' && !authSettings.value.registration_enabled) return
+
+  mode.value = nextMode
+}
+
 onMounted(async () => {
   try {
-    providers.value = await api.listAuthProviders()
+    const [settings, authProviders] = await Promise.all([
+      api.getAuthSettings(),
+      api.listAuthProviders(),
+    ])
+    authSettings.value = settings
+    providers.value = authProviders
   } catch {
     providers.value = []
   }
 })
+
+watch(
+  () => authSettings.value.registration_enabled,
+  (registrationEnabled) => {
+    if (!registrationEnabled && mode.value === 'signup') mode.value = 'login'
+  },
+)
 </script>
 
 <template>
@@ -43,8 +68,10 @@ onMounted(async () => {
         :loading="loading"
         :error="error"
         :providers="providers"
+        :registration-enabled="authSettings.registration_enabled"
+        :email-login-enabled="authSettings.email_login_enabled"
         @submit="submitAuth"
-        @change-mode="mode = $event"
+        @change-mode="changeMode"
       />
     </div>
   </main>

@@ -7,6 +7,11 @@ module Api
         respond_to :json
 
         def create
+          unless ApplicationSetting.current.registration_enabled?
+            render json: { error: "Registration is disabled" }, status: :forbidden
+            return
+          end
+
           build_resource(sign_up_params)
 
           if resource.save

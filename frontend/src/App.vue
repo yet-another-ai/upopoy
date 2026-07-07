@@ -8,6 +8,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useBoard } from '@/composables/useBoard'
 import { useProjects } from '@/composables/useProjects'
 import { useUserGroups } from '@/composables/useUserGroups'
+import AdminSettingsView from '@/views/AdminSettingsView.vue'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
 import AuthView from '@/views/AuthView.vue'
 import DashboardView from '@/views/DashboardView.vue'
@@ -55,6 +56,7 @@ const userGroupsSection = computed<'users' | 'groups'>(() =>
 )
 
 const authenticatedPageTitle = computed(() => {
+  if (route.name === 'admin-settings') return 'Admin Settings'
   if (route.name === 'projects') return 'Project management'
   if (userGroupsRoute.value) return 'Users & Groups'
   if (route.name === 'board' || route.name === 'task-detail') return 'Kanban'
@@ -245,6 +247,8 @@ function isUserGroupsRouteName(routeName: unknown) {
       @create-project="createProject"
       @select-project="projects.selectProject"
     />
+
+    <AdminSettingsView v-else-if="route.name === 'admin-settings'" />
 
     <UserGroupsView
       v-else-if="userGroupsRoute"

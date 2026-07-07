@@ -50,6 +50,17 @@ export interface AuthProvider {
   authorize_path: string
 }
 
+export interface AuthSettings {
+  registration_enabled: boolean
+  email_login_enabled: boolean
+}
+
+export interface AdminSettings extends AuthSettings {
+  updated_at: string
+}
+
+export type AdminSettingsInput = Partial<AuthSettings>
+
 interface AuthResponse {
   user: User
 }
@@ -251,6 +262,13 @@ function userListPath(params: UserListParams = {}) {
 }
 
 export const api = {
+  getAuthSettings: () => request<AuthSettings>('/api/v1/auth/settings'),
+  getAdminSettings: () => request<AdminSettings>('/api/v1/admin/settings'),
+  updateAdminSettings: (settings: AdminSettingsInput) =>
+    request<AdminSettings>('/api/v1/admin/settings', {
+      method: 'PATCH',
+      body: JSON.stringify({ settings }),
+    }),
   listAuthProviders: () => request<AuthProvider[]>('/api/v1/auth/providers'),
   signUp: (input: AuthInput) => requestAuth('/api/v1/auth/signup', input),
   login: (input: AuthInput) => requestAuth('/api/v1/auth/login', input),

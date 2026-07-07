@@ -27,6 +27,11 @@ const routes = [
     component: { template: '<span />' },
   },
   {
+    path: '/admin-settings',
+    name: 'admin-settings',
+    component: { template: '<span />' },
+  },
+  {
     path: '/users',
     name: 'users',
     component: { template: '<span />' },

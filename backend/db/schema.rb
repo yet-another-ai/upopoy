@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_07_133000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_07_142000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "application_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "email_login_enabled", default: true, null: false
+    t.boolean "registration_enabled", default: true, null: false
+    t.integer "singleton_guard", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["singleton_guard"], name: "index_application_settings_on_singleton_guard", unique: true
+  end
 
   create_table "group_memberships", force: :cascade do |t|
     t.datetime "created_at", null: false

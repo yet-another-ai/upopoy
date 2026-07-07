@@ -24,6 +24,20 @@ RSpec.describe "Api::V1::Auth", type: :request do
     end
   end
 
+  describe "GET /api/v1/auth/settings" do
+    it "returns public authentication settings" do
+      ApplicationSetting.current.update!(registration_enabled: false, email_login_enabled: false)
+
+      get "/api/v1/auth/settings"
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response).to include(
+        "registration_enabled" => false,
+        "email_login_enabled" => false
+      )
+    end
+  end
+
   describe "POST /api/v1/auth/signup" do
     it "creates a user and dispatches a JWT" do
       post "/api/v1/auth/signup",
@@ -47,6 +61,22 @@ RSpec.describe "Api::V1::Auth", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(json_response["errors"]).to be_present
     end
+
+    it "rejects signup when registration is disabled" do
+      ApplicationSetting.current.update!(registration_enabled: false)
+
+      post "/api/v1/auth/signup",
+           params: {
+             user: {
+               email: "founder@example.com",
+               password: "password123",
+               password_confirmation: "password123"
+             }
+           }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(json_response["error"]).to eq("Registration is disabled")
+    end
   end
 
   describe "POST /api/v1/auth/login" do
@@ -69,6 +99,17 @@ RSpec.describe "Api::V1::Auth", type: :request do
 
       expect(response).to have_http_status(:unauthorized)
       expect(json_response["error"]).to eq("Invalid email or password")
+    end
+
+    it "rejects email login when email login is disabled" do
+      create(:user, email: "founder@example.com", password: "password123")
+      ApplicationSetting.current.update!(email_login_enabled: false)
+
+      post "/api/v1/auth/login",
+           params: { user: { email: "founder@example.com", password: "password123" } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(json_response["error"]).to eq("Email login is disabled")
     end
   end
 

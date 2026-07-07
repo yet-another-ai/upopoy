@@ -8,6 +8,11 @@ module Api
         skip_before_action :verify_signed_out_user, only: :destroy
 
         def create
+          unless ApplicationSetting.current.email_login_enabled?
+            render json: { error: "Email login is disabled" }, status: :forbidden
+            return
+          end
+
           self.resource = warden.authenticate(auth_options)
 
           unless resource

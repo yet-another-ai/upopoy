@@ -11,6 +11,8 @@ const props = defineProps<{
   loading: boolean
   error: string | null
   providers: readonly AuthProvider[]
+  registrationEnabled: boolean
+  emailLoginEnabled: boolean
 }>()
 
 const emit = defineEmits<{
@@ -30,6 +32,8 @@ const alternateLabel = computed(() =>
   props.mode === 'login' ? 'Create an account' : 'Use an existing account',
 )
 const alternateMode = computed(() => (props.mode === 'login' ? 'signup' : 'login'))
+const showAlternateMode = computed(() => props.registrationEnabled || props.mode === 'signup')
+const showEmailForm = computed(() => props.emailLoginEnabled)
 const passwordConfirmationMismatch = computed(
   () =>
     props.mode === 'signup' &&
@@ -38,7 +42,9 @@ const passwordConfirmationMismatch = computed(
 )
 
 function submitForm() {
+  if (!showEmailForm.value) return
   if (!form.email.trim() || !form.password) return
+  if (props.mode === 'signup' && !props.registrationEnabled) return
   if (props.mode === 'signup' && form.password !== form.passwordConfirmation) return
 
   emit('submit', {
@@ -55,7 +61,7 @@ function submitForm() {
       <CardTitle>{{ title }}</CardTitle>
     </CardHeader>
     <CardContent>
-      <form class="grid gap-4" @submit.prevent="submitForm">
+      <form v-if="showEmailForm" class="grid gap-4" @submit.prevent="submitForm">
         <div class="grid gap-1.5">
           <Label for="auth-email">Email</Label>
           <Input
@@ -100,6 +106,7 @@ function submitForm() {
         </Button>
 
         <Button
+          v-if="showAlternateMode"
           type="button"
           variant="ghost"
           :disabled="props.loading"
@@ -109,8 +116,8 @@ function submitForm() {
         </Button>
       </form>
 
-      <div v-if="props.providers.length" class="mt-4 grid gap-3">
-        <div class="flex items-center gap-3">
+      <div v-if="props.providers.length" :class="showEmailForm ? 'mt-4 grid gap-3' : 'grid gap-3'">
+        <div v-if="showEmailForm" class="flex items-center gap-3">
           <div class="bg-border h-px flex-1" />
           <span class="text-muted-foreground text-xs">or</span>
           <div class="bg-border h-px flex-1" />
@@ -127,6 +134,10 @@ function submitForm() {
           Continue with {{ provider.label }}
         </Button>
       </div>
+
+      <p v-else-if="!showEmailForm" class="text-muted-foreground text-sm">
+        Email login is disabled and no OAuth providers are configured.
+      </p>
     </CardContent>
   </Card>
 </template>

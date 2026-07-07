@@ -11,11 +11,16 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       devise_scope :user do
+        get "auth/settings", to: "auth_settings#show"
         get "auth/providers", to: "users/auth_providers#index"
         post "auth/login", to: "users/sessions#create"
         delete "auth/logout", to: "users/sessions#destroy"
         post "auth/signup", to: "users/registrations#create"
         get "auth/me", to: "users/current_user#show"
+      end
+
+      namespace :admin do
+        resource :settings, only: [ :show, :update ]
       end
 
       resources :users, only: [ :index, :show, :update ]

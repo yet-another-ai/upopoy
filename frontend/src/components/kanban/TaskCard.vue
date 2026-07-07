@@ -3,6 +3,7 @@ import { MoreHorizontalIcon } from '@lucide/vue'
 import { useDraggable } from '@vueuse/core'
 import { computed, shallowRef, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +32,7 @@ const dragSize = shallowRef<{ width: number; height: number } | null>(null)
 const movedDuringDrag = shallowRef(false)
 const openPointerStart = shallowRef<{ x: number; y: number } | null>(null)
 const openPointerMoved = shallowRef(false)
+const deleteDialogOpen = shallowRef(false)
 const cardRef = useTemplateRef<HTMLElement>('cardRef')
 const kanbanDrag = useKanbanDrag()
 const router = useRouter()
@@ -181,17 +183,26 @@ function formatEstimate(minutes: number | null) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem @click="openTaskDetails"> Edit </DropdownMenuItem>
-              <DropdownMenuItem class="text-destructive" @click="emit('deleteTask', props.task.id)">
+              <DropdownMenuItem class="text-destructive" @select="deleteDialogOpen = true">
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <ConfirmDeleteDialog
+            v-model:open="deleteDialogOpen"
+            title="Delete task?"
+            :description="`This will permanently delete '${props.task.title}'.`"
+            @confirm="emit('deleteTask', props.task.id)"
+          />
         </CardHeader>
         <CardContent class="grid gap-3 p-3 pt-0">
           <div class="flex flex-wrap items-center gap-2">
             <Badge variant="secondary"> #{{ props.task.id }} </Badge>
             <Badge :variant="priorityBadgeVariant(props.task.priority)">
               {{ formatPriority(props.task.priority) }}
+            </Badge>
+            <Badge variant="outline">
+              {{ props.task.iteration_name }}
             </Badge>
             <Badge v-if="props.task.deadline" variant="outline">
               Due {{ formatDeadline(props.task.deadline) }}

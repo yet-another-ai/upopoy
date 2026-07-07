@@ -15,11 +15,13 @@ import {
 import { useKanbanDrag } from '@/composables/useKanbanDrag'
 import TaskCard from './TaskCard.vue'
 import TaskForm from './TaskForm.vue'
-import type { BoardStatus, TaskInput, TaskStatusOption } from '@/services/api'
+import type { BoardStatus, Iteration, TaskInput, TaskStatusOption } from '@/services/api'
 
 const props = defineProps<{
   status: BoardStatus
   statuses: readonly TaskStatusOption[]
+  iterations: readonly Iteration[]
+  inboxIteration: Iteration | null
 }>()
 
 const emit = defineEmits<{
@@ -128,8 +130,11 @@ function forwardTaskUpdate(taskId: number, input: Partial<TaskInput>) {
       </DialogHeader>
       <TaskForm
         :statuses="props.statuses"
+        :iterations="props.iterations"
+        :default-iteration-id="props.inboxIteration?.id"
         :default-status="props.status.id"
         submit-label="Create task"
+        show-iteration
         @submit="submitTask"
         @cancel="creatingTask = false"
       />

@@ -2,6 +2,7 @@
 import { computed, shallowRef, watch } from 'vue'
 import { ChevronRightIcon, PencilIcon, Trash2Icon, UsersRoundIcon } from '@lucide/vue'
 import { TreeItem, TreeRoot } from 'reka-ui'
+import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -86,10 +87,6 @@ function getKey(node: GroupTreeNode) {
 function getChildren(node: GroupTreeNode) {
   return node.children.length > 0 ? node.children : undefined
 }
-
-function confirmDelete(group: GroupTreeNode) {
-  if (window.confirm(`Delete ${group.name}?`)) emit('deleteGroup', group.id)
-}
 </script>
 
 <template>
@@ -166,15 +163,23 @@ function confirmDelete(group: GroupTreeNode) {
                 >
                   <PencilIcon />
                 </Button>
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  class="text-destructive"
-                  aria-label="Delete group"
-                  @click.stop="confirmDelete(node.value)"
+                <ConfirmDeleteDialog
+                  title="Delete group?"
+                  :description="`This will permanently delete '${node.value.name}'.`"
+                  @confirm="emit('deleteGroup', node.value.id)"
                 >
-                  <Trash2Icon />
-                </Button>
+                  <template #trigger="{ open }">
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      class="text-destructive"
+                      aria-label="Delete group"
+                      @click.stop="open"
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  </template>
+                </ConfirmDeleteDialog>
               </div>
             </div>
           </TreeItem>

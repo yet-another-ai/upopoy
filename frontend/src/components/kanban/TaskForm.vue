@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import DeadlinePicker from './DeadlinePicker.vue'
 import {
   TASK_PRIORITIES,
+  type Iteration,
   type Task,
   type TaskInput,
   type TaskPriority,
@@ -23,9 +24,12 @@ import {
 const props = defineProps<{
   task?: Task | null
   statuses: readonly TaskStatusOption[]
+  iterations?: readonly Iteration[]
   defaultStatus?: TaskStatusOption['id']
+  defaultIterationId?: number | null
   submitLabel: string
   showStatus?: boolean
+  showIteration?: boolean
   showSchedule?: boolean
 }>()
 
@@ -38,13 +42,14 @@ const form = reactive({
   title: '',
   description: '',
   status: '',
+  iterationId: '',
   priority: 'medium' as TaskPriority,
   deadline: null as string | null,
   estimatedMinutes: '',
 })
 
 watch(
-  () => [props.task, props.defaultStatus, props.statuses] as const,
+  () => [props.task, props.defaultStatus, props.statuses, props.defaultIterationId] as const,
   () => {
     form.title = props.task?.title ?? ''
     form.description = props.task?.description ?? ''
@@ -53,6 +58,7 @@ watch(
     form.estimatedMinutes =
       props.task?.estimated_minutes == null ? '' : String(props.task.estimated_minutes)
     form.status = props.task?.status ?? props.defaultStatus ?? props.statuses[0]?.id ?? ''
+    form.iterationId = String(props.task?.iteration_id ?? props.defaultIterationId ?? '')
   },
   { immediate: true },
 )
@@ -65,6 +71,10 @@ function submitForm() {
     description: form.description.trim(),
     status: form.status ? (form.status as TaskStatusOption['id']) : undefined,
     priority: form.priority,
+  }
+
+  if (props.showIteration) {
+    input.iteration_id = form.iterationId ? Number(form.iterationId) : null
   }
 
   if (props.showSchedule) {
@@ -111,6 +121,24 @@ function submitForm() {
         <SelectContent>
           <SelectItem v-for="priority in TASK_PRIORITIES" :key="priority.id" :value="priority.id">
             {{ priority.name }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div v-if="props.showIteration" class="grid gap-1.5">
+      <Label>Iteration</Label>
+      <Select v-model="form.iterationId">
+        <SelectTrigger class="w-full" aria-label="Iteration">
+          <SelectValue placeholder="Select iteration" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="iteration in props.iterations ?? []"
+            :key="iteration.id"
+            :value="String(iteration.id)"
+          >
+            {{ iteration.name }}
           </SelectItem>
         </SelectContent>
       </Select>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import IterationsView from '@/components/kanban/IterationsView.vue'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import ProjectSidebar from '@/components/kanban/ProjectSidebar.vue'
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout.vue'
@@ -25,6 +26,8 @@ import type {
   TaskStatusOption,
 } from '@/services/api'
 
+type BoardView = 'kanban' | 'iterations'
+
 const auth = useAuth()
 const projects = useProjects()
 const board = useBoard()
@@ -32,6 +35,7 @@ const userGroups = useUserGroups()
 const route = useRoute()
 const router = useRouter()
 const ready = shallowRef(false)
+const boardView = shallowRef<BoardView>('kanban')
 
 const taskDetailId = computed(() => {
   if (route.name !== 'task-detail') return null
@@ -177,6 +181,11 @@ async function createTask(_status: TaskStatusOption['id'], input: TaskInput) {
   if (projectId) await board.createTask(projectId, input)
 }
 
+async function createIteration(input: Parameters<typeof board.createIteration>[1]) {
+  const projectId = projects.selectedProjectId.value
+  if (projectId) await board.createIteration(projectId, input)
+}
+
 async function refreshBoardAfterTaskUpdate(task: Task) {
   if (projects.selectedProjectId.value !== task.project_id) projects.selectProject(task.project_id)
 
@@ -319,8 +328,10 @@ function isUserGroupsRouteName(routeName: unknown) {
       <ProjectSidebar
         :projects="projects.projects.value"
         :selected-project-id="projects.selectedProjectId.value"
+        :active-view="boardView"
         :loading="projects.loading.value"
         @select-project="projects.selectProject"
+        @select-view="boardView = $event"
       />
 
       <TaskDetailPage
@@ -330,14 +341,28 @@ function isUserGroupsRouteName(routeName: unknown) {
       />
 
       <KanbanBoard
-        v-else
+        v-else-if="boardView === 'kanban'"
         :project="board.project.value"
         :statuses="board.statuses.value"
+        :iterations="board.iterations.value"
+        :inbox-iteration="board.inboxIteration.value"
         :task-count="board.taskCount.value"
         :loading="board.loading.value"
         @refresh="refreshBoard"
         @create-task="createTask"
         @update-task="board.updateTask"
+        @delete-task="board.deleteTask"
+      />
+
+      <IterationsView
+        v-else
+        :project="board.project.value"
+        :iterations="board.iterations.value"
+        :statuses="board.statuses.value"
+        :loading="board.loading.value"
+        @refresh="refreshBoard"
+        @create-iteration="createIteration"
+        @create-task="createTask"
         @delete-task="board.deleteTask"
       />
     </template>

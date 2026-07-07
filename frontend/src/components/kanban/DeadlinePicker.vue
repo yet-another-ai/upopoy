@@ -11,6 +11,7 @@ import { buildDeadlineIso, deadlineDatePart, deadlineTimePart } from '@/lib/dead
 
 const props = defineProps<{
   id?: string
+  label?: string
   modelValue?: string | null
 }>()
 
@@ -27,6 +28,7 @@ const dateLabel = computed(() =>
     ? selectedDate.value.toDate(getLocalTimeZone()).toLocaleDateString()
     : 'Select date',
 )
+const fieldLabel = computed(() => props.label ?? 'Deadline')
 
 watch(
   () => props.modelValue,
@@ -76,7 +78,7 @@ function commitDeadline() {
             type="button"
             variant="outline"
             class="w-36 justify-between font-normal"
-            aria-label="Deadline date"
+            :aria-label="`${fieldLabel} date`"
           >
             {{ dateLabel }}
             <ChevronDownIcon />
@@ -85,7 +87,7 @@ function commitDeadline() {
         <PopoverContent class="w-auto overflow-hidden p-0" align="start">
           <Calendar
             :model-value="selectedDate"
-            calendar-label="Deadline date"
+            :calendar-label="`${fieldLabel} date`"
             prevent-deselect
             @update:model-value="selectDate"
           />
@@ -101,7 +103,7 @@ function commitDeadline() {
         step="1"
         :model-value="timeValue"
         :disabled="!selectedDate"
-        aria-label="Deadline time"
+        :aria-label="`${fieldLabel} time`"
         class="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
         @update:model-value="updateTime"
       />

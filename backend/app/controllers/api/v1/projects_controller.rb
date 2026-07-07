@@ -46,10 +46,14 @@ module Api
 
       def board
         authorize @project
-        tasks_by_status = @project.tasks.in_status_order.group_by(&:status)
+        @project.inbox_iteration
+        tasks_by_status = @project.tasks.includes(:iteration).in_status_order.group_by(&:status)
+        iterations = @project.iterations.ordered.to_a
 
         render json: {
           project: project_payload(@project),
+          iterations: iterations.map { |iteration| iteration_payload(iteration) },
+          inbox_iteration: iteration_payload(iterations.find(&:inbox?)),
           statuses: Task.status_options.map do |status|
             status.merge(
               tasks: tasks_by_status.fetch(status[:id], []).map { |task| task_payload(task) }

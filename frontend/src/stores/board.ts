@@ -4,6 +4,8 @@ import {
   api,
   type Board,
   type BoardStatus,
+  type Iteration,
+  type IterationInput,
   type Project,
   type Task,
   type TaskInput,
@@ -12,6 +14,8 @@ import {
 export const useBoardStore = defineStore('board', () => {
   const project = shallowRef<Project | null>(null)
   const statuses = shallowRef<BoardStatus[]>([])
+  const iterations = shallowRef<Iteration[]>([])
+  const inboxIteration = shallowRef<Iteration | null>(null)
   const loading = shallowRef(false)
   const error = shallowRef<string | null>(null)
 
@@ -38,6 +42,11 @@ export const useBoardStore = defineStore('board', () => {
     await loadBoard(projectId)
   }
 
+  async function createIteration(projectId: number, input: IterationInput) {
+    await api.createIteration(projectId, input)
+    await loadBoard(projectId)
+  }
+
   async function updateTask(taskId: number, input: Partial<TaskInput>) {
     const task = await api.updateTask(taskId, input)
     replaceTask(task)
@@ -54,6 +63,8 @@ export const useBoardStore = defineStore('board', () => {
   function setBoard(board: Board) {
     project.value = board.project
     statuses.value = board.statuses
+    iterations.value = board.iterations
+    inboxIteration.value = board.inbox_iteration
   }
 
   function replaceTask(task: Task) {
@@ -76,16 +87,21 @@ export const useBoardStore = defineStore('board', () => {
   function clearBoard() {
     project.value = null
     statuses.value = []
+    iterations.value = []
+    inboxIteration.value = null
     error.value = null
   }
 
   return {
     project,
     statuses,
+    iterations,
+    inboxIteration,
     taskCount,
     loading,
     error,
     loadBoard,
+    createIteration,
     createTask,
     updateTask,
     deleteTask,

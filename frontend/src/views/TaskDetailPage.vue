@@ -50,14 +50,19 @@ const form = reactive({
   title: '',
   description: '',
   status: '',
+  iterationId: '',
   priority: 'medium' as TaskPriority,
   deadline: null as string | null,
   estimatedMinutes: '',
 })
 
 const statuses = computed(() => board.value?.statuses ?? [])
+const iterations = computed(() => board.value?.iterations ?? [])
 const currentStatus = computed(() =>
   statuses.value.find((status) => status.id === task.value?.status),
+)
+const currentIteration = computed(() =>
+  iterations.value.find((iteration) => iteration.id === task.value?.iteration_id),
 )
 
 watch(
@@ -90,6 +95,7 @@ watch(
     form.title = task.value?.title ?? ''
     form.description = task.value?.description ?? ''
     form.status = task.value?.status ?? statuses.value[0]?.id ?? ''
+    form.iterationId = String(task.value?.iteration_id ?? board.value?.inbox_iteration.id ?? '')
     form.priority = task.value?.priority ?? 'medium'
     form.deadline = task.value?.deadline ?? null
     form.estimatedMinutes =
@@ -124,6 +130,7 @@ function submitTaskForm() {
     title: form.title.trim(),
     description: form.description.trim(),
     status: form.status ? (form.status as TaskStatus) : undefined,
+    iteration_id: form.iterationId ? Number(form.iterationId) : null,
     priority: form.priority,
     deadline: form.deadline,
     estimated_minutes: form.estimatedMinutes !== '' ? Number(form.estimatedMinutes) : null,
@@ -256,6 +263,26 @@ function formatEstimate(minutes: number | null) {
 
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="grid gap-1.5">
+                  <Label>Iteration</Label>
+                  <Select v-model="form.iterationId">
+                    <SelectTrigger class="w-full" aria-label="Iteration">
+                      <SelectValue placeholder="Select iteration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="iteration in iterations"
+                        :key="iteration.id"
+                        :value="String(iteration.id)"
+                      >
+                        {{ iteration.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="grid gap-1.5">
                   <Label for="task-deadline">Deadline</Label>
                   <DeadlinePicker id="task-deadline" v-model="form.deadline" />
                 </div>
@@ -297,6 +324,15 @@ function formatEstimate(minutes: number | null) {
             <div class="flex items-center gap-2">
               <CalendarIcon class="text-muted-foreground size-4" />
               <span>{{ formatDeadline(task?.deadline) ?? 'No deadline' }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <CalendarIcon class="text-muted-foreground size-4" />
+              <span>
+                {{ currentIteration?.name ?? 'No iteration' }}
+                <template v-if="currentIteration?.deadline">
+                  - {{ formatDeadline(currentIteration.deadline) }}
+                </template>
+              </span>
             </div>
             <div class="flex items-center gap-2">
               <ClockIcon class="text-muted-foreground size-4" />

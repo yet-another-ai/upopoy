@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_08_002002) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_08_031000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -51,6 +51,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_002002) do
     t.bigint "parent_group_id"
     t.datetime "updated_at", null: false
     t.index ["parent_group_id"], name: "index_groups_on_parent_group_id"
+  end
+
+  create_table "iterations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deadline"
+    t.boolean "inbox", default: false, null: false
+    t.string "name", null: false
+    t.bigint "project_id", null: false
+    t.datetime "starts_at"
+    t.datetime "updated_at", null: false
+    t.index ["project_id", "inbox"], name: "index_iterations_on_project_id_and_inbox", unique: true, where: "(inbox = true)"
+    t.index ["project_id"], name: "index_iterations_on_project_id"
   end
 
   create_table "oauth_identities", force: :cascade do |t|
@@ -127,12 +139,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_002002) do
     t.datetime "deadline"
     t.text "description"
     t.integer "estimated_minutes"
+    t.bigint "iteration_id"
     t.integer "position", default: 0, null: false
     t.string "priority", default: "medium", null: false
     t.bigint "project_id", null: false
     t.string "status", default: "todo", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["iteration_id"], name: "index_tasks_on_iteration_id"
     t.index ["project_id", "status", "position"], name: "index_tasks_on_project_id_and_status_and_position"
     t.index ["project_id"], name: "index_tasks_on_project_id"
   end
@@ -159,10 +173,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_002002) do
   add_foreign_key "group_memberships", "groups", on_delete: :cascade
   add_foreign_key "group_memberships", "users", on_delete: :cascade
   add_foreign_key "groups", "groups", column: "parent_group_id", on_delete: :nullify
+  add_foreign_key "iterations", "projects", on_delete: :cascade
   add_foreign_key "oauth_identities", "users"
   add_foreign_key "projects", "groups"
   add_foreign_key "projects", "users"
   add_foreign_key "search_documents", "groups"
   add_foreign_key "search_documents", "users"
+  add_foreign_key "tasks", "iterations", on_delete: :nullify
   add_foreign_key "tasks", "projects"
 end

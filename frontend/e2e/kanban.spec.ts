@@ -20,6 +20,11 @@ interface TaskStatusPayload {
 interface TaskPayload {
   id: number
   project_id: number
+  iteration_id: number
+  iteration_name: string
+  iteration_starts_at: string | null
+  iteration_deadline: string | null
+  iteration_inbox: boolean
   status: TaskStatusPayload['id']
   priority: 'low' | 'medium' | 'high'
   title: string
@@ -27,6 +32,18 @@ interface TaskPayload {
   deadline: string | null
   estimated_minutes: number | null
   position: number
+  created_at: string
+  updated_at: string
+}
+
+interface IterationPayload {
+  id: number
+  project_id: number
+  name: string
+  starts_at: string | null
+  deadline: string | null
+  inbox: boolean
+  task_count: number
   created_at: string
   updated_at: string
 }
@@ -93,6 +110,33 @@ async function installMockApi(page: Page) {
       tasks: [],
     },
   ]
+  const iterations: IterationPayload[] = [
+    {
+      id: 1,
+      project_id: 1,
+      name: 'Inbox',
+      starts_at: null,
+      deadline: null,
+      inbox: true,
+      task_count: 0,
+      created_at: timestamp,
+      updated_at: timestamp,
+    },
+  ]
+
+  function syncIterationCounts() {
+    for (const iteration of iterations) {
+      iteration.task_count = statuses.reduce(
+        (count, status) =>
+          count + status.tasks.filter((task) => task.iteration_id === iteration.id).length,
+        0,
+      )
+    }
+  }
+
+  function findIteration(iterationId: number | null | undefined) {
+    return iterations.find((iteration) => iteration.id === iterationId) ?? iterations[0]
+  }
 
   function isAuthorized(route: Route) {
     return route.request().headers().authorization === authToken
@@ -208,7 +252,39 @@ async function installMockApi(page: Page) {
   await page.route('**/api/v1/projects/1/board', async (route) => {
     if (!(await requireAuth(route))) return
 
-    await json(route, { project, statuses })
+    syncIterationCounts()
+    await json(route, { project, iterations, inbox_iteration: iterations[0], statuses })
+  })
+
+  await page.route('**/api/v1/projects/1/iterations', async (route) => {
+    if (!(await requireAuth(route))) return
+
+    if (route.request().method() === 'GET') {
+      syncIterationCounts()
+      await json(route, iterations)
+      return
+    }
+
+    const requestBody = route.request().postDataJSON() as {
+      iteration: {
+        name: string
+        starts_at: string
+        deadline: string
+      }
+    }
+    const iteration: IterationPayload = {
+      id: iterations.length + 1,
+      project_id: 1,
+      name: requestBody.iteration.name,
+      starts_at: requestBody.iteration.starts_at,
+      deadline: requestBody.iteration.deadline,
+      inbox: false,
+      task_count: 0,
+      created_at: timestamp,
+      updated_at: timestamp,
+    }
+    iterations.push(iteration)
+    await json(route, iteration, 201)
   })
 
   await page.route('**/api/v1/search**', async (route) => {
@@ -246,11 +322,18 @@ async function installMockApi(page: Page) {
         description?: string
         deadline?: string | null
         estimated_minutes?: number | null
+        iteration_id?: number | null
       }
     }
+    const iteration = findIteration(requestBody.task.iteration_id)
     const task: TaskPayload = {
       id: nextTaskId++,
       project_id: 1,
+      iteration_id: iteration.id,
+      iteration_name: iteration.name,
+      iteration_starts_at: iteration.starts_at,
+      iteration_deadline: iteration.deadline,
+      iteration_inbox: iteration.inbox,
       status: requestBody.task.status,
       priority: requestBody.task.priority ?? 'medium',
       title: requestBody.task.title,
@@ -283,6 +366,12 @@ async function installMockApi(page: Page) {
       return
     }
 
+    if (route.request().method() === 'DELETE') {
+      currentStatus.tasks = currentStatus.tasks.filter((item) => item.id !== taskId)
+      await route.fulfill({ status: 204 })
+      return
+    }
+
     const requestBody = route.request().postDataJSON() as {
       task: {
         status?: TaskStatusPayload['id']
@@ -291,11 +380,15 @@ async function installMockApi(page: Page) {
         description?: string
         deadline?: string | null
         estimated_minutes?: number | null
+        iteration_id?: number | null
         position?: number
       }
     }
 
     currentStatus.tasks = currentStatus.tasks.filter((item) => item.id !== taskId)
+    const iteration = Object.hasOwn(requestBody.task, 'iteration_id')
+      ? findIteration(requestBody.task.iteration_id)
+      : findIteration(task.iteration_id)
 
     const updatedTask = {
       ...task,
@@ -309,6 +402,11 @@ async function installMockApi(page: Page) {
       estimated_minutes: Object.hasOwn(requestBody.task, 'estimated_minutes')
         ? requestBody.task.estimated_minutes!
         : task.estimated_minutes,
+      iteration_id: iteration.id,
+      iteration_name: iteration.name,
+      iteration_starts_at: iteration.starts_at,
+      iteration_deadline: iteration.deadline,
+      iteration_inbox: iteration.inbox,
       position: requestBody.task.position ?? task.position,
       updated_at: timestamp,
     }
@@ -339,7 +437,7 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await page.getByRole('button', { name: /MVP/ }).click()
 
   await expect(page).toHaveURL('/kanban')
-  await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+  await expect(page.locator('h1', { hasText: 'MVP' })).toBeVisible()
   await page.getByRole('link', { name: 'Apps' }).click()
 
   await expect(page).toHaveURL('/')
@@ -357,22 +455,49 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await page.getByRole('link', { name: 'Open Kanban' }).click()
 
   await expect(page).toHaveURL('/kanban')
-  await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+  await expect(page.locator('h1', { hasText: 'MVP' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'New project' })).toHaveCount(0)
   await expect(page.getByText('Signed in as founder@example.com')).toBeVisible()
   await expect(page.getByText('4 statuses')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Under Review' })).toBeVisible()
   await expect(page.getByText('todo', { exact: true })).toBeHidden()
 
-  await page.getByRole('button', { name: 'Add task' }).first().click()
+  await page.getByRole('button', { name: 'Iterations' }).click()
+  await expect(page.locator('h1', { hasText: 'MVP' })).toBeVisible()
+  await expect(page.getByText('Inbox')).toBeVisible()
+  await page.getByRole('button', { name: 'Iteration', exact: true }).click()
+  await page.getByLabel('Name').fill('Sprint 1')
+  await page.getByRole('button', { name: 'Start date' }).click()
+  await page
+    .getByLabel('Start date, July')
+    .getByRole('button', { name: 'Monday, July 20, 2026' })
+    .click()
+  await page.getByLabel('Start time').fill('09:00')
+  await page.getByRole('button', { name: 'Deadline date' }).click()
+  await page
+    .getByLabel('Deadline date, July')
+    .getByRole('button', { name: 'Friday, July 31, 2026' })
+    .click()
+  await page.getByLabel('Deadline time').fill('09:00')
+  await page.getByRole('button', { name: 'Create' }).click()
+  await expect(page.getByText('Sprint 1')).toBeVisible()
+
+  const sprintSection = page.getByTestId('iteration-section').filter({ hasText: 'Sprint 1' })
+  await sprintSection.getByRole('button', { name: 'Task', exact: true }).click()
   await page.getByLabel('Title').fill('Draft MCP contract')
   await page.getByLabel('Description').fill('## Scope\n\n- Describe the future agent API.')
   await page.getByRole('combobox', { name: 'Priority' }).click()
   await page.getByRole('option', { name: 'High' }).click()
   await page.getByRole('button', { name: 'Create task' }).click()
+  await expect(sprintSection.getByTestId('iteration-task-row')).toContainText('Draft MCP contract')
+  await sprintSection.getByRole('link', { name: 'Open task Draft MCP contract' }).click()
+  await expect(page.getByRole('heading', { name: 'Draft MCP contract' })).toBeVisible()
+  await page.getByRole('link', { name: 'Board' }).click()
+  await page.getByRole('button', { name: 'Kanban' }).click()
 
   await expect(page.getByTestId('task-card')).toContainText('Draft MCP contract')
   await expect(page.getByTestId('task-card')).toContainText('High')
+  await expect(page.getByTestId('task-card')).toContainText('Sprint 1')
   await expect(page.getByText('Describe the future agent API.')).toBeHidden()
   await expect(page.getByText('Drag to move', { exact: true })).toBeHidden()
   await expect(page.getByText('Details', { exact: true })).toBeHidden()
@@ -464,7 +589,18 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Draft MCP contract' })).toBeVisible()
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page).toHaveURL('/kanban')
-  await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+  await expect(page.locator('h1', { hasText: 'MVP' })).toBeVisible()
+
+  await doneColumn.getByRole('button', { name: 'Task actions' }).click()
+  await page.getByRole('menuitem', { name: 'Delete' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Delete task?')
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await expect(doneColumn.getByTestId('task-card')).toContainText('Draft MCP contract')
+
+  await doneColumn.getByRole('button', { name: 'Task actions' }).click()
+  await page.getByRole('menuitem', { name: 'Delete' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
+  await expect(doneColumn.getByTestId('task-card')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'User menu' }).click()
   await page.getByRole('menuitem', { name: 'Sign out' }).click()

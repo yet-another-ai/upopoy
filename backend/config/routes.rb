@@ -34,9 +34,11 @@ Rails.application.routes.draw do
           get :board
         end
 
+        resources :iterations, only: [ :index, :create ]
         resources :tasks, only: [ :index, :create ]
       end
 
+      resources :iterations, only: [ :show, :update, :destroy ]
       resources :tasks, only: [ :show, :update, :destroy ]
     end
   end

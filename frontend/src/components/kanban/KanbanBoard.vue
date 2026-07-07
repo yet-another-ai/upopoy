@@ -3,11 +3,13 @@ import { RefreshCwIcon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import KanbanColumn from './KanbanColumn.vue'
-import type { BoardStatus, Project, TaskInput, TaskStatusOption } from '@/services/api'
+import type { BoardStatus, Iteration, Project, TaskInput, TaskStatusOption } from '@/services/api'
 
 const props = defineProps<{
   project: Project | null
   statuses: readonly BoardStatus[]
+  iterations: readonly Iteration[]
+  inboxIteration: Iteration | null
   taskCount: number
   loading: boolean
 }>()
@@ -67,6 +69,8 @@ function updateTask(taskId: number, input: Partial<TaskInput>) {
           :key="status.id"
           :status="status"
           :statuses="props.statuses"
+          :iterations="props.iterations"
+          :inbox-iteration="props.inboxIteration"
           @create-task="createTask"
           @update-task="updateTask"
           @delete-task="emit('deleteTask', $event)"

@@ -167,18 +167,23 @@ RSpec.describe "Api::V1::Projects", type: :request do
   describe "GET /api/v1/projects/:id/board" do
     it "groups tasks by fixed statuses" do
       project = create(:project)
-      create(:task, project:, status: "todo", title: "Plan", position: 2)
+      iteration = create(:iteration, project:, name: "Sprint 1")
+      create(:task, project:, iteration:, status: "todo", title: "Plan", position: 2)
       create(:task, project:, status: "in_progress", title: "Build", position: 1)
 
       get "/api/v1/projects/#{project.id}/board", headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response.dig("project", "id")).to eq(project.id)
+      expect(json_response.dig("inbox_iteration", "name")).to eq("Inbox")
+      expect(json_response["iterations"].pluck("name")).to include("Inbox", "Sprint 1")
       expect(json_response["statuses"].map { |status| status["slug"] }).to eq(
         %w[todo in_progress under_review done]
       )
       expect(json_response["statuses"].first["tasks"].pluck("title")).to eq([ "Plan" ])
+      expect(json_response["statuses"].first["tasks"].first["iteration_name"]).to eq("Sprint 1")
       expect(json_response["statuses"].second["tasks"].pluck("title")).to eq([ "Build" ])
+      expect(json_response["statuses"].second["tasks"].first["iteration_name"]).to eq("Inbox")
     end
   end
 end

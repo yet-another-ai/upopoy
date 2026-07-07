@@ -92,6 +92,11 @@ export const TASK_PRIORITIES: readonly TaskPriorityOption[] = [
 export interface Task {
   id: number
   project_id: number
+  iteration_id: number
+  iteration_name: string
+  iteration_starts_at: string | null
+  iteration_deadline: string | null
+  iteration_inbox: boolean
   status: TaskStatus
   priority: TaskPriority
   title: string
@@ -103,12 +108,26 @@ export interface Task {
   updated_at: string
 }
 
+export interface Iteration {
+  id: number
+  project_id: number
+  name: string
+  starts_at: string | null
+  deadline: string | null
+  inbox: boolean
+  task_count: number
+  created_at: string
+  updated_at: string
+}
+
 export interface BoardStatus extends TaskStatusOption {
   tasks: readonly Task[]
 }
 
 export interface Board {
   project: Project
+  iterations: Iteration[]
+  inbox_iteration: Iteration
   statuses: BoardStatus[]
 }
 
@@ -179,7 +198,14 @@ export interface TaskInput {
   description?: string
   deadline?: string | null
   estimated_minutes?: number | null
+  iteration_id?: number | null
   position?: number
+}
+
+export interface IterationInput {
+  name: string
+  starts_at: string
+  deadline: string
 }
 
 const jsonHeaders = {
@@ -341,6 +367,22 @@ export const api = {
       body: JSON.stringify({ project }),
     }),
   getBoard: (projectId: number) => request<Board>(`/api/v1/projects/${projectId}/board`),
+  listIterations: (projectId: number) =>
+    request<Iteration[]>(`/api/v1/projects/${projectId}/iterations`),
+  createIteration: (projectId: number, iteration: IterationInput) =>
+    request<Iteration>(`/api/v1/projects/${projectId}/iterations`, {
+      method: 'POST',
+      body: JSON.stringify({ iteration }),
+    }),
+  updateIteration: (iterationId: number, iteration: Partial<IterationInput>) =>
+    request<Iteration>(`/api/v1/iterations/${iterationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ iteration }),
+    }),
+  deleteIteration: (iterationId: number) =>
+    request<void>(`/api/v1/iterations/${iterationId}`, {
+      method: 'DELETE',
+    }),
   getTask: (taskId: number) => request<Task>(`/api/v1/tasks/${taskId}`),
   createTask: (projectId: number, task: TaskInput) =>
     request<Task>(`/api/v1/projects/${projectId}/tasks`, {

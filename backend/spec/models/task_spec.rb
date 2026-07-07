@@ -28,6 +28,23 @@ RSpec.describe Task, type: :model do
     expect(task.priority).to eq("medium")
   end
 
+  it "assigns the project inbox iteration by default" do
+    project = create(:project)
+    task = create(:task, project:, iteration: nil)
+
+    expect(task.iteration).to eq(project.inbox_iteration)
+    expect(task.iteration).to be_inbox
+  end
+
+  it "requires the iteration to belong to the task project" do
+    project = create(:project)
+    other_iteration = create(:iteration)
+    task = build(:task, project:, iteration: other_iteration)
+
+    expect(task).not_to be_valid
+    expect(task.errors[:iteration]).to include("must belong to the task project")
+  end
+
   it "rejects an unknown status" do
     task = build(:task, status: "blocked")
 

@@ -32,6 +32,11 @@ module Api
         {
           id: task.id,
           project_id: task.project_id,
+          iteration_id: task.iteration_id,
+          iteration_name: task.iteration&.name,
+          iteration_starts_at: task.iteration&.starts_at&.iso8601,
+          iteration_deadline: task.iteration&.deadline&.iso8601,
+          iteration_inbox: task.iteration&.inbox?,
           status: task.status,
           priority: task.priority,
           title: task.title,
@@ -41,6 +46,20 @@ module Api
           position: task.position,
           created_at: task.created_at,
           updated_at: task.updated_at
+        }
+      end
+
+      def iteration_payload(iteration)
+        {
+          id: iteration.id,
+          project_id: iteration.project_id,
+          name: iteration.name,
+          starts_at: iteration.starts_at&.iso8601,
+          deadline: iteration.deadline&.iso8601,
+          inbox: iteration.inbox?,
+          task_count: iteration.tasks.size,
+          created_at: iteration.created_at,
+          updated_at: iteration.updated_at
         }
       end
 

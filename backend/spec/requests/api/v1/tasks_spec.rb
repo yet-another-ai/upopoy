@@ -62,6 +62,34 @@ RSpec.describe "Api::V1::Tasks", type: :request do
         "status" => "in_progress",
         "priority" => "high"
       )
+      expect(json_response["iteration_name"]).to eq("Inbox")
+    end
+
+    it "creates a task in the selected iteration" do
+      project = create(:project)
+      iteration = create(:iteration, project:, name: "Sprint 1")
+
+      post "/api/v1/projects/#{project.id}/tasks",
+           params: { task: task_params.merge(iteration_id: iteration.id) },
+           headers: auth_headers_for(project.user)
+
+      expect(response).to have_http_status(:created)
+      expect(json_response["iteration_id"]).to eq(iteration.id)
+      expect(json_response["iteration_name"]).to eq("Sprint 1")
+    end
+
+    it "rejects an iteration from another project" do
+      project = create(:project)
+      other_iteration = create(:iteration)
+
+      post "/api/v1/projects/#{project.id}/tasks",
+           params: { task: task_params.merge(iteration_id: other_iteration.id) },
+           headers: auth_headers_for(project.user)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response.dig("errors", "iteration")).to include(
+        "Iteration must belong to the task project"
+      )
     end
 
     it "creates a task in a descendant group project" do

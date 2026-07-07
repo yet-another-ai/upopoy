@@ -63,6 +63,7 @@ module Api
           :description,
           :deadline,
           :estimated_minutes,
+          :iteration_id,
           :position
         )
       end

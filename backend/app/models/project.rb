@@ -5,9 +5,18 @@ class Project < ApplicationRecord
 
   belongs_to :user
   belongs_to :group
+  has_many :iterations, dependent: :destroy
   has_many :tasks, dependent: :destroy
 
+  after_create :ensure_inbox_iteration
+
   validates :name, presence: true
+
+  def inbox_iteration
+    iterations.find_or_create_by!(inbox: true) do |iteration|
+      iteration.name = "Inbox"
+    end
+  end
 
   def search_title
     name
@@ -31,5 +40,11 @@ class Project < ApplicationRecord
 
   def search_api_path
     "/api/v1/projects/#{id}"
+  end
+
+  private
+
+  def ensure_inbox_iteration
+    inbox_iteration
   end
 end

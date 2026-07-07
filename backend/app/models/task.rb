@@ -14,19 +14,22 @@ class Task < ApplicationRecord
     "high" => "High"
   }.freeze
 
-  search_index_attributes :project_id, :title, :description, :status, :priority
+  search_index_attributes :project_id, :iteration_id, :title, :description, :status, :priority
 
   belongs_to :project
+  belongs_to :iteration, optional: true
 
   before_validation :assign_defaults
 
   validates :title, presence: true
+  validates :iteration, presence: true, if: :project_persisted?
   validates :status, presence: true, inclusion: { in: STATUSES.keys }
   validates :priority, presence: true, inclusion: { in: PRIORITIES.keys }
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :estimated_minutes,
             numericality: { only_integer: true, greater_than_or_equal_to: 0 },
             allow_nil: true
+  validate :iteration_belongs_to_project
 
   scope :ordered, -> { order(:position, :created_at) }
   scope :in_status_order, lambda {
@@ -56,6 +59,7 @@ class Task < ApplicationRecord
   def search_content
     [
       description,
+      iteration&.name,
       STATUSES[status],
       PRIORITIES[priority]
     ].compact.join("\n")
@@ -70,7 +74,7 @@ class Task < ApplicationRecord
   end
 
   def search_metadata
-    { project_id: project_id, group_id: project&.group_id }
+    { project_id: project_id, group_id: project&.group_id, iteration_id: iteration_id }
   end
 
   def search_api_path
@@ -80,9 +84,20 @@ class Task < ApplicationRecord
   private
 
   def assign_defaults
+    self.iteration ||= project&.inbox_iteration if project_persisted?
     self.status = "todo" if status.blank?
     self.priority = "medium" if priority.blank?
     self.position = next_position if position.nil? || (new_record? && position.zero?)
+  end
+
+  def iteration_belongs_to_project
+    return if iteration.blank? || project.blank? || iteration.project_id == project_id
+
+    errors.add(:iteration, "must belong to the task project")
+  end
+
+  def project_persisted?
+    project&.persisted? || project_id.present?
   end
 
   def next_position

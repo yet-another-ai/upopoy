@@ -4,6 +4,8 @@ source "https://rubygems.org"
 gem "rails", "~> 8.1.3"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
+# Postgres performance dashboard
+gem "pghero"
 # Use Falcon as the Rack web server.
 gem "falcon", "~> 0.55.5"
 # Authentication stack
@@ -34,6 +36,9 @@ gem "kamal", require: false
 
 # Add HTTP asset caching/compression and X-Sendfile acceleration [https://github.com/basecamp/thruster/]
 gem "thruster", require: false
+
+# Serve mounted engine assets, including PgHero stylesheets and scripts.
+gem "propshaft"
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"

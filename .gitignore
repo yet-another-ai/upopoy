@@ -7,6 +7,8 @@ backend/config/master.key
 backend/coverage/
 backend/log/*
 !backend/log/.keep
+backend/public/assets/
+backend/public/rails-assets/
 backend/storage/*
 !backend/storage/.keep
 backend/tmp/*

@@ -45,7 +45,7 @@ service "upopoy-frontend" do
   service_class CommandService
   directory File.join(root_path, "frontend")
   command [
-    { "VITE_API_PROXY_TARGET" => api_url },
+    { "VITE_RAILS_PROXY_TARGET" => api_url },
     "pnpm",
     "dev",
     "--host",

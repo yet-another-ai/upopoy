@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  mount PgHero::Engine, at: "pghero"
+
   devise_for :users,
     path: "api/v1",
     only: :omniauth_callbacks,

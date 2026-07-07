@@ -3,7 +3,15 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 
-const apiProxyTarget = process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:3001'
+const railsProxyTarget =
+  process.env.VITE_RAILS_PROXY_TARGET ??
+  process.env.VITE_API_PROXY_TARGET ??
+  'http://localhost:3001'
+
+const railsProxy = {
+  target: railsProxyTarget,
+  changeOrigin: true,
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -16,7 +24,9 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': apiProxyTarget,
+      '/api': railsProxy,
+      '/pghero': railsProxy,
+      '/rails-assets': railsProxy,
     },
   },
 })

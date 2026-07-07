@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_08_002000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_08_002002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -62,6 +62,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_002000) do
     t.index ["provider", "uid"], name: "index_oauth_identities_on_provider_and_uid", unique: true
     t.index ["user_id", "provider"], name: "index_oauth_identities_on_user_id_and_provider", unique: true
     t.index ["user_id"], name: "index_oauth_identities_on_user_id"
+  end
+
+  create_table "pghero_query_stats", force: :cascade do |t|
+    t.bigint "calls"
+    t.datetime "captured_at", precision: nil
+    t.text "database"
+    t.text "query"
+    t.bigint "query_hash"
+    t.float "total_time"
+    t.text "user"
+    t.index ["database", "captured_at"], name: "index_pghero_query_stats_on_database_and_captured_at"
+  end
+
+  create_table "pghero_space_stats", force: :cascade do |t|
+    t.datetime "captured_at", precision: nil
+    t.text "database"
+    t.text "relation"
+    t.text "schema"
+    t.bigint "size"
+    t.index ["database", "captured_at"], name: "index_pghero_space_stats_on_database_and_captured_at"
   end
 
   create_table "projects", force: :cascade do |t|

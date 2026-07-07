@@ -3,6 +3,7 @@ import { computed, onMounted, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import ProjectSidebar from '@/components/kanban/ProjectSidebar.vue'
+import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useBoard } from '@/composables/useBoard'
 import { useProjects } from '@/composables/useProjects'
@@ -25,6 +26,21 @@ const taskDetailId = computed(() => {
 
   const taskId = Number(route.params.taskId)
   return Number.isInteger(taskId) && taskId > 0 ? taskId : null
+})
+
+const authenticatedPageTitle = computed(() => {
+  if (route.name === 'projects') return 'Project management'
+  if (route.name === 'board' || route.name === 'task-detail') return 'Kanban'
+
+  return 'Apps'
+})
+
+const authenticatedContentClass = computed(() => {
+  if (route.name === 'board' || route.name === 'task-detail') {
+    return 'flex min-h-0 w-full flex-1 flex-col p-0 lg:flex-row'
+  }
+
+  return 'mx-auto w-full max-w-5xl px-5 py-6'
 })
 
 onMounted(() => {
@@ -136,54 +152,51 @@ async function refreshBoardAfterTaskUpdate(task: Task) {
     @signup="signUp"
   />
 
-  <DashboardView
-    v-else-if="auth.user.value && route.name === 'home'"
-    :current-user="auth.user.value"
-    @sign-out="signOut"
-  />
-
-  <ProjectsView
-    v-else-if="auth.user.value && route.name === 'projects'"
-    :projects="projects.projects.value"
-    :selected-project-id="projects.selectedProjectId.value"
-    :loading="projects.loading.value"
-    :current-user="auth.user.value"
-    @create-project="createProject"
-    @select-project="projects.selectProject"
-    @sign-out="signOut"
-  />
-
-  <div
+  <AuthenticatedLayout
     v-else-if="auth.user.value"
-    class="bg-background text-foreground flex min-h-svh flex-col lg:flex-row"
+    :current-user="auth.user.value"
+    :title="authenticatedPageTitle"
+    :content-class="authenticatedContentClass"
+    @sign-out="signOut"
   >
-    <ProjectSidebar
+    <DashboardView v-if="route.name === 'home'" />
+
+    <ProjectsView
+      v-else-if="route.name === 'projects'"
       :projects="projects.projects.value"
       :selected-project-id="projects.selectedProjectId.value"
       :loading="projects.loading.value"
-      :current-user="auth.user.value"
+      @create-project="createProject"
       @select-project="projects.selectProject"
-      @sign-out="signOut"
     />
 
-    <TaskDetailPage
-      v-if="taskDetailId"
-      :task-id="taskDetailId"
-      @task-updated="refreshBoardAfterTaskUpdate"
-    />
+    <template v-else>
+      <ProjectSidebar
+        :projects="projects.projects.value"
+        :selected-project-id="projects.selectedProjectId.value"
+        :loading="projects.loading.value"
+        @select-project="projects.selectProject"
+      />
 
-    <KanbanBoard
-      v-else
-      :project="board.project.value"
-      :statuses="board.statuses.value"
-      :task-count="board.taskCount.value"
-      :loading="board.loading.value"
-      @refresh="refreshBoard"
-      @create-task="createTask"
-      @update-task="board.updateTask"
-      @delete-task="board.deleteTask"
-    />
-  </div>
+      <TaskDetailPage
+        v-if="taskDetailId"
+        :task-id="taskDetailId"
+        @task-updated="refreshBoardAfterTaskUpdate"
+      />
+
+      <KanbanBoard
+        v-else
+        :project="board.project.value"
+        :statuses="board.statuses.value"
+        :task-count="board.taskCount.value"
+        :loading="board.loading.value"
+        @refresh="refreshBoard"
+        @create-task="createTask"
+        @update-task="board.updateTask"
+        @delete-task="board.deleteTask"
+      />
+    </template>
+  </AuthenticatedLayout>
 
   <div
     v-if="projects.error.value || board.error.value"

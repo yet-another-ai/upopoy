@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { FolderKanbanIcon, LayoutDashboardIcon, LogOutIcon } from '@lucide/vue'
+import { FolderKanbanIcon } from '@lucide/vue'
 import { RouterLink } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import type { Project, User } from '@/services/api'
+import type { Project } from '@/services/api'
 
 const props = defineProps<{
   projects: readonly Project[]
   selectedProjectId: number | null
   loading: boolean
-  currentUser: User
 }>()
 
 const emit = defineEmits<{
   selectProject: [projectId: number]
-  signOut: []
 }>()
 </script>
 
@@ -24,12 +22,12 @@ const emit = defineEmits<{
   >
     <div class="flex items-center justify-between gap-3">
       <div>
-        <p class="text-muted-foreground text-xs font-medium tracking-wider uppercase">upopoy</p>
-        <h1 class="text-xl leading-tight font-semibold">Projects</h1>
+        <p class="text-muted-foreground text-xs font-medium tracking-wider uppercase">Workspace</p>
+        <h2 class="text-xl leading-tight font-semibold">Projects</h2>
       </div>
-      <Button as-child size="icon" variant="outline" aria-label="Apps">
-        <RouterLink :to="{ name: 'home' }">
-          <LayoutDashboardIcon />
+      <Button as-child size="icon" variant="outline" aria-label="Project management">
+        <RouterLink :to="{ name: 'projects' }">
+          <FolderKanbanIcon />
         </RouterLink>
       </Button>
     </div>
@@ -71,17 +69,14 @@ const emit = defineEmits<{
       </RouterLink>
     </Button>
 
-    <div class="mt-auto grid gap-3 pt-6">
+    <div v-if="props.projects.length > 0" class="mt-auto grid gap-3 pt-6">
       <Separator />
-      <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0">
-          <p class="text-muted-foreground text-xs">Signed in as</p>
-          <p class="truncate text-sm font-medium">{{ props.currentUser.email }}</p>
-        </div>
-        <Button size="icon" variant="ghost" aria-label="Sign out" @click="emit('signOut')">
-          <LogOutIcon />
-        </Button>
-      </div>
+      <Button as-child variant="outline" class="justify-start">
+        <RouterLink :to="{ name: 'projects' }">
+          <FolderKanbanIcon />
+          Project management
+        </RouterLink>
+      </Button>
     </div>
   </aside>
 </template>

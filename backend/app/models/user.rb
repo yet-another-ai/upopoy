@@ -1,5 +1,8 @@
 class User < ApplicationRecord
+  include SearchableResource
   include Devise::JWT::RevocationStrategies::JTIMatcher
+
+  search_index_attributes :email, :display_name, :title, :bio
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
@@ -26,5 +29,29 @@ class User < ApplicationRecord
 
     user.oauth_identities.create!(provider: auth.provider, uid: auth.uid)
     user
+  end
+
+  def search_title
+    display_name.presence || email
+  end
+
+  def search_content
+    [
+      email,
+      title,
+      bio
+    ].compact.join("\n")
+  end
+
+  def search_owner_user_id
+    nil
+  end
+
+  def search_metadata
+    {}
+  end
+
+  def search_api_path
+    "/api/v1/users/#{id}"
   end
 end

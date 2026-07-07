@@ -1,4 +1,8 @@
 class Group < ApplicationRecord
+  include SearchableResource
+
+  search_index_attributes :name, :description
+
   belongs_to :parent_group,
              class_name: "Group",
              optional: true,
@@ -15,6 +19,26 @@ class Group < ApplicationRecord
   validates :name, presence: true
   validate :parent_group_cannot_be_self
   validate :parent_group_cannot_create_cycle
+
+  def search_title
+    name
+  end
+
+  def search_content
+    description
+  end
+
+  def search_owner_user_id
+    nil
+  end
+
+  def search_metadata
+    {}
+  end
+
+  def search_api_path
+    "/api/v1/groups/#{id}"
+  end
 
   private
 

@@ -111,6 +111,13 @@ async function installMockApi(page: Page) {
     ])
   })
 
+  await page.route('**/api/v1/auth/settings', async (route) => {
+    await json(route, {
+      registration_enabled: true,
+      email_login_enabled: true,
+    })
+  })
+
   await page.route('**/api/v1/auth/login', async (route) => {
     await json(
       route,
@@ -180,6 +187,30 @@ async function installMockApi(page: Page) {
     if (!(await requireAuth(route))) return
 
     await json(route, { project, statuses })
+  })
+
+  await page.route('**/api/v1/search**', async (route) => {
+    if (!(await requireAuth(route))) return
+
+    const url = new URL(route.request().url())
+    const query = url.searchParams.get('q')?.toLowerCase() ?? ''
+
+    await json(route, {
+      results: query.includes('mvp')
+        ? [
+            {
+              slug: 'project:1',
+              type: 'project',
+              id: 1,
+              title: 'MVP',
+              snippet: 'Initial Kanban surface',
+              api_path: '/api/v1/projects/1',
+              metadata: {},
+              updated_at: timestamp,
+            },
+          ]
+        : [],
+    })
   })
 
   await page.route('**/api/v1/projects/1/tasks', async (route) => {
@@ -280,12 +311,21 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await page.getByRole('button', { name: 'Create account' }).click()
 
   await expect(page).toHaveURL('/')
-  await expect(page.getByRole('heading', { name: 'Apps' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  await page.getByLabel('Search workspace').fill('MVP')
+  await expect(page.getByRole('button', { name: /MVP/ })).toBeVisible()
+  await page.getByRole('button', { name: /MVP/ }).click()
+
+  await expect(page).toHaveURL('/kanban')
+  await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+  await page.getByRole('link', { name: 'Apps' }).click()
+
+  await expect(page).toHaveURL('/')
   await expect(page.getByRole('link', { name: 'Open Project management' })).toBeVisible()
   await page.getByRole('link', { name: 'Open Project management' }).click()
 
   await expect(page).toHaveURL('/projects')
-  await expect(page.getByRole('heading', { name: 'Project management' })).toBeVisible()
+  await expect(page.getByText('Project management', { exact: true })).toBeVisible()
   await expect(page.getByText('New project', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
   await page.getByRole('link', { name: 'Apps' }).click()
@@ -297,7 +337,7 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await expect(page).toHaveURL('/kanban')
   await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'New project' })).toHaveCount(0)
-  await expect(page.getByText('founder@example.com')).toBeVisible()
+  await expect(page.getByText('Signed in as founder@example.com')).toBeVisible()
   await expect(page.getByText('4 statuses')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Under Review' })).toBeVisible()
   await expect(page.getByText('todo', { exact: true })).toBeHidden()
@@ -404,7 +444,8 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await expect(page).toHaveURL('/kanban')
   await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Sign out' }).click()
+  await page.getByRole('button', { name: 'User menu' }).click()
+  await page.getByRole('menuitem', { name: 'Sign out' }).click()
   await expect(page).toHaveURL('/login')
   await expect(page.getByRole('heading', { name: 'Workspace access' })).toBeVisible()
 })
@@ -415,6 +456,6 @@ test('accepts an OAuth callback token', async ({ page }) => {
   await page.goto('/auth/callback#token=e2e-token')
 
   await expect(page).toHaveURL('/')
-  await expect(page.getByRole('heading', { name: 'Apps' })).toBeVisible()
-  await expect(page.getByText('founder@example.com')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  await expect(page.getByText('Signed in as founder@example.com')).toBeVisible()
 })

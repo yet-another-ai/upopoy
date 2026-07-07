@@ -1,4 +1,6 @@
 class Task < ApplicationRecord
+  include SearchableResource
+
   STATUSES = {
     "todo" => "To Do",
     "in_progress" => "In Progress",
@@ -11,6 +13,8 @@ class Task < ApplicationRecord
     "medium" => "Medium",
     "high" => "High"
   }.freeze
+
+  search_index_attributes :project_id, :title, :description, :status, :priority
 
   belongs_to :project
 
@@ -43,6 +47,30 @@ class Task < ApplicationRecord
   def self.status_order_sql
     cases = STATUSES.keys.map.with_index { |status, index| "WHEN '#{status}' THEN #{index}" }.join(" ")
     "CASE tasks.status #{cases} ELSE #{STATUSES.length} END"
+  end
+
+  def search_title
+    title
+  end
+
+  def search_content
+    [
+      description,
+      STATUSES[status],
+      PRIORITIES[priority]
+    ].compact.join("\n")
+  end
+
+  def search_owner_user_id
+    project&.user_id
+  end
+
+  def search_metadata
+    { project_id: project_id }
+  end
+
+  def search_api_path
+    "/api/v1/tasks/#{id}"
   end
 
   private

@@ -38,28 +38,32 @@ const emit = defineEmits<{
           {{ props.title }}
         </p>
 
-        <div class="group relative ml-auto">
-          <Button size="icon" variant="ghost" aria-label="User menu" aria-haspopup="menu">
-            <UserCircleIcon />
-          </Button>
+        <div class="ml-auto flex min-w-0 items-center gap-2">
+          <slot name="header-actions" />
 
-          <div
-            role="menu"
-            class="bg-popover text-popover-foreground ring-foreground/10 invisible absolute top-full right-0 z-50 mt-2 grid w-56 gap-1 rounded-lg p-1 opacity-0 shadow-md ring-1 transition duration-100 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100"
-          >
-            <p class="text-muted-foreground truncate px-1.5 py-1 text-xs font-medium">
-              {{ props.currentUser.email }}
-            </p>
-            <div class="bg-border -mx-1 h-px" />
-            <button
-              type="button"
-              role="menuitem"
-              class="text-destructive hover:bg-destructive/10 focus:bg-destructive/10 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-sm outline-none"
-              @click="emit('signOut')"
+          <div class="group relative shrink-0">
+            <Button size="icon" variant="ghost" aria-label="User menu" aria-haspopup="menu">
+              <UserCircleIcon />
+            </Button>
+
+            <div
+              role="menu"
+              class="bg-popover text-popover-foreground ring-foreground/10 invisible absolute top-full right-0 z-50 mt-2 grid w-56 gap-1 rounded-lg p-1 opacity-0 shadow-md ring-1 transition duration-100 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100"
             >
-              <LogOutIcon class="size-4" />
-              Sign out
-            </button>
+              <p class="text-muted-foreground truncate px-1.5 py-1 text-xs font-medium">
+                {{ props.currentUser.email }}
+              </p>
+              <div class="bg-border -mx-1 h-px" />
+              <button
+                type="button"
+                role="menuitem"
+                class="text-destructive hover:bg-destructive/10 focus:bg-destructive/10 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-sm outline-none"
+                @click="emit('signOut')"
+              >
+                <LogOutIcon class="size-4" />
+                Sign out
+              </button>
+            </div>
           </div>
         </div>
       </div>

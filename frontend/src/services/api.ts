@@ -110,6 +110,29 @@ export interface Board {
   statuses: BoardStatus[]
 }
 
+export type SearchResultType = 'project' | 'task' | 'user' | 'group'
+
+export interface SearchResult {
+  slug: string
+  type: SearchResultType
+  id: number
+  title: string
+  snippet: string
+  api_path: string
+  metadata: Record<string, unknown>
+  updated_at: string
+}
+
+export interface SearchResponse {
+  results: SearchResult[]
+}
+
+export interface SearchParams {
+  q: string
+  type?: SearchResultType
+  limit?: number
+}
+
 export interface ProjectInput {
   name: string
   description?: string
@@ -261,6 +284,14 @@ function userListPath(params: UserListParams = {}) {
   return query ? `/api/v1/users?${query}` : '/api/v1/users'
 }
 
+function searchPath(params: SearchParams) {
+  const searchParams = new URLSearchParams({ q: params.q })
+  if (params.type) searchParams.set('type', params.type)
+  if (params.limit) searchParams.set('limit', String(params.limit))
+
+  return `/api/v1/search?${searchParams.toString()}`
+}
+
 export const api = {
   getAuthSettings: () => request<AuthSettings>('/api/v1/auth/settings'),
   getAdminSettings: () => request<AdminSettings>('/api/v1/admin/settings'),
@@ -299,6 +330,7 @@ export const api = {
     request<void>(`/api/v1/groups/${groupId}`, {
       method: 'DELETE',
     }),
+  search: (params: SearchParams) => request<SearchResponse>(searchPath(params)),
   listProjects: () => request<Project[]>('/api/v1/projects'),
   createProject: (project: ProjectInput) =>
     request<Project>('/api/v1/projects', {

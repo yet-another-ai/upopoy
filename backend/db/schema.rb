@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_07_142000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_07_153000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "application_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -62,6 +63,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_142000) do
     t.index ["user_id"], name: "index_projects_on_user_id"
   end
 
+  create_table "search_documents", force: :cascade do |t|
+    t.string "api_path", null: false
+    t.text "content", default: "", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "resource_slug", null: false
+    t.string "resource_type", null: false
+    t.datetime "resource_updated_at", null: false
+    t.virtual "search_vector", type: :tsvector, as: "to_tsvector('simple'::regconfig, (((((COALESCE(resource_slug, ''::character varying))::text || ' '::text) || (COALESCE(title, ''::character varying))::text) || ' '::text) || COALESCE(content, ''::text)))", stored: true
+    t.bigint "searchable_id", null: false
+    t.string "searchable_type", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["content"], name: "index_search_documents_on_content_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["metadata"], name: "index_search_documents_on_metadata", using: :gin
+    t.index ["resource_slug"], name: "index_search_documents_on_resource_slug", unique: true
+    t.index ["resource_slug"], name: "index_search_documents_on_resource_slug_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["resource_type"], name: "index_search_documents_on_resource_type"
+    t.index ["search_vector"], name: "index_search_documents_on_search_vector", using: :gin
+    t.index ["searchable_type", "searchable_id"], name: "index_search_documents_on_searchable_type_and_searchable_id", unique: true
+    t.index ["title"], name: "index_search_documents_on_title_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["user_id"], name: "index_search_documents_on_user_id"
+  end
+
   create_table "tasks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "deadline"
@@ -99,5 +125,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_142000) do
   add_foreign_key "groups", "groups", column: "parent_group_id", on_delete: :nullify
   add_foreign_key "oauth_identities", "users"
   add_foreign_key "projects", "users"
+  add_foreign_key "search_documents", "users"
   add_foreign_key "tasks", "projects"
 end

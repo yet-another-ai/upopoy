@@ -25,6 +25,7 @@ Rails.application.routes.draw do
 
       resources :users, only: [ :index, :show, :update ]
       resources :groups
+      get "search", to: "search#index"
 
       resources :projects do
         member do

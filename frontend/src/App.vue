@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import ProjectSidebar from '@/components/kanban/ProjectSidebar.vue'
 import AuthenticatedLayout from '@/components/layout/AuthenticatedLayout.vue'
+import GlobalSearch from '@/components/search/GlobalSearch.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useBoard } from '@/composables/useBoard'
 import { useProjects } from '@/composables/useProjects'
@@ -15,7 +16,14 @@ import DashboardView from '@/views/DashboardView.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
 import TaskDetailPage from '@/views/TaskDetailPage.vue'
 import UserGroupsView from '@/views/UserGroupsView.vue'
-import type { AuthInput, ProjectInput, Task, TaskInput, TaskStatusOption } from '@/services/api'
+import type {
+  AuthInput,
+  ProjectInput,
+  SearchResult,
+  Task,
+  TaskInput,
+  TaskStatusOption,
+} from '@/services/api'
 
 const auth = useAuth()
 const projects = useProjects()
@@ -200,6 +208,30 @@ function closeGroupEditor() {
   void router.push({ name: 'groups' })
 }
 
+async function openSearchResult(result: SearchResult) {
+  if (result.type === 'project') {
+    projects.selectProject(result.id)
+    await board.loadBoard(result.id)
+    await router.push({ name: 'board' })
+    return
+  }
+
+  if (result.type === 'task') {
+    const projectId = Number(result.metadata.project_id)
+    if (Number.isInteger(projectId) && projectId > 0) projects.selectProject(projectId)
+
+    await router.push({ name: 'task-detail', params: { taskId: result.id } })
+    return
+  }
+
+  if (result.type === 'user') {
+    await router.push({ name: 'user-profile', params: { userId: result.id } })
+    return
+  }
+
+  await router.push({ name: 'group-detail', params: { groupId: result.id } })
+}
+
 function isUserGroupsRouteName(routeName: unknown) {
   return (
     routeName === 'users' ||
@@ -237,6 +269,10 @@ function isUserGroupsRouteName(routeName: unknown) {
     :content-class="authenticatedContentClass"
     @sign-out="signOut"
   >
+    <template #header-actions>
+      <GlobalSearch @select-result="openSearchResult" />
+    </template>
+
     <DashboardView v-if="route.name === 'home'" />
 
     <ProjectsView

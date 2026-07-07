@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PlusIcon } from '@lucide/vue'
+import { LogOutIcon, PlusIcon } from '@lucide/vue'
 import { reactive, shallowRef } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,17 +7,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import type { Project, ProjectInput } from '@/services/api'
+import type { Project, ProjectInput, User } from '@/services/api'
 
 const props = defineProps<{
   projects: readonly Project[]
   selectedProjectId: number | null
   loading: boolean
+  currentUser: User
 }>()
 
 const emit = defineEmits<{
   selectProject: [projectId: number]
   createProject: [input: ProjectInput]
+  signOut: []
 }>()
 
 const form = reactive({
@@ -97,5 +99,18 @@ function submitProject() {
     >
       Create a project to start shaping the board.
     </p>
+
+    <div class="mt-auto grid gap-3 pt-6">
+      <Separator />
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-muted-foreground text-xs">Signed in as</p>
+          <p class="truncate text-sm font-medium">{{ props.currentUser.email }}</p>
+        </div>
+        <Button size="icon" variant="ghost" aria-label="Sign out" @click="emit('signOut')">
+          <LogOutIcon />
+        </Button>
+      </div>
+    </div>
   </aside>
 </template>

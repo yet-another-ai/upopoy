@@ -3,25 +3,37 @@ require "rails_helper"
 RSpec.describe "Api::V1::Projects", type: :request do
   describe "GET /api/v1/projects" do
     it "lists projects newest first" do
-      older = create(:project, name: "Older")
-      newer = create(:project, name: "Newer")
+      user = create(:user)
+      older = create(:project, user:, name: "Older")
+      newer = create(:project, user:, name: "Newer")
+      create(:project, name: "Other user's project")
       older.update!(created_at: 1.day.ago)
       newer.update!(created_at: Time.current)
 
-      get "/api/v1/projects"
+      get "/api/v1/projects", headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response.pluck("name")).to eq([ "Newer", "Older" ])
+    end
+
+    it "requires authentication" do
+      get "/api/v1/projects"
+
+      expect(response).to have_http_status(:unauthorized)
     end
   end
 
   describe "POST /api/v1/projects" do
     it "creates a project" do
-      post "/api/v1/projects", params: { project: { name: "AI Ops", description: "Agent-managed work." } }
+      user = create(:user)
+
+      post "/api/v1/projects",
+           params: { project: { name: "AI Ops", description: "Agent-managed work." } },
+           headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:created)
       expect(json_response["name"]).to eq("AI Ops")
-      expect(Project.find(json_response["id"])).to be_present
+      expect(Project.find(json_response["id"]).user).to eq(user)
     end
   end
 
@@ -29,10 +41,18 @@ RSpec.describe "Api::V1::Projects", type: :request do
     it "returns a project" do
       project = create(:project)
 
-      get "/api/v1/projects/#{project.id}"
+      get "/api/v1/projects/#{project.id}", headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["id"]).to eq(project.id)
+    end
+
+    it "does not return another user's project" do
+      project = create(:project)
+
+      get "/api/v1/projects/#{project.id}", headers: auth_headers_for(create(:user))
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 
@@ -40,7 +60,9 @@ RSpec.describe "Api::V1::Projects", type: :request do
     it "updates project attributes" do
       project = create(:project)
 
-      patch "/api/v1/projects/#{project.id}", params: { project: { name: "Renamed" } }
+      patch "/api/v1/projects/#{project.id}",
+            params: { project: { name: "Renamed" } },
+            headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["name"]).to eq("Renamed")
@@ -52,7 +74,7 @@ RSpec.describe "Api::V1::Projects", type: :request do
       project = create(:project)
 
       expect {
-        delete "/api/v1/projects/#{project.id}"
+        delete "/api/v1/projects/#{project.id}", headers: auth_headers_for(project.user)
       }.to change(Project, :count).by(-1)
       expect(response).to have_http_status(:no_content)
     end
@@ -64,7 +86,7 @@ RSpec.describe "Api::V1::Projects", type: :request do
       create(:task, project:, status: "todo", title: "Plan", position: 2)
       create(:task, project:, status: "in_progress", title: "Build", position: 1)
 
-      get "/api/v1/projects/#{project.id}/board"
+      get "/api/v1/projects/#{project.id}/board", headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response.dig("project", "id")).to eq(project.id)

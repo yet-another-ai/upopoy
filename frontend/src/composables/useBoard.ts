@@ -72,6 +72,12 @@ export function useBoard() {
     statuses.value = nextStatuses
   }
 
+  function clearBoard() {
+    project.value = null
+    statuses.value = []
+    error.value = null
+  }
+
   return {
     project: readonly(project),
     statuses: readonly(statuses),
@@ -82,5 +88,6 @@ export function useBoard() {
     createTask,
     updateTask,
     deleteTask,
+    clearBoard,
   }
 }

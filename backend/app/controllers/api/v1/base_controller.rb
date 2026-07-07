@@ -1,6 +1,10 @@
 module Api
   module V1
     class BaseController < ApplicationController
+      include UserPayloads
+
+      before_action :authenticate_user!
+
       private
 
       def project_payload(project)

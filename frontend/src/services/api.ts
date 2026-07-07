@@ -6,6 +6,34 @@ export interface Project {
   updated_at: string
 }
 
+export interface User {
+  id: number
+  email: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AuthInput {
+  email: string
+  password: string
+  password_confirmation?: string
+}
+
+export interface AuthSession {
+  user: User
+  token: string
+}
+
+export interface AuthProvider {
+  name: string
+  label: string
+  authorize_path: string
+}
+
+interface AuthResponse {
+  user: User
+}
+
 export type TaskStatus = 'todo' | 'in_progress' | 'under_review' | 'done'
 
 export type TaskPriority = 'low' | 'medium' | 'high'
@@ -71,28 +99,106 @@ const jsonHeaders = {
   'Content-Type': 'application/json',
 }
 
+const AUTH_TOKEN_STORAGE_KEY = 'upopoy.authToken'
+
+let authToken =
+  typeof localStorage === 'undefined' ? null : localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
+
+export class ApiError extends Error {
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+export function setAuthToken(token: string | null) {
+  authToken = token
+
+  if (typeof localStorage === 'undefined') return
+
+  if (token) localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token)
+  else localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
+}
+
+export function getAuthToken() {
+  return authToken
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
     ...options,
     headers: {
       ...jsonHeaders,
+      ...(authToken ? { Authorization: authToken } : {}),
       ...options.headers,
     },
   })
 
   if (response.status === 204) return undefined as T
 
-  const data = await response.json()
+  const data = await parseResponseBody(response)
 
   if (!response.ok) {
-    const message = data?.errors ? Object.values(data.errors).flat().join(', ') : 'Request failed'
-    throw new Error(message)
+    throw new ApiError(errorMessage(data), response.status)
   }
 
   return data as T
 }
 
+async function requestAuth(path: string, input: AuthInput): Promise<AuthSession> {
+  const response = await fetch(path, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ user: input }),
+  })
+  const data = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw new ApiError(errorMessage(data), response.status)
+  }
+
+  const token = response.headers.get('Authorization')
+  if (!token) throw new ApiError('Authentication token missing', response.status)
+
+  return {
+    user: (data as AuthResponse).user,
+    token,
+  }
+}
+
+async function parseResponseBody(response: Response) {
+  const contentType = response.headers.get('Content-Type') ?? ''
+  if (contentType.includes('application/json')) return response.json()
+
+  return response.text()
+}
+
+function errorMessage(data: unknown) {
+  if (typeof data === 'string' && data) return data
+  if (data && typeof data === 'object') {
+    if ('errors' in data)
+      return Object.values(data.errors as Record<string, string[]>)
+        .flat()
+        .join(', ')
+    if ('error' in data && typeof data.error === 'string') return data.error
+    if ('message' in data && typeof data.message === 'string') return data.message
+  }
+
+  return 'Request failed'
+}
+
 export const api = {
+  listAuthProviders: () => request<AuthProvider[]>('/api/v1/auth/providers'),
+  signUp: (input: AuthInput) => requestAuth('/api/v1/auth/signup', input),
+  login: (input: AuthInput) => requestAuth('/api/v1/auth/login', input),
+  logout: () =>
+    request<{ message: string }>('/api/v1/auth/logout', {
+      method: 'DELETE',
+    }),
+  me: () => request<AuthResponse>('/api/v1/auth/me'),
   listProjects: () => request<Project[]>('/api/v1/projects'),
   createProject: (project: ProjectInput) =>
     request<Project>('/api/v1/projects', {

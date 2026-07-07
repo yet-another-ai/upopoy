@@ -30,11 +30,20 @@ interface TaskPayload {
 }
 
 const timestamp = '2026-07-06T00:00:00Z'
+const authToken = 'Bearer e2e-token'
 
-async function json(route: Route, body: unknown, status = 200) {
+async function json(
+  route: Route,
+  body: unknown,
+  status = 200,
+  headers: Record<string, string> = {},
+) {
   await route.fulfill({
     status,
-    contentType: 'application/json',
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+    },
     body: JSON.stringify(body),
   })
 }
@@ -81,7 +90,84 @@ async function installMockApi(page: Page) {
     },
   ]
 
+  function isAuthorized(route: Route) {
+    return route.request().headers().authorization === authToken
+  }
+
+  async function requireAuth(route: Route) {
+    if (isAuthorized(route)) return true
+
+    await json(route, { error: 'You need to sign in or sign up before continuing.' }, 401)
+    return false
+  }
+
+  await page.route('**/api/v1/auth/providers', async (route) => {
+    await json(route, [
+      {
+        name: 'developer',
+        label: 'Developer',
+        authorize_path: '/api/v1/auth/developer',
+      },
+    ])
+  })
+
+  await page.route('**/api/v1/auth/login', async (route) => {
+    await json(
+      route,
+      {
+        user: {
+          id: 1,
+          email: 'founder@example.com',
+          created_at: timestamp,
+          updated_at: timestamp,
+        },
+      },
+      200,
+      { Authorization: authToken },
+    )
+  })
+
+  await page.route('**/api/v1/auth/signup', async (route) => {
+    await json(
+      route,
+      {
+        user: {
+          id: 1,
+          email: 'founder@example.com',
+          created_at: timestamp,
+          updated_at: timestamp,
+        },
+      },
+      201,
+      { Authorization: authToken },
+    )
+  })
+
+  await page.route('**/api/v1/auth/me', async (route) => {
+    if (!isAuthorized(route)) {
+      await json(route, { error: 'You need to sign in or sign up before continuing.' }, 401)
+      return
+    }
+
+    await json(route, {
+      user: {
+        id: 1,
+        email: 'founder@example.com',
+        created_at: timestamp,
+        updated_at: timestamp,
+      },
+    })
+  })
+
+  await page.route('**/api/v1/auth/logout', async (route) => {
+    if (!(await requireAuth(route))) return
+
+    await json(route, { message: 'Signed out' })
+  })
+
   await page.route('**/api/v1/projects', async (route) => {
+    if (!(await requireAuth(route))) return
+
     if (route.request().method() === 'GET') {
       await json(route, [project])
       return
@@ -91,10 +177,14 @@ async function installMockApi(page: Page) {
   })
 
   await page.route('**/api/v1/projects/1/board', async (route) => {
+    if (!(await requireAuth(route))) return
+
     await json(route, { project, statuses })
   })
 
   await page.route('**/api/v1/projects/1/tasks', async (route) => {
+    if (!(await requireAuth(route))) return
+
     const requestBody = route.request().postDataJSON() as {
       task: {
         status: TaskStatusPayload['id']
@@ -124,6 +214,8 @@ async function installMockApi(page: Page) {
   })
 
   await page.route('**/api/v1/tasks/*', async (route) => {
+    if (!(await requireAuth(route))) return
+
     const taskId = Number(route.request().url().split('/').at(-1))
     const currentStatus = statuses.find((status) => status.tasks.some((task) => task.id === taskId))
     const task = currentStatus?.tasks.find((item) => item.id === taskId)
@@ -178,7 +270,17 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
 
   await page.goto('/')
 
+  await expect(page).toHaveURL('/login')
+  await expect(page.getByRole('heading', { name: 'Workspace access' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Continue with Developer' })).toBeVisible()
+  await page.getByRole('button', { name: 'Create an account' }).click()
+  await page.getByLabel('Email').fill('founder@example.com')
+  await page.getByLabel('Password', { exact: true }).fill('password123')
+  await page.getByLabel('Confirm password', { exact: true }).fill('password123')
+  await page.getByRole('button', { name: 'Create account' }).click()
+
   await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+  await expect(page.getByText('founder@example.com')).toBeVisible()
   await expect(page.getByText('4 statuses')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Under Review' })).toBeVisible()
   await expect(page.getByText('todo', { exact: true })).toBeHidden()
@@ -284,4 +386,17 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page).toHaveURL('/')
   await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Sign out' }).click()
+  await expect(page).toHaveURL('/login')
+  await expect(page.getByRole('heading', { name: 'Workspace access' })).toBeVisible()
+})
+
+test('accepts an OAuth callback token', async ({ page }) => {
+  await installMockApi(page)
+
+  await page.goto('/auth/callback#token=e2e-token')
+
+  await expect(page).toHaveURL('/')
+  await expect(page.getByText('founder@example.com')).toBeVisible()
 })

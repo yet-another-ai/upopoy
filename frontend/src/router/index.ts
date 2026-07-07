@@ -2,6 +2,16 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
+    path: '/login',
+    name: 'auth',
+    component: { template: '<span />' },
+  },
+  {
+    path: '/auth/callback',
+    name: 'auth-callback',
+    component: { template: '<span />' },
+  },
+  {
     path: '/',
     name: 'board',
     component: { template: '<span />' },

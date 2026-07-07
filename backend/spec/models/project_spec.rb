@@ -8,6 +8,13 @@ RSpec.describe Project, type: :model do
     expect(project.errors[:name]).to be_present
   end
 
+  it "requires a user" do
+    project = build(:project, user: nil)
+
+    expect(project).not_to be_valid
+    expect(project.errors[:user]).to be_present
+  end
+
   it "can be persisted without project-specific task statuses" do
     project = create(:project)
 

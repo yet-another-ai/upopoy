@@ -36,6 +36,12 @@ export function useProjects() {
     selectedProjectId.value = projectId
   }
 
+  function clearProjects() {
+    projects.value = []
+    selectedProjectId.value = null
+    error.value = null
+  }
+
   return {
     projects: readonly(projects),
     selectedProject,
@@ -45,5 +51,6 @@ export function useProjects() {
     loadProjects,
     createProject,
     selectProject,
+    clearProjects,
   }
 }

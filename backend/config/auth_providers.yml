@@ -1,0 +1,39 @@
+# Provider entries support optional `args` and `options`:
+#
+#   - name: github
+#     label: GitHub
+#     enabled: true
+#     args:
+#       - <%= ENV.fetch("GITHUB_CLIENT_ID", "") %>
+#       - <%= ENV.fetch("GITHUB_CLIENT_SECRET", "") %>
+#     options:
+#       scope: "user:email"
+
+default: &default
+  frontend_callback_url: <%= ENV.fetch("FRONTEND_AUTH_CALLBACK_URL", "http://localhost:3000/auth/callback") %>
+  providers: []
+
+development:
+  <<: *default
+  providers:
+    - name: developer
+      label: Developer
+      enabled: true
+      options:
+        fields:
+          - name
+          - email
+
+test:
+  <<: *default
+  providers:
+    - name: developer
+      label: Developer
+      enabled: true
+      options:
+        fields:
+          - name
+          - email
+
+production:
+  <<: *default

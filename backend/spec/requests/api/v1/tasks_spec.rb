@@ -6,29 +6,44 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       project = create(:project)
       create(:task, project:, title: "First task")
 
-      get "/api/v1/projects/#{project.id}/tasks"
+      get "/api/v1/projects/#{project.id}/tasks", headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response.pluck("title")).to eq([ "First task" ])
     end
+
+    it "does not list another user's project tasks" do
+      project = create(:project)
+
+      get "/api/v1/projects/#{project.id}/tasks", headers: auth_headers_for(create(:user))
+
+      expect(response).to have_http_status(:not_found)
+    end
   end
 
   describe "POST /api/v1/projects/:project_id/tasks" do
-    it "creates a task in the requested status" do
-      project = create(:project)
-      task_params = {
+    let(:task_params) do
+      {
         title: "Draft MCP API",
         description: "Keep resources clear.",
         status: "in_progress",
         priority: "high"
       }
+    end
 
-      post "/api/v1/projects/#{project.id}/tasks", params: { task: task_params }
+    it "creates a task in the requested status" do
+      project = create(:project)
+
+      post "/api/v1/projects/#{project.id}/tasks",
+           params: { task: task_params },
+           headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:created)
-      expect(json_response["title"]).to eq("Draft MCP API")
-      expect(json_response["status"]).to eq("in_progress")
-      expect(json_response["priority"]).to eq("high")
+      expect(json_response.slice("title", "status", "priority")).to eq(
+        "title" => "Draft MCP API",
+        "status" => "in_progress",
+        "priority" => "high"
+      )
     end
   end
 
@@ -41,7 +56,7 @@ RSpec.describe "Api::V1::Tasks", type: :request do
         priority: "low"
       )
 
-      get "/api/v1/tasks/#{task.id}"
+      get "/api/v1/tasks/#{task.id}", headers: auth_headers_for(task.project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["id"]).to eq(task.id)
@@ -56,7 +71,9 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       project = create(:project)
       task = create(:task, project:)
 
-      patch "/api/v1/tasks/#{task.id}", params: { task: { status: "done", position: 4 } }
+      patch "/api/v1/tasks/#{task.id}",
+            params: { task: { status: "done", position: 4 } },
+            headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["status"]).to eq("done")
@@ -67,7 +84,8 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       task = create(:task)
 
       patch "/api/v1/tasks/#{task.id}",
-            params: { task: { deadline: "2026-07-31T15:45:00Z", estimated_minutes: 240 } }
+            params: { task: { deadline: "2026-07-31T15:45:00Z", estimated_minutes: 240 } },
+            headers: auth_headers_for(task.project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["deadline"]).to eq("2026-07-31T15:45:00Z")
@@ -77,7 +95,9 @@ RSpec.describe "Api::V1::Tasks", type: :request do
     it "updates task priority" do
       task = create(:task)
 
-      patch "/api/v1/tasks/#{task.id}", params: { task: { priority: "high" } }
+      patch "/api/v1/tasks/#{task.id}",
+            params: { task: { priority: "high" } },
+            headers: auth_headers_for(task.project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["priority"]).to eq("high")
@@ -89,7 +109,7 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       task = create(:task)
 
       expect {
-        delete "/api/v1/tasks/#{task.id}"
+        delete "/api/v1/tasks/#{task.id}", headers: auth_headers_for(task.project.user)
       }.to change(Task, :count).by(-1)
       expect(response).to have_http_status(:no_content)
     end

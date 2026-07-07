@@ -1,103 +1,20 @@
-import { computed, readonly, shallowRef } from 'vue'
-import { api, getAuthToken, setAuthToken, type AuthInput, type User } from '@/services/api'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
 export function useAuth() {
-  const user = shallowRef<User | null>(null)
-  const loading = shallowRef(false)
-  const error = shallowRef<string | null>(null)
-
-  const authenticated = computed(() => Boolean(user.value))
-
-  async function restoreSession() {
-    if (!getAuthToken()) return false
-
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await api.me()
-      user.value = response.user
-      return true
-    } catch {
-      setAuthToken(null)
-      user.value = null
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function login(input: AuthInput) {
-    await authenticate(() => api.login(input))
-  }
-
-  async function signUp(input: AuthInput) {
-    await authenticate(() => api.signUp(input))
-  }
-
-  async function acceptToken(token: string) {
-    loading.value = true
-    error.value = null
-    setAuthToken(token.startsWith('Bearer ') ? token : `Bearer ${token}`)
-
-    try {
-      const response = await api.me()
-      user.value = response.user
-    } catch (err) {
-      setAuthToken(null)
-      user.value = null
-      error.value = err instanceof Error ? err.message : 'Unable to authenticate'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  function failAuthentication(message: string) {
-    setAuthToken(null)
-    user.value = null
-    error.value = message
-  }
-
-  async function authenticate(request: () => ReturnType<typeof api.login>) {
-    loading.value = true
-    error.value = null
-
-    try {
-      const session = await request()
-      setAuthToken(session.token)
-      user.value = session.user
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Unable to authenticate'
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function logout() {
-    loading.value = true
-    error.value = null
-
-    try {
-      if (getAuthToken()) await api.logout()
-    } finally {
-      setAuthToken(null)
-      user.value = null
-      loading.value = false
-    }
-  }
+  const store = useAuthStore()
+  const { user, authenticated, loading, error } = storeToRefs(store)
 
   return {
-    user: readonly(user),
+    user,
     authenticated,
-    loading: readonly(loading),
-    error: readonly(error),
-    restoreSession,
-    login,
-    signUp,
-    acceptToken,
-    failAuthentication,
-    logout,
+    loading,
+    error,
+    restoreSession: store.restoreSession,
+    login: store.login,
+    signUp: store.signUp,
+    acceptToken: store.acceptToken,
+    failAuthentication: store.failAuthentication,
+    logout: store.logout,
   }
 }

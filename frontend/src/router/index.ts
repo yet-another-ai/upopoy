@@ -13,7 +13,17 @@ const routes = [
   },
   {
     path: '/',
+    name: 'home',
+    component: { template: '<span />' },
+  },
+  {
+    path: '/kanban',
     name: 'board',
+    component: { template: '<span />' },
+  },
+  {
+    path: '/projects',
+    name: 'projects',
     component: { template: '<span />' },
   },
   {

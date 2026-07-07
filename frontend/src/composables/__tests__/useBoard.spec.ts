@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { useBoard } from '../useBoard'
 import { api, type Board, type Task } from '@/services/api'
 
@@ -53,6 +54,7 @@ const board: Board = {
 
 describe('useBoard', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 

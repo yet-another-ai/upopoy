@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { LogOutIcon, PlusIcon } from '@lucide/vue'
-import { reactive, shallowRef } from 'vue'
+import { FolderKanbanIcon, LayoutDashboardIcon, LogOutIcon } from '@lucide/vue'
+import { RouterLink } from 'vue-router'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Textarea } from '@/components/ui/textarea'
-import type { Project, ProjectInput, User } from '@/services/api'
+import type { Project, User } from '@/services/api'
 
 const props = defineProps<{
   projects: readonly Project[]
@@ -18,27 +14,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   selectProject: [projectId: number]
-  createProject: [input: ProjectInput]
   signOut: []
 }>()
-
-const form = reactive({
-  name: '',
-  description: '',
-})
-const creating = shallowRef(false)
-
-function submitProject() {
-  if (!form.name.trim()) return
-
-  emit('createProject', {
-    name: form.name.trim(),
-    description: form.description.trim(),
-  })
-  form.name = ''
-  form.description = ''
-  creating.value = false
-}
 </script>
 
 <template>
@@ -50,29 +27,12 @@ function submitProject() {
         <p class="text-muted-foreground text-xs font-medium tracking-wider uppercase">upopoy</p>
         <h1 class="text-xl leading-tight font-semibold">Projects</h1>
       </div>
-      <Button size="icon" variant="outline" aria-label="New project" @click="creating = !creating">
-        <PlusIcon />
+      <Button as-child size="icon" variant="outline" aria-label="Apps">
+        <RouterLink :to="{ name: 'home' }">
+          <LayoutDashboardIcon />
+        </RouterLink>
       </Button>
     </div>
-
-    <Card v-if="creating" class="mt-4">
-      <CardHeader class="pb-2">
-        <CardTitle class="text-sm"> New project </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form class="grid gap-3" @submit.prevent="submitProject">
-          <div class="grid gap-1.5">
-            <Label for="project-name">Name</Label>
-            <Input id="project-name" v-model="form.name" placeholder="Website relaunch" />
-          </div>
-          <div class="grid gap-1.5">
-            <Label for="project-description">Description</Label>
-            <Textarea id="project-description" v-model="form.description" rows="3" />
-          </div>
-          <Button type="submit" size="sm"> Create project </Button>
-        </form>
-      </CardContent>
-    </Card>
 
     <Separator class="my-4" />
 
@@ -97,8 +57,19 @@ function submitProject() {
       v-if="!props.loading && props.projects.length === 0"
       class="text-muted-foreground mt-6 text-sm"
     >
-      Create a project to start shaping the board.
+      Create a project in Project management to start shaping the board.
     </p>
+    <Button
+      v-if="!props.loading && props.projects.length === 0"
+      as-child
+      variant="outline"
+      class="mt-3 justify-start"
+    >
+      <RouterLink :to="{ name: 'projects' }">
+        <FolderKanbanIcon />
+        Project management
+      </RouterLink>
+    </Button>
 
     <div class="mt-auto grid gap-3 pt-6">
       <Separator />

@@ -8,8 +8,10 @@ import { useBoard } from '@/composables/useBoard'
 import { useProjects } from '@/composables/useProjects'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
 import AuthView from '@/views/AuthView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import ProjectsView from '@/views/ProjectsView.vue'
 import TaskDetailPage from '@/views/TaskDetailPage.vue'
-import type { AuthInput, Task, TaskInput, TaskStatusOption } from '@/services/api'
+import type { AuthInput, ProjectInput, Task, TaskInput, TaskStatusOption } from '@/services/api'
 
 const auth = useAuth()
 const projects = useProjects()
@@ -55,7 +57,7 @@ async function restoreSession() {
     return
   }
 
-  if (route.name === 'auth') await router.replace({ name: 'board' })
+  if (route.name === 'auth') await router.replace({ name: 'home' })
 
   await projects.loadProjects()
 }
@@ -83,7 +85,7 @@ async function failOAuth(message: string) {
 }
 
 async function enterWorkspace() {
-  await router.push({ name: 'board' })
+  await router.push({ name: 'home' })
   await projects.loadProjects()
 }
 
@@ -94,9 +96,8 @@ async function signOut() {
   await router.push({ name: 'auth' })
 }
 
-async function createProject(input: { name: string; description?: string }) {
-  const project = await projects.createProject(input)
-  await board.loadBoard(project.id)
+async function createProject(input: ProjectInput) {
+  await projects.createProject(input)
 }
 
 async function refreshBoard() {
@@ -135,6 +136,23 @@ async function refreshBoardAfterTaskUpdate(task: Task) {
     @signup="signUp"
   />
 
+  <DashboardView
+    v-else-if="auth.user.value && route.name === 'home'"
+    :current-user="auth.user.value"
+    @sign-out="signOut"
+  />
+
+  <ProjectsView
+    v-else-if="auth.user.value && route.name === 'projects'"
+    :projects="projects.projects.value"
+    :selected-project-id="projects.selectedProjectId.value"
+    :loading="projects.loading.value"
+    :current-user="auth.user.value"
+    @create-project="createProject"
+    @select-project="projects.selectProject"
+    @sign-out="signOut"
+  />
+
   <div
     v-else-if="auth.user.value"
     class="bg-background text-foreground flex min-h-svh flex-col lg:flex-row"
@@ -145,7 +163,6 @@ async function refreshBoardAfterTaskUpdate(task: Task) {
       :loading="projects.loading.value"
       :current-user="auth.user.value"
       @select-project="projects.selectProject"
-      @create-project="createProject"
       @sign-out="signOut"
     />
 

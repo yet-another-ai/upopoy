@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { useProjects } from '../useProjects'
 import { api, type Project } from '@/services/api'
 
@@ -21,6 +22,7 @@ const projects: Project[] = [
 
 describe('useProjects', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 

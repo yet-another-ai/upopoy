@@ -279,7 +279,24 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await page.getByLabel('Confirm password', { exact: true }).fill('password123')
   await page.getByRole('button', { name: 'Create account' }).click()
 
+  await expect(page).toHaveURL('/')
+  await expect(page.getByRole('heading', { name: 'Apps' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open Project management' })).toBeVisible()
+  await page.getByRole('link', { name: 'Open Project management' }).click()
+
+  await expect(page).toHaveURL('/projects')
+  await expect(page.getByRole('heading', { name: 'Project management' })).toBeVisible()
+  await expect(page.getByText('New project', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+  await page.getByRole('link', { name: 'Apps' }).click()
+
+  await expect(page).toHaveURL('/')
+  await expect(page.getByRole('link', { name: 'Open Kanban' })).toBeVisible()
+  await page.getByRole('link', { name: 'Open Kanban' }).click()
+
+  await expect(page).toHaveURL('/kanban')
+  await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'New project' })).toHaveCount(0)
   await expect(page.getByText('founder@example.com')).toBeVisible()
   await expect(page.getByText('4 statuses')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Under Review' })).toBeVisible()
@@ -376,7 +393,7 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await page.getByLabel('Estimated time').fill('240')
   await page.getByRole('button', { name: 'Save task' }).click()
 
-  await expect(page).toHaveURL('/')
+  await expect(page).toHaveURL('/kanban')
   await expect(doneColumn.getByTestId('task-card')).toContainText('Low')
   await expect(doneColumn.getByTestId('task-card')).toContainText(/Jul 31, 2026/)
   await expect(doneColumn.getByTestId('task-card')).toContainText('4h')
@@ -384,7 +401,7 @@ test('manages a project board with fixed statuses and tasks', async ({ page }) =
   await doneColumn.getByRole('link', { name: 'Open task Draft MCP contract' }).click()
   await expect(page.getByRole('heading', { name: 'Draft MCP contract' })).toBeVisible()
   await page.getByRole('button', { name: 'Cancel' }).click()
-  await expect(page).toHaveURL('/')
+  await expect(page).toHaveURL('/kanban')
   await expect(page.getByRole('heading', { name: 'MVP' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Sign out' }).click()
@@ -398,5 +415,6 @@ test('accepts an OAuth callback token', async ({ page }) => {
   await page.goto('/auth/callback#token=e2e-token')
 
   await expect(page).toHaveURL('/')
+  await expect(page.getByRole('heading', { name: 'Apps' })).toBeVisible()
   await expect(page.getByText('founder@example.com')).toBeVisible()
 })

@@ -5,7 +5,7 @@ upopoy is an AI-collaborative SaaS MVP. The first implementation focuses on proj
 ## Stack
 
 - Runtime management: `mise` with Ruby `4.0.5` and Node `24`
-- Backend: Rails API-only, PostgreSQL, RSpec, FactoryBot, RuboCop
+- Backend: Rails API-only, Falcon, PostgreSQL, RSpec, FactoryBot, RuboCop
 - Frontend: Vue 3, Vite, TypeScript, shadcn-vue, Vitest, Playwright, ESLint, Prettier
 
 ## Setup
@@ -22,7 +22,16 @@ cd frontend && pnpm install
 mise run dev
 ```
 
-Rails runs on `http://localhost:3001`; Vite runs on `http://localhost:3000` and proxies `/api` to Rails.
+Falcon reads `falcon.rb` and starts both services:
+
+- Rails API on `http://localhost:3001`
+- Vite frontend on `http://localhost:3000`, proxying `/api` to Rails
+
+You can still run only the Rails API with:
+
+```sh
+mise run backend
+```
 
 ## Quality
 

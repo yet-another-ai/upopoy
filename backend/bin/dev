@@ -1,2 +1,4 @@
 #!/usr/bin/env ruby
-exec "./bin/rails", "server", *ARGV
+require "rbconfig"
+
+exec RbConfig.ruby, Gem.bin_path("bundler", "bundle"), "exec", "falcon", "serve", "--bind", "http://127.0.0.1:3001", "--config", "config.ru", "--threaded", "--count", "1", *ARGV

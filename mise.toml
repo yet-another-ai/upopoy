@@ -6,9 +6,9 @@ node = "24"
 experimental = true
 
 [tasks.backend]
-description = "Run the Rails API server"
+description = "Run the Rails API server with Falcon"
 dir = "backend"
-run = "ruby bin/rails server -p 3001"
+run = "bundle exec falcon serve --bind http://127.0.0.1:3001 --config config.ru --threaded --count 1"
 
 [tasks.frontend]
 description = "Run the Vite frontend"
@@ -16,8 +16,8 @@ dir = "frontend"
 run = "pnpm dev --host 0.0.0.0"
 
 [tasks.dev]
-description = "Run backend and frontend together"
-depends = ["backend", "frontend"]
+description = "Run backend and frontend together with Falcon host"
+run = "cd backend && bundle exec falcon host ../falcon.rb"
 
 [tasks.test]
 description = "Run backend, frontend unit, and frontend integration tests"

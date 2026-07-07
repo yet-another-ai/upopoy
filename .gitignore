@@ -11,8 +11,6 @@ backend/storage/*
 !backend/storage/.keep
 backend/tmp/*
 !backend/tmp/.keep
-!backend/tmp/pids/
-!backend/tmp/pids/.keep
 !backend/tmp/storage/
 !backend/tmp/storage/.keep
 
@@ -20,6 +18,8 @@ backend/tmp/*
 .pnpm-store/
 frontend/dist/
 frontend/node_modules/
+frontend/playwright-report/
+frontend/test-results/
 frontend/.vite/
 frontend/src/assets/hero.png
 frontend/src/assets/vite.svg

@@ -67,18 +67,3 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_052000) do
   add_foreign_key "projects", "users"
   add_foreign_key "tasks", "projects"
 end
-ll: false
-    t.string "jti", null: false
-    t.datetime "remember_created_at"
-    t.datetime "reset_password_sent_at"
-    t.string "reset_password_token"
-    t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["jti"], name: "index_users_on_jti", unique: true
-    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
-  end
-
-  add_foreign_key "oauth_identities", "users"
-  add_foreign_key "projects", "users"
-  add_foreign_key "tasks", "projects"
-end

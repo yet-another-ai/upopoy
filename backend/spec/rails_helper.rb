@@ -52,6 +52,8 @@ RSpec.configure do |config|
   config.include AuthHelpers, type: :request
 
   config.before do
+    GroupMembership.delete_all
+    Group.delete_all
     Task.delete_all
     Project.delete_all
     OauthIdentity.delete_all

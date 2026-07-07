@@ -10,9 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_07_052000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_07_123500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "group_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "group_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["group_id", "user_id"], name: "index_group_memberships_on_group_id_and_user_id", unique: true
+    t.index ["group_id"], name: "index_group_memberships_on_group_id"
+    t.index ["user_id"], name: "index_group_memberships_on_user_id"
+  end
+
+  create_table "groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.bigint "parent_group_id"
+    t.datetime "updated_at", null: false
+    t.index ["parent_group_id"], name: "index_groups_on_parent_group_id"
+  end
 
   create_table "oauth_identities", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -63,6 +82,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_052000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "group_memberships", "groups", on_delete: :cascade
+  add_foreign_key "group_memberships", "users", on_delete: :cascade
+  add_foreign_key "groups", "groups", column: "parent_group_id", on_delete: :nullify
   add_foreign_key "oauth_identities", "users"
   add_foreign_key "projects", "users"
   add_foreign_key "tasks", "projects"

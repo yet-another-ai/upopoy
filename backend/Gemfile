@@ -10,6 +10,7 @@ gem "falcon", "~> 0.55.5"
 gem "devise"
 gem "devise-jwt"
 gem "omniauth"
+gem "pundit"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 # gem "jbuilder"
 

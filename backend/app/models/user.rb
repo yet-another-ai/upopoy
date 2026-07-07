@@ -11,6 +11,8 @@ class User < ApplicationRecord
          jwt_revocation_strategy: self
 
   has_many :projects, dependent: :destroy
+  has_many :group_memberships, dependent: :destroy
+  has_many :groups, through: :group_memberships
   has_many :oauth_identities, dependent: :destroy
 
   def self.from_omniauth(auth)

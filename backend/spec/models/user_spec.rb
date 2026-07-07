@@ -14,6 +14,15 @@ RSpec.describe User, type: :model do
     expect(user.errors[:email]).to be_present
   end
 
+  it "can belong to groups through memberships" do
+    user = create(:user)
+    group = create(:group)
+
+    create(:group_membership, user:, group:)
+
+    expect(user.groups).to contain_exactly(group)
+  end
+
   it "creates a user from an OmniAuth payload" do
     auth = OmniAuth::AuthHash.new(
       provider: "developer",

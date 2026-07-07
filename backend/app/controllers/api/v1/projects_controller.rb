@@ -4,17 +4,20 @@ module Api
       before_action :set_project, only: [ :show, :update, :destroy, :board ]
 
       def index
-        projects = current_user.projects.order(created_at: :desc)
+        projects = policy_scope(Project).order(created_at: :desc)
 
         render json: projects.map { |project| project_payload(project) }
       end
 
       def show
+        authorize @project
+
         render json: project_payload(@project)
       end
 
       def create
         project = current_user.projects.new(project_params)
+        authorize project
 
         if project.save
           render json: project_payload(project), status: :created
@@ -24,6 +27,8 @@ module Api
       end
 
       def update
+        authorize @project
+
         if @project.update(project_params)
           render json: project_payload(@project)
         else
@@ -32,12 +37,14 @@ module Api
       end
 
       def destroy
+        authorize @project
         @project.destroy!
 
         head :no_content
       end
 
       def board
+        authorize @project
         tasks_by_status = @project.tasks.in_status_order.group_by(&:status)
 
         render json: {
@@ -53,7 +60,7 @@ module Api
       private
 
       def set_project
-        @project = current_user.projects.find(params[:id])
+        @project = policy_scope(Project).find(params[:id])
       end
 
       def project_params

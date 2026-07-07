@@ -15,6 +15,7 @@ class Group < ApplicationRecord
            dependent: :nullify
   has_many :group_memberships, dependent: :destroy
   has_many :users, through: :group_memberships
+  has_many :projects, dependent: :destroy
 
   validates :name, presence: true
   validate :parent_group_cannot_be_self
@@ -30,6 +31,10 @@ class Group < ApplicationRecord
 
   def search_owner_user_id
     nil
+  end
+
+  def search_owner_group_id
+    id
   end
 
   def search_metadata

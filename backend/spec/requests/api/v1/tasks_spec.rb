@@ -5,8 +5,10 @@ RSpec.describe "Api::V1::Tasks", type: :request do
     it "lists project tasks" do
       project = create(:project)
       create(:task, project:, title: "First task")
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member)
 
-      get "/api/v1/projects/#{project.id}/tasks", headers: auth_headers_for(project.user)
+      get "/api/v1/projects/#{project.id}/tasks", headers: auth_headers_for(member)
 
       expect(response).to have_http_status(:ok)
       expect(json_response.pluck("title")).to eq([ "First task" ])
@@ -33,10 +35,12 @@ RSpec.describe "Api::V1::Tasks", type: :request do
 
     it "creates a task in the requested status" do
       project = create(:project)
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member)
 
       post "/api/v1/projects/#{project.id}/tasks",
            params: { task: task_params },
-           headers: auth_headers_for(project.user)
+           headers: auth_headers_for(member)
 
       expect(response).to have_http_status(:created)
       expect(json_response.slice("title", "status", "priority")).to eq(
@@ -70,10 +74,12 @@ RSpec.describe "Api::V1::Tasks", type: :request do
     it "updates task status and position" do
       project = create(:project)
       task = create(:task, project:)
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member)
 
       patch "/api/v1/tasks/#{task.id}",
             params: { task: { status: "done", position: 4 } },
-            headers: auth_headers_for(project.user)
+            headers: auth_headers_for(member)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["status"]).to eq("done")
@@ -107,9 +113,11 @@ RSpec.describe "Api::V1::Tasks", type: :request do
   describe "DELETE /api/v1/tasks/:id" do
     it "deletes a task" do
       task = create(:task)
+      member = create(:user)
+      create(:group_membership, group: task.project.group, user: member)
 
       expect {
-        delete "/api/v1/tasks/#{task.id}", headers: auth_headers_for(task.project.user)
+        delete "/api/v1/tasks/#{task.id}", headers: auth_headers_for(member)
       }.to change(Task, :count).by(-1)
       expect(response).to have_http_status(:no_content)
     end

@@ -1,5 +1,7 @@
 export interface Project {
   id: number
+  group_id: number
+  group_name: string | null
   name: string
   description: string | null
   created_at: string
@@ -136,6 +138,7 @@ export interface SearchParams {
 export interface ProjectInput {
   name: string
   description?: string
+  group_id: number
 }
 
 export interface GroupInput {

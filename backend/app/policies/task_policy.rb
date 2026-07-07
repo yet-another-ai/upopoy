@@ -4,32 +4,36 @@ class TaskPolicy < ApplicationPolicy
   end
 
   def show?
-    owns_task_project?
+    project_group_member?
   end
 
   def create?
-    owns_task_project?
+    project_group_member?
   end
 
   def update?
-    owns_task_project?
+    project_group_member?
   end
 
   def destroy?
-    owns_task_project?
+    project_group_member?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
       return scope.none if user.blank?
 
-      scope.joins(:project).where(projects: { user_id: user.id })
+      scope.joins(project: { group: :group_memberships })
+        .where(group_memberships: { user_id: user.id })
     end
   end
 
   private
 
-  def owns_task_project?
-    user.present? && record.project&.user_id == user.id
+  def project_group_member?
+    return false if user.blank?
+
+    group_id = record.project&.group_id
+    group_id.present? && user.group_ids.include?(group_id)
   end
 end

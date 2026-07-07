@@ -26,14 +26,34 @@ RSpec.describe "Api::V1::Projects", type: :request do
   describe "POST /api/v1/projects" do
     it "creates a project" do
       user = create(:user)
+      group = create(:group)
+      create(:group_membership, user:, group:)
 
       post "/api/v1/projects",
-           params: { project: { name: "AI Ops", description: "Agent-managed work." } },
+           params: {
+             project: {
+               name: "AI Ops",
+               description: "Agent-managed work.",
+               group_id: group.id
+             }
+           },
            headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:created)
       expect(json_response["name"]).to eq("AI Ops")
       expect(Project.find(json_response["id"]).user).to eq(user)
+      expect(Project.find(json_response["id"]).group).to eq(group)
+    end
+
+    it "does not create a project in a group the user does not belong to" do
+      user = create(:user)
+      group = create(:group)
+
+      post "/api/v1/projects",
+           params: { project: { name: "AI Ops", group_id: group.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
     end
   end
 
@@ -45,6 +65,18 @@ RSpec.describe "Api::V1::Projects", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(json_response["id"]).to eq(project.id)
+    end
+
+    it "returns another user's project when the requester is a group member" do
+      project = create(:project)
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member)
+
+      get "/api/v1/projects/#{project.id}", headers: auth_headers_for(member)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["id"]).to eq(project.id)
+      expect(json_response["group_id"]).to eq(project.group_id)
     end
 
     it "does not return another user's project" do
@@ -59,22 +91,38 @@ RSpec.describe "Api::V1::Projects", type: :request do
   describe "PATCH /api/v1/projects/:id" do
     it "updates project attributes" do
       project = create(:project)
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member)
 
       patch "/api/v1/projects/#{project.id}",
             params: { project: { name: "Renamed" } },
-            headers: auth_headers_for(project.user)
+            headers: auth_headers_for(member)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["name"]).to eq("Renamed")
+    end
+
+    it "does not move a project to a group the requester cannot access" do
+      project = create(:project)
+      inaccessible_group = create(:group)
+
+      patch "/api/v1/projects/#{project.id}",
+            params: { project: { group_id: inaccessible_group.id } },
+            headers: auth_headers_for(project.user)
+
+      expect(response).to have_http_status(:forbidden)
+      expect(project.reload.group).not_to eq(inaccessible_group)
     end
   end
 
   describe "DELETE /api/v1/projects/:id" do
     it "deletes a project" do
       project = create(:project)
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member)
 
       expect {
-        delete "/api/v1/projects/#{project.id}", headers: auth_headers_for(project.user)
+        delete "/api/v1/projects/#{project.id}", headers: auth_headers_for(member)
       }.to change(Project, :count).by(-1)
       expect(response).to have_http_status(:no_content)
     end

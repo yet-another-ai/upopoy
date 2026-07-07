@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_07_153000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_07_164000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -57,9 +57,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_153000) do
   create_table "projects", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
+    t.bigint "group_id", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["group_id"], name: "index_projects_on_group_id"
     t.index ["user_id"], name: "index_projects_on_user_id"
   end
 
@@ -67,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_153000) do
     t.string "api_path", null: false
     t.text "content", default: "", null: false
     t.datetime "created_at", null: false
+    t.bigint "group_id"
     t.jsonb "metadata", default: {}, null: false
     t.string "resource_slug", null: false
     t.string "resource_type", null: false
@@ -78,6 +81,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_153000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["content"], name: "index_search_documents_on_content_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["group_id"], name: "index_search_documents_on_group_id"
     t.index ["metadata"], name: "index_search_documents_on_metadata", using: :gin
     t.index ["resource_slug"], name: "index_search_documents_on_resource_slug", unique: true
     t.index ["resource_slug"], name: "index_search_documents_on_resource_slug_trgm", opclass: :gin_trgm_ops, using: :gin
@@ -124,7 +128,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_07_153000) do
   add_foreign_key "group_memberships", "users", on_delete: :cascade
   add_foreign_key "groups", "groups", column: "parent_group_id", on_delete: :nullify
   add_foreign_key "oauth_identities", "users"
+  add_foreign_key "projects", "groups"
   add_foreign_key "projects", "users"
+  add_foreign_key "search_documents", "groups"
   add_foreign_key "search_documents", "users"
   add_foreign_key "tasks", "projects"
 end

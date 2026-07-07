@@ -2,6 +2,8 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 
 interface ProjectPayload {
   id: number
+  group_id: number
+  group_name: string | null
   name: string
   description: string | null
   created_at: string
@@ -53,6 +55,8 @@ async function installMockApi(page: Page) {
 
   const project: ProjectPayload = {
     id: 1,
+    group_id: 1,
+    group_name: 'Engineering',
     name: 'MVP',
     description: 'Initial Kanban surface',
     created_at: timestamp,
@@ -181,6 +185,24 @@ async function installMockApi(page: Page) {
     }
 
     await json(route, project, 201)
+  })
+
+  await page.route('**/api/v1/groups', async (route) => {
+    if (!(await requireAuth(route))) return
+
+    await json(route, [
+      {
+        id: 1,
+        name: 'Engineering',
+        description: 'Product engineering workspace',
+        parent_group_id: null,
+        parent_group_name: null,
+        user_ids: [1],
+        users_count: 1,
+        created_at: timestamp,
+        updated_at: timestamp,
+      },
+    ])
   })
 
   await page.route('**/api/v1/projects/1/board', async (route) => {

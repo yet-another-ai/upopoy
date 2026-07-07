@@ -8,6 +8,7 @@ class SearchDocument < ApplicationRecord
 
   belongs_to :searchable, polymorphic: true
   belongs_to :user, optional: true
+  belongs_to :group, optional: true
 
   validates :resource_slug, presence: true, uniqueness: true
   validates :resource_type, presence: true, inclusion: { in: RESOURCE_TYPES.keys }
@@ -18,7 +19,21 @@ class SearchDocument < ApplicationRecord
   validates :resource_updated_at, presence: true
 
   scope :visible_to, lambda { |user|
-    where(user_id: nil).or(where(user_id: user.id))
+    return none if user.blank?
+
+    where(
+      <<~SQL.squish,
+        (search_documents.user_id IS NULL AND search_documents.group_id IS NULL)
+        OR search_documents.user_id = :user_id
+        OR EXISTS (
+          SELECT 1
+          FROM group_memberships
+          WHERE group_memberships.group_id = search_documents.group_id
+            AND group_memberships.user_id = :user_id
+        )
+      SQL
+      user_id: user.id
+    )
   }
 
   scope :of_resource_type, ->(resource_type) { where(resource_type:) if resource_type.present? }
@@ -27,6 +42,7 @@ class SearchDocument < ApplicationRecord
     document = find_or_initialize_by(searchable: resource)
     document.assign_attributes(
       user_id: resource.search_owner_user_id,
+      group_id: resource.respond_to?(:search_owner_group_id) ? resource.search_owner_group_id : nil,
       resource_slug: resource.resource_slug,
       resource_type: resource.class.search_resource_type,
       title: resource.search_title,

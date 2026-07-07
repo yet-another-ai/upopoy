@@ -15,6 +15,13 @@ RSpec.describe Project, type: :model do
     expect(project.errors[:user]).to be_present
   end
 
+  it "requires a group" do
+    project = build(:project, group: nil)
+
+    expect(project).not_to be_valid
+    expect(project.errors[:group]).to be_present
+  end
+
   it "can be persisted without project-specific task statuses" do
     project = create(:project)
 

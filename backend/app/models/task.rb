@@ -62,11 +62,15 @@ class Task < ApplicationRecord
   end
 
   def search_owner_user_id
-    project&.user_id
+    nil
+  end
+
+  def search_owner_group_id
+    project&.group_id
   end
 
   def search_metadata
-    { project_id: project_id }
+    { project_id: project_id, group_id: project&.group_id }
   end
 
   def search_api_path

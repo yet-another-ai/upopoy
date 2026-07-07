@@ -19,6 +19,8 @@ module Api
       def project_payload(project)
         {
           id: project.id,
+          group_id: project.group_id,
+          group_name: project.group&.name,
           name: project.name,
           description: project.description,
           created_at: project.created_at,
@@ -51,13 +53,15 @@ module Api
 
       def group_payload(group)
         user_ids = group.user_ids
+        parent_group_visible = group.parent_group_id.present? &&
+          current_user.group_ids.include?(group.parent_group_id)
 
         {
           id: group.id,
           name: group.name,
           description: group.description,
           parent_group_id: group.parent_group_id,
-          parent_group_name: group.parent_group&.name,
+          parent_group_name: parent_group_visible ? group.parent_group&.name : nil,
           user_ids:,
           users_count: user_ids.size,
           created_at: group.created_at,

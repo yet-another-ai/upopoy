@@ -47,6 +47,9 @@ const emit = defineEmits<{
           <span v-if="project.description" class="text-muted-foreground block truncate text-xs">
             {{ project.description }}
           </span>
+          <span v-if="project.group_name" class="text-muted-foreground block truncate text-xs">
+            {{ project.group_name }}
+          </span>
         </span>
       </Button>
     </div>

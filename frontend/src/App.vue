@@ -123,6 +123,7 @@ async function restoreSession() {
   if (route.name === 'auth') await router.replace({ name: 'home' })
 
   await projects.loadProjects()
+  await userGroups.loadGroups()
   if (userGroupsRoute.value) await userGroups.loadDirectory()
 }
 
@@ -151,6 +152,7 @@ async function failOAuth(message: string) {
 async function enterWorkspace() {
   await router.push({ name: 'home' })
   await projects.loadProjects()
+  await userGroups.loadGroups()
 }
 
 async function signOut() {
@@ -278,8 +280,10 @@ function isUserGroupsRouteName(routeName: unknown) {
     <ProjectsView
       v-else-if="route.name === 'projects'"
       :projects="projects.projects.value"
+      :groups="userGroups.groups.value"
       :selected-project-id="projects.selectedProjectId.value"
       :loading="projects.loading.value"
+      :loading-groups="userGroups.loadingGroups.value"
       @create-project="createProject"
       @select-project="projects.selectProject"
     />

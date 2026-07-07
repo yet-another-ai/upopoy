@@ -17,7 +17,11 @@ RSpec.describe "Api::V1::Search", type: :request do
 
     it "searches resources visible to the current user" do
       user = create(:user)
-      project = create(:project, user:, name: "Apollo", description: "Moonshot roadmap")
+      group = create(:group)
+      create(:group_membership, user:, group:)
+      owner = create(:user)
+      create(:group_membership, user: owner, group:)
+      project = create(:project, user: owner, group:, name: "Apollo", description: "Moonshot roadmap")
       create(:task, project:, title: "Draft MCP API", description: "Keep resources clear.")
       create(:project, name: "Other Apollo")
 
@@ -29,10 +33,12 @@ RSpec.describe "Api::V1::Search", type: :request do
       expect(slugs).not_to include(SearchDocument.find_by(title: "Other Apollo").resource_slug)
     end
 
-    it "includes global users and groups for authenticated users" do
+    it "includes global users and member groups for authenticated users" do
       user = create(:user)
       target = create(:user, display_name: "Ada Lovelace")
       group = create(:group, name: "Research Guild")
+      hidden_group = create(:group, name: "Research Vault")
+      create(:group_membership, user:, group:)
 
       get "/api/v1/search", params: { q: "Ada" }, headers: auth_headers_for(user)
 
@@ -41,7 +47,9 @@ RSpec.describe "Api::V1::Search", type: :request do
 
       get "/api/v1/search", params: { q: "Research" }, headers: auth_headers_for(user)
 
-      expect(json_response["results"].pluck("slug")).to include("group:#{group.id}")
+      slugs = json_response["results"].pluck("slug")
+      expect(slugs).to include("group:#{group.id}")
+      expect(slugs).not_to include("group:#{hidden_group.id}")
     end
 
     it "orders exact slug matches first" do

@@ -27,9 +27,10 @@ module Api
       end
 
       def update
+        @project.assign_attributes(project_params)
         authorize @project
 
-        if @project.update(project_params)
+        if @project.save
           render json: project_payload(@project)
         else
           render_errors(@project)
@@ -64,7 +65,7 @@ module Api
       end
 
       def project_params
-        params.require(:project).permit(:name, :description)
+        params.require(:project).permit(:name, :description, :group_id)
       end
     end
   end

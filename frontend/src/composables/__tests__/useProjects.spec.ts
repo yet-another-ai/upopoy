@@ -13,6 +13,8 @@ vi.mock('@/services/api', () => ({
 const projects: Project[] = [
   {
     id: 1,
+    group_id: 1,
+    group_name: 'Engineering',
     name: 'MVP',
     description: 'Initial Kanban surface',
     created_at: '2026-07-06T00:00:00Z',
@@ -42,7 +44,7 @@ describe('useProjects', () => {
     vi.mocked(api.createProject).mockResolvedValue(created)
     const state = useProjects()
 
-    await state.createProject({ name: 'Agent workflows' })
+    await state.createProject({ name: 'Agent workflows', group_id: 1 })
 
     expect(state.projects.value).toEqual([created])
     expect(state.selectedProjectId.value).toBe(2)

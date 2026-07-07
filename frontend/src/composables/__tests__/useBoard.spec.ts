@@ -29,6 +29,8 @@ const task: Task = {
 const board: Board = {
   project: {
     id: 1,
+    group_id: 1,
+    group_name: 'Engineering',
     name: 'MVP',
     description: 'Initial Kanban surface',
     created_at: '2026-07-06T00:00:00Z',

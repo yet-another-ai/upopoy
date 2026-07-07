@@ -10,7 +10,8 @@ RSpec.describe SearchDocument, type: :model do
         resource_type: "project",
         title: "Apollo",
         content: "Moonshot roadmap",
-        user_id: project.user_id,
+        user_id: nil,
+        group_id: project.group_id,
         api_path: "/api/v1/projects/#{project.id}"
       )
     end
@@ -31,17 +32,18 @@ RSpec.describe SearchDocument, type: :model do
       expect(described_class.exists?(document.id)).to be(false)
     end
 
-    it "indexes task ownership and metadata from the task project" do
+    it "indexes task group visibility and metadata from the task project" do
       project = create(:project)
       task = create(:task, project:, title: "Draft MCP API", description: "Keep resources clear.")
 
       document = described_class.find_by!(resource_slug: "task:#{task.id}")
-      expect(document.user_id).to eq(project.user_id)
-      expect(document.metadata).to eq("project_id" => project.id)
+      expect(document.user_id).to be_nil
+      expect(document.group_id).to eq(project.group_id)
+      expect(document.metadata).to eq("project_id" => project.id, "group_id" => project.group_id)
       expect(document.api_path).to eq("/api/v1/tasks/#{task.id}")
     end
 
-    it "indexes global users and groups without an owner" do
+    it "indexes global users without a group and groups under their own membership" do
       user = create(:user, email: "ada@example.com", display_name: "Ada Lovelace")
       group = create(:group, name: "Engineering")
 
@@ -50,8 +52,24 @@ RSpec.describe SearchDocument, type: :model do
 
       expect(user_document.title).to eq("Ada Lovelace")
       expect(user_document.user_id).to be_nil
+      expect(user_document.group_id).to be_nil
       expect(group_document.title).to eq("Engineering")
       expect(group_document.user_id).to be_nil
+      expect(group_document.group_id).to eq(group.id)
+    end
+  end
+
+  describe ".visible_to" do
+    it "returns global documents and documents for groups the user belongs to" do
+      user = create(:user)
+      visible_project = create(:project, name: "Visible")
+      hidden_project = create(:project, name: "Hidden")
+      create(:group_membership, user:, group: visible_project.group)
+
+      slugs = described_class.visible_to(user).pluck(:resource_slug)
+
+      expect(slugs).to include("user:#{user.id}", "project:#{visible_project.id}")
+      expect(slugs).not_to include("project:#{hidden_project.id}")
     end
   end
 end

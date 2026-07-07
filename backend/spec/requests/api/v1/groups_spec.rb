@@ -6,11 +6,14 @@ RSpec.describe "Api::V1::Groups", type: :request do
       user = create(:user)
       parent = create(:group, name: "Engineering")
       group = create(:group, name: "Platform", parent_group: parent)
+      create(:group_membership, user:, group: parent)
       create(:group_membership, user:, group:)
+      create(:group, name: "Hidden")
 
       get "/api/v1/groups", headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
+      expect(json_response.pluck("name")).not_to include("Hidden")
       platform = json_response.find { |item| item["name"] == "Platform" }
       expect(platform["parent_group_id"]).to eq(parent.id)
       expect(platform["parent_group_name"]).to eq("Engineering")
@@ -39,7 +42,18 @@ RSpec.describe "Api::V1::Groups", type: :request do
 
       expect(response).to have_http_status(:created)
       expect(json_response["name"]).to eq("Product")
-      expect(json_response["user_ids"]).to eq([ member.id ])
+      expect(json_response["user_ids"]).to match_array([ user.id, member.id ])
+    end
+
+    it "does not create a child group under an inaccessible parent" do
+      user = create(:user)
+      parent = create(:group)
+
+      post "/api/v1/groups",
+           params: { group: { name: "Private child", parent_group_id: parent.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
     end
   end
 
@@ -48,6 +62,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
       user = create(:user)
       member = create(:user)
       group = create(:group)
+      create(:group_membership, user:, group:)
       group_params = { group: { name: "Renamed", user_ids: [ member.id ] } }
 
       patch "/api/v1/groups/#{group.id}",
@@ -63,6 +78,8 @@ RSpec.describe "Api::V1::Groups", type: :request do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
+      create(:group_membership, user:, group: parent)
+      create(:group_membership, user:, group: child)
 
       patch "/api/v1/groups/#{parent.id}",
             params: { group: { parent_group_id: child.id } },
@@ -71,12 +88,24 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(json_response.dig("errors", "parent_group").join).to include("cannot be a child group")
     end
+
+    it "does not update a group for non-members" do
+      user = create(:user)
+      group = create(:group)
+
+      patch "/api/v1/groups/#{group.id}",
+            params: { group: { name: "Renamed" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:not_found)
+    end
   end
 
   describe "DELETE /api/v1/groups/:id" do
     it "deletes a group" do
       user = create(:user)
       group = create(:group)
+      create(:group_membership, user:, group:)
 
       expect {
         delete "/api/v1/groups/#{group.id}", headers: auth_headers_for(user)

@@ -4,19 +4,19 @@ class ProjectPolicy < ApplicationPolicy
   end
 
   def show?
-    owns_project?
+    group_member?
   end
 
   def create?
-    user.present? && record.user == user
+    user.present? && record.user == user && group_member?
   end
 
   def update?
-    owns_project?
+    group_member?
   end
 
   def destroy?
-    owns_project?
+    group_member?
   end
 
   def board?
@@ -27,13 +27,15 @@ class ProjectPolicy < ApplicationPolicy
     def resolve
       return scope.none if user.blank?
 
-      scope.where(user:)
+      scope.joins(group: :group_memberships).where(group_memberships: { user_id: user.id })
     end
   end
 
   private
 
-  def owns_project?
-    user.present? && record.user_id == user.id
+  def group_member?
+    return false if user.blank? || record.group_id.blank?
+
+    user.group_ids.include?(record.group_id)
   end
 end

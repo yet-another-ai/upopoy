@@ -17,14 +17,11 @@ module Api
 
       def create
         group = Group.new
-        authorize group
 
         persist_group(group, :created)
       end
 
       def update
-        authorize @group
-
         persist_group(@group)
       end
 
@@ -44,8 +41,10 @@ module Api
       def persist_group(group, status = :ok)
         attributes = group_params
         user_ids = normalize_user_ids(attributes.delete(:user_ids))
+        user_ids = include_current_user(user_ids) if group.new_record?
 
         group.assign_attributes(attributes)
+        authorize group
         return render_invalid_user_ids unless valid_user_ids?(user_ids)
 
         Group.transaction do
@@ -81,6 +80,12 @@ module Api
 
         known_user_ids = User.where(id: user_ids).pluck(:id)
         known_user_ids.sort == user_ids.sort
+      end
+
+      def include_current_user(user_ids)
+        return [ current_user.id ] if user_ids.nil?
+
+        (user_ids + [ current_user.id ]).uniq
       end
 
       def render_invalid_user_ids

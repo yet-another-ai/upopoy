@@ -36,7 +36,7 @@ ENV BUNDLE_DEPLOYMENT="1" \
     RACK_ENV="production" \
     RAILS_ENV="production" \
     RAILS_LOG_TO_STDOUT="1" \
-    RAILS_SERVE_STATIC_FILES="true"
+    UPOPOY_CONTAINER="true"
 
 FROM base AS backend-build
 
@@ -57,14 +57,21 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 FROM base
 
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y nginx && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash
-USER 1000:1000
 
 COPY --chown=rails:rails --from=backend-build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=rails:rails --from=backend-build /rails /rails
+COPY --chown=rails:rails falcon.rb /rails/falcon.rb
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+
+USER 1000:1000
 
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 EXPOSE 3000
-CMD ["bundle", "exec", "falcon", "serve", "--bind", "http://0.0.0.0:3000", "--config", "config.ru", "--threaded", "--count", "1"]
+CMD ["bundle", "exec", "falcon", "host", "/rails/falcon.rb"]

@@ -47,6 +47,17 @@ describe('useGlobalSearch', () => {
     expect(search.searched.value).toBe(true)
   })
 
+  it('passes through the resource type filter', async () => {
+    vi.mocked(api.search).mockResolvedValue({ results: [] })
+    const search = useGlobalSearch({ debounceMs: 300, type: 'user' })
+
+    search.query.value = 'ada'
+    await vi.advanceTimersByTimeAsync(300)
+    await flushPromises()
+
+    expect(api.search).toHaveBeenCalledWith({ q: 'ada', limit: 8, type: 'user' })
+  })
+
   it('does not request blank queries', async () => {
     const search = useGlobalSearch({ debounceMs: 300 })
 

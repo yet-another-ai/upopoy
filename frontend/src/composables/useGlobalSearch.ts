@@ -1,10 +1,11 @@
 import { watchDebounced } from '@vueuse/core'
 import { readonly, shallowRef, watch } from 'vue'
-import { api, type SearchResult } from '@/services/api'
+import { api, type SearchResult, type SearchResultType } from '@/services/api'
 
 interface UseGlobalSearchOptions {
   limit?: number
   debounceMs?: number
+  type?: SearchResultType
 }
 
 export function useGlobalSearch(options: UseGlobalSearchOptions = {}) {
@@ -17,18 +18,15 @@ export function useGlobalSearch(options: UseGlobalSearchOptions = {}) {
   const error = shallowRef<string | null>(null)
   let requestId = 0
 
-  watch(
-    query,
-    (value) => {
-      if (value.trim()) return
+  watch(query, (value) => {
+    if (value.trim()) return
 
-      requestId += 1
-      loading.value = false
-      searched.value = false
-      error.value = null
-      results.value = []
-    },
-  )
+    requestId += 1
+    loading.value = false
+    searched.value = false
+    error.value = null
+    results.value = []
+  })
 
   watchDebounced(
     query,
@@ -55,7 +53,11 @@ export function useGlobalSearch(options: UseGlobalSearchOptions = {}) {
     error.value = null
 
     try {
-      const response = await api.search({ q: trimmedQuery, limit })
+      const response = await api.search({
+        q: trimmedQuery,
+        limit,
+        ...(options.type ? { type: options.type } : {}),
+      })
       if (currentRequestId !== requestId) return
 
       results.value = response.results

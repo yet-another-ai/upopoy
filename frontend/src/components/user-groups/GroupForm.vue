@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 import { SaveIcon, XIcon } from '@lucide/vue'
+import ResourceSearch from '@/components/search/ResourceSearch.vue'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import type { Group, GroupInput, ManagedUser } from '@/services/api'
+import type { Group, GroupInput, ManagedUser, SearchResult } from '@/services/api'
 
 const props = defineProps<{
   group: Group | null
@@ -34,10 +36,26 @@ const form = reactive({
   parentGroupId: noParentValue,
   userIds: [] as number[],
 })
+const selectedSearchResults = reactive(new Map<number, SearchResult>())
 
 const editing = computed(() => props.group !== null)
 const availableParentGroups = computed(() =>
   props.groups.filter((group) => group.id !== props.group?.id),
+)
+const userLookup = computed(() => new Map(props.users.map((user) => [user.id, user] as const)))
+const selectedMembers = computed(() =>
+  form.userIds.map((userId) => {
+    const user = userLookup.value.get(userId)
+    const result = selectedSearchResults.get(userId)
+    const label = user?.display_name || result?.title || user?.email || `User #${userId}`
+    const detail = user?.display_name ? user.email : result?.snippet
+
+    return {
+      id: userId,
+      label,
+      detail: detail && detail !== label ? detail : null,
+    }
+  }),
 )
 
 watch(
@@ -47,14 +65,22 @@ watch(
     form.description = group?.description ?? ''
     form.parentGroupId = group?.parent_group_id ? String(group.parent_group_id) : noParentValue
     form.userIds = group?.user_ids ? [...group.user_ids] : []
+    selectedSearchResults.clear()
   },
   { immediate: true },
 )
 
-function toggleUser(userId: number) {
-  form.userIds = form.userIds.includes(userId)
-    ? form.userIds.filter((id) => id !== userId)
-    : [...form.userIds, userId]
+function addUser(result: SearchResult) {
+  if (result.type !== 'user') return
+
+  selectedSearchResults.set(result.id, result)
+  if (form.userIds.includes(result.id)) return
+
+  form.userIds = [...form.userIds, result.id]
+}
+
+function removeUser(userId: number) {
+  form.userIds = form.userIds.filter((id) => id !== userId)
 }
 
 function submitGroup() {
@@ -76,6 +102,7 @@ function resetForm() {
   form.description = ''
   form.parentGroupId = noParentValue
   form.userIds = []
+  selectedSearchResults.clear()
 }
 </script>
 
@@ -112,23 +139,39 @@ function resetForm() {
 
     <fieldset class="grid gap-2">
       <legend class="text-sm font-medium">Members</legend>
+      <ResourceSearch
+        type="user"
+        panel-width="input"
+        :show-type-label="false"
+        placeholder="Search users"
+        aria-label="Search users to add as members"
+        @select-result="addUser"
+      />
       <div class="border-border grid max-h-56 gap-1 overflow-auto rounded-lg border p-2">
-        <label
-          v-for="user in props.users"
-          :key="user.id"
-          class="hover:bg-accent flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
+        <div
+          v-for="member in selectedMembers"
+          :key="member.id"
+          class="hover:bg-accent flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm"
         >
-          <!-- prettier-ignore -->
-          <input
-            type="checkbox"
-            class="accent-primary size-4"
-            :checked="form.userIds.includes(user.id)"
-            @change="toggleUser(user.id)"
+          <div class="min-w-0 flex-1">
+            <span class="block truncate font-medium">{{ member.label }}</span>
+            <span v-if="member.detail" class="text-muted-foreground block truncate text-xs">
+              {{ member.detail }}
+            </span>
+          </div>
+          <Badge variant="secondary" class="shrink-0">Member</Badge>
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="ghost"
+            aria-label="Remove member"
+            @click="removeUser(member.id)"
           >
-          <span class="min-w-0 truncate">{{ user.email }}</span>
-        </label>
-        <p v-if="props.users.length === 0" class="text-muted-foreground px-2 py-1 text-sm">
-          No users found.
+            <XIcon class="size-3.5" />
+          </Button>
+        </div>
+        <p v-if="selectedMembers.length === 0" class="text-muted-foreground px-2 py-1 text-sm">
+          No members selected.
         </p>
       </div>
     </fieldset>

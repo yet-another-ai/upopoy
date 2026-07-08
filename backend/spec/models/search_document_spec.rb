@@ -39,7 +39,11 @@ RSpec.describe SearchDocument, type: :model do
       document = described_class.find_by!(resource_slug: "task:#{task.id}")
       expect(document.user_id).to be_nil
       expect(document.group_id).to eq(project.group_id)
-      expect(document.metadata).to eq("project_id" => project.id, "group_id" => project.group_id)
+      expect(document.metadata).to eq(
+        "project_id" => project.id,
+        "group_id" => project.group_id,
+        "iteration_id" => task.iteration_id
+      )
       expect(document.api_path).to eq("/api/v1/tasks/#{task.id}")
     end
 

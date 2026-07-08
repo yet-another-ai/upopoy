@@ -3,13 +3,15 @@ module Api
     module Users
       class RegistrationsController < Devise::RegistrationsController
         include LocalizesRequest
-        include UserPayloads
 
         respond_to :json
 
         def create
           unless ApplicationSetting.current.registration_enabled?
-            render json: { error: I18n.t("api.errors.registration_disabled") }, status: :forbidden
+            render "api/v1/errors/show",
+              formats: :json,
+              locals: { error: I18n.t("api.errors.registration_disabled") },
+              status: :forbidden
             return
           end
 
@@ -17,9 +19,12 @@ module Api
 
           if resource.save
             sign_in(resource_name, resource, store: false)
-            render json: { user: user_payload(resource) }, status: :created
+            render :create, status: :created
           else
-            render json: { errors: resource.errors.to_hash(true) }, status: :unprocessable_entity
+            render "api/v1/errors/show",
+              formats: :json,
+              locals: { errors: resource.errors.to_hash(true) },
+              status: :unprocessable_entity
           end
         end
 

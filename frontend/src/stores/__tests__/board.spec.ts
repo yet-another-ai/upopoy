@@ -1,6 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useBoard } from '../useBoard'
+import { useBoardStore } from '../board'
 import { api, type Board, type Task } from '@/services/api'
 
 vi.mock('@/services/api', () => ({
@@ -88,7 +88,7 @@ const board: Board = {
   ],
 }
 
-describe('useBoard', () => {
+describe('useBoardStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -96,24 +96,45 @@ describe('useBoard', () => {
 
   it('loads a board and derives the task count', async () => {
     vi.mocked(api.getBoard).mockResolvedValue(board)
-    const state = useBoard()
+    const store = useBoardStore()
 
-    await state.loadBoard(1)
+    await store.loadBoard(1)
 
-    expect(state.project.value?.name).toBe('MVP')
-    expect(state.statuses.value).toHaveLength(2)
-    expect(state.taskCount.value).toBe(1)
+    expect(store.project?.name).toBe('MVP')
+    expect(store.statuses).toHaveLength(2)
+    expect(store.taskCount).toBe(1)
   })
 
   it('moves an updated task into its target status locally', async () => {
     vi.mocked(api.getBoard).mockResolvedValue(board)
     vi.mocked(api.updateTask).mockResolvedValue({ ...task, status: 'done', position: 0 })
-    const state = useBoard()
+    const store = useBoardStore()
 
-    await state.loadBoard(1)
-    await state.updateTask(1, { status: 'done', position: 0 })
+    await store.loadBoard(1)
+    await store.updateTask(1, { status: 'done', position: 0 })
 
-    expect(state.statuses.value[0].tasks).toEqual([])
-    expect(state.statuses.value[1].tasks.map((item) => item.id)).toEqual([1])
+    expect(store.statuses[0].tasks).toEqual([])
+    expect(store.statuses[1].tasks.map((item) => item.id)).toEqual([1])
+  })
+
+  it('removes deleted tasks from every status', async () => {
+    vi.mocked(api.getBoard).mockResolvedValue(board)
+    vi.mocked(api.deleteTask).mockResolvedValue(undefined)
+    const store = useBoardStore()
+
+    await store.loadBoard(1)
+    await store.deleteTask(1)
+
+    expect(store.statuses.flatMap((status) => status.tasks)).toEqual([])
+  })
+
+  it('captures load errors and clears loading state', async () => {
+    vi.mocked(api.getBoard).mockRejectedValue(new Error('Board unavailable'))
+    const store = useBoardStore()
+
+    await store.loadBoard(1)
+
+    expect(store.error).toBe('Board unavailable')
+    expect(store.loading).toBe(false)
   })
 })

@@ -3,20 +3,18 @@ module Api
     module Admin
       class SettingsController < BaseController
         def show
-          settings = ApplicationSetting.current
-          authorize settings
-
-          render json: settings_payload(settings)
+          @settings = ApplicationSetting.current
+          authorize @settings
         end
 
         def update
-          settings = ApplicationSetting.current
-          authorize settings
+          @settings = ApplicationSetting.current
+          authorize @settings
 
-          if settings.update(settings_params)
-            render json: settings_payload(settings)
+          if @settings.update(settings_params)
+            render :show
           else
-            render_errors(settings)
+            render_errors(@settings)
           end
         end
 
@@ -24,14 +22,6 @@ module Api
 
         def settings_params
           params.require(:settings).permit(:registration_enabled, :email_login_enabled)
-        end
-
-        def settings_payload(settings)
-          {
-            registration_enabled: settings.registration_enabled,
-            email_login_enabled: settings.email_login_enabled,
-            updated_at: settings.updated_at
-          }
         end
       end
     end

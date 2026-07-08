@@ -1,3 +1,4 @@
+import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, shallowRef } from 'vue'
 import {
   api,
@@ -34,7 +35,7 @@ function syncGroupMembership(users: readonly ManagedUser[], group: Group) {
   })
 }
 
-export function useUserGroups() {
+export const useUserGroupsStore = defineStore('userGroups', () => {
   const users = shallowRef<ManagedUser[]>([])
   const usersMeta = shallowRef<UserPaginationMeta>({ ...defaultUsersMeta })
   const groups = shallowRef<Group[]>([])
@@ -206,4 +207,8 @@ export function useUserGroups() {
     deleteGroup,
     clearDirectory,
   }
+})
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useUserGroupsStore, import.meta.hot))
 }

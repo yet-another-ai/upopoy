@@ -4,8 +4,6 @@ module Api
       class CurrentUserController < BaseController
         def show
           authorize current_user
-
-          render json: { user: user_payload(current_user) }
         end
       end
     end

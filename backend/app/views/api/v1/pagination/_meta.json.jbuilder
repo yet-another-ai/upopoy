@@ -1,0 +1,4 @@
+json.current_page paginated_users.current_page
+json.total_pages paginated_users.total_pages
+json.total_count paginated_users.total_count
+json.per_page paginated_users.limit_value

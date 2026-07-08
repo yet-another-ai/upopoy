@@ -1,0 +1,2 @@
+json.registration_enabled settings.registration_enabled
+json.email_login_enabled settings.email_login_enabled

@@ -21,6 +21,7 @@ import MarkdownPreview from '@/components/markdown/MarkdownPreview.vue'
 import UserMultiSelect from '@/components/search/UserMultiSelect.vue'
 import { formatDeadline } from '@/lib/deadline'
 import { formatPriority, priorityBadgeVariant } from '@/lib/priority'
+import { formatEstimate, userNames } from '@/lib/taskDisplay'
 import { useToastsStore } from '@/stores/toasts'
 import {
   api,
@@ -162,20 +163,6 @@ function cancelTaskForm() {
   void router.push({ name: 'board' })
 }
 
-function formatEstimate(minutes: number | null) {
-  if (minutes == null) return t('tasks.notEstimated')
-  if (minutes < 60) return t('tasks.minutes', { count: minutes })
-
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
-}
-
-function userNames(users: readonly { display_name: string | null; email: string }[]) {
-  if (users.length === 0) return null
-
-  return users.map((user) => user.display_name || user.email).join(', ')
-}
 </script>
 
 <template>
@@ -379,15 +366,15 @@ function userNames(users: readonly { display_name: string | null; email: string 
             </div>
             <div class="flex items-center gap-2">
               <ClockIcon class="text-muted-foreground size-4" />
-              <span>{{ formatEstimate(task?.estimated_minutes ?? null) }}</span>
+              <span>{{ formatEstimate(task?.estimated_minutes ?? null, t) }}</span>
             </div>
             <div class="flex items-start gap-2">
               <UsersRoundIcon class="text-muted-foreground mt-0.5 size-4" />
-              <span>{{ userNames(task?.developers ?? []) ?? 'No developers' }}</span>
+              <span>{{ userNames(task?.developers ?? []) ?? t('tasks.noDevelopers') }}</span>
             </div>
             <div class="flex items-start gap-2">
               <UsersRoundIcon class="text-muted-foreground mt-0.5 size-4" />
-              <span>{{ userNames(task?.reviewers ?? []) ?? 'No reviewers' }}</span>
+              <span>{{ userNames(task?.reviewers ?? []) ?? t('tasks.noReviewers') }}</span>
             </div>
           </CardContent>
         </Card>

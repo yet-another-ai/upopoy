@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { formatDeadline } from '@/lib/deadline'
 import { formatPriority, priorityBadgeVariant } from '@/lib/priority'
+import { userNames } from '@/lib/taskDisplay'
 import type { Task, TaskStatusOption } from '@/services/api'
 
 const props = defineProps<{
@@ -42,11 +43,6 @@ function openTaskDetailsFromKeyboard(event: KeyboardEvent) {
   openTaskDetails()
 }
 
-function userNames(users: readonly { display_name: string | null; email: string }[]) {
-  if (users.length === 0) return null
-
-  return users.map((user) => user.display_name || user.email).join(', ')
-}
 </script>
 
 <template>
@@ -79,10 +75,10 @@ function userNames(users: readonly { display_name: string | null; email: string 
         {{ t('tasks.due', { date: formatDeadline(props.task.deadline) }) }}
       </Badge>
       <Badge v-if="userNames(props.task.developers)" variant="outline">
-        Dev: {{ userNames(props.task.developers) }}
+        {{ t('tasks.developersLabel', { users: userNames(props.task.developers) }) }}
       </Badge>
       <Badge v-if="userNames(props.task.reviewers)" variant="outline">
-        Review: {{ userNames(props.task.reviewers) }}
+        {{ t('tasks.reviewersLabel', { users: userNames(props.task.reviewers) }) }}
       </Badge>
       <DropdownMenu>
         <DropdownMenuTrigger as-child>

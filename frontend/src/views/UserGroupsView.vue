@@ -1,58 +1,104 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import GroupCreateDialog from '@/components/user-groups/GroupCreateDialog.vue'
 import GroupsTab from '@/components/user-groups/GroupsTab.vue'
 import UsersTab from '@/components/user-groups/UsersTab.vue'
+import { positiveIntegerRouteParam } from '@/lib/route'
+import { useToastsStore } from '@/stores/toasts'
+import { useUserGroupsStore } from '@/stores/userGroups'
 import GroupEditorView from '@/views/GroupEditorView.vue'
 import UserProfileView from '@/views/UserProfileView.vue'
-import type {
-  Group,
-  GroupInput,
-  ManagedUser,
-  UserListParams,
-  UserPaginationMeta,
-  UserProfileInput,
-} from '@/services/api'
+import type { GroupInput, UserProfileInput } from '@/services/api'
 
-const props = defineProps<{
-  users: readonly ManagedUser[]
-  usersMeta: UserPaginationMeta
-  groups: readonly Group[]
-  loading: boolean
-  loadingUsers: boolean
-  loadingGroups: boolean
-  saving: boolean
-  section: 'users' | 'groups'
-  userId: number | null
-  editingUser: boolean
-  groupId: number | null
-  creatingGroup: boolean
-}>()
+const route = useRoute()
+const router = useRouter()
+const userGroupsStore = useUserGroupsStore()
+const toasts = useToastsStore()
+const userGroups = storeToRefs(userGroupsStore)
+const { t } = useI18n()
 
-const emit = defineEmits<{
-  loadUsers: [params: UserListParams]
-  loadUser: [userId: number]
-  loadGroups: []
-  editUser: [userId: number]
-  createGroup: []
-  selectGroup: [groupId: number]
-  closeGroupEditor: []
-  saveUserProfile: [userId: number, input: UserProfileInput]
-  cancelUserEdit: []
-  saveGroup: [groupId: number | null, input: GroupInput]
-  deleteGroup: [groupId: number]
-}>()
+const section = computed<'users' | 'groups'>(() =>
+  route.name === 'groups' || route.name === 'group-new' || route.name === 'group-detail'
+    ? 'groups'
+    : 'users',
+)
+const activeTab = computed(() => section.value)
+const userId = computed(() => positiveIntegerRouteParam(route, 'userId'))
+const groupId = computed(() => positiveIntegerRouteParam(route, 'groupId'))
+const editingUser = computed(() => route.name === 'user-edit')
+const creatingGroup = computed(() => route.name === 'group-new')
 
-const activeTab = computed(() => props.section)
+onMounted(() => {
+  void userGroupsStore.loadDirectory()
+})
 
-function saveUserProfile(userId: number, input: UserProfileInput) {
-  emit('saveUserProfile', userId, input)
+watch(
+  () => route.name,
+  () => {
+    if (userGroups.groups.value.length === 0 && userGroups.users.value.length === 0) {
+      void userGroupsStore.loadDirectory()
+    }
+  },
+)
+
+async function saveUserProfile(userId: number, input: UserProfileInput) {
+  try {
+    await userGroupsStore.updateUserProfile(userId, input)
+  } catch (err) {
+    notifyError(err, 'Unable to update user profile')
+    return
+  }
+
+  await router.push({ name: 'user-profile', params: { userId } })
 }
 
-function saveGroup(groupId: number | null, input: GroupInput) {
-  emit('saveGroup', groupId, input)
+async function saveGroup(groupId: number | null, input: GroupInput) {
+  try {
+    if (groupId) await userGroupsStore.updateGroup(groupId, input)
+    else await userGroupsStore.createGroup(input)
+  } catch (err) {
+    notifyError(err, groupId ? 'Unable to update group' : 'Unable to create group')
+    return
+  }
+
+  await router.push({ name: 'groups' })
+}
+
+async function deleteGroup(groupId: number) {
+  try {
+    await userGroupsStore.deleteGroup(groupId)
+  } catch (err) {
+    notifyError(err, 'Unable to delete group')
+  }
+}
+
+function editUser(userId: number) {
+  void router.push({ name: 'user-profile', params: { userId } })
+}
+
+function cancelUserEdit() {
+  if (userId.value) void router.push({ name: 'user-profile', params: { userId: userId.value } })
+  else void router.push({ name: 'users' })
+}
+
+function selectGroup(groupId: number) {
+  void router.push({ name: 'group-detail', params: { groupId } })
+}
+
+function createGroup() {
+  void router.push({ name: 'group-new' })
+}
+
+function closeGroupEditor() {
+  void router.push({ name: 'groups' })
+}
+
+function notifyError(err: unknown, fallback: string) {
+  toasts.error(fallback, err instanceof Error ? err.message : fallback)
 }
 </script>
 
@@ -60,78 +106,78 @@ function saveGroup(groupId: number | null, input: GroupInput) {
   <TabsRoot :model-value="activeTab" class="grid gap-5">
     <TabsList
       class="bg-muted text-muted-foreground grid w-full max-w-sm grid-cols-2 rounded-lg p-1"
-      aria-label="Users and groups sections"
+      :aria-label="t('users.sectionsLabel')"
     >
       <TabsTrigger
         value="users"
         as-child
         class="data-[state=active]:bg-background data-[state=active]:text-foreground focus-visible:ring-ring rounded-md px-3 py-1.5 text-sm font-medium transition outline-none focus-visible:ring-2 data-[state=active]:shadow-xs"
       >
-        <RouterLink :to="{ name: 'users' }">Users</RouterLink>
+        <RouterLink :to="{ name: 'users' }">{{ t('users.users') }}</RouterLink>
       </TabsTrigger>
       <TabsTrigger
         value="groups"
         as-child
         class="data-[state=active]:bg-background data-[state=active]:text-foreground focus-visible:ring-ring rounded-md px-3 py-1.5 text-sm font-medium transition outline-none focus-visible:ring-2 data-[state=active]:shadow-xs"
       >
-        <RouterLink :to="{ name: 'groups' }">Groups</RouterLink>
+        <RouterLink :to="{ name: 'groups' }">{{ t('users.groups') }}</RouterLink>
       </TabsTrigger>
     </TabsList>
 
     <TabsContent value="users" class="outline-none">
       <UserProfileView
-        v-if="props.userId"
-        :user-id="props.userId"
-        :users="props.users"
-        :groups="props.groups"
-        :loading="props.loadingUsers"
-        :saving="props.saving"
-        :editing="props.editingUser"
-        @load-user="emit('loadUser', $event)"
-        @load-groups="emit('loadGroups')"
+        v-if="userId"
+        :user-id="userId"
+        :users="userGroups.users.value"
+        :groups="userGroups.groups.value"
+        :loading="userGroups.loadingUsers.value"
+        :saving="userGroups.saving.value"
+        :editing="editingUser"
+        @load-user="userGroupsStore.loadUser"
+        @load-groups="userGroupsStore.loadGroups"
         @save-user-profile="saveUserProfile"
-        @cancel-edit="emit('cancelUserEdit')"
+        @cancel-edit="cancelUserEdit"
       />
 
       <UsersTab
         v-else
-        :users="props.users"
-        :groups="props.groups"
-        :meta="props.usersMeta"
-        :loading="props.loadingUsers"
-        @load-users="emit('loadUsers', $event)"
-        @edit-user="emit('editUser', $event)"
+        :users="userGroups.users.value"
+        :groups="userGroups.groups.value"
+        :meta="userGroups.usersMeta.value"
+        :loading="userGroups.loadingUsers.value"
+        @load-users="userGroupsStore.loadUsers"
+        @edit-user="editUser"
       />
     </TabsContent>
 
     <TabsContent value="groups" class="outline-none">
       <GroupEditorView
-        v-if="props.groupId"
-        :group-id="props.groupId"
-        :users="props.users"
-        :groups="props.groups"
-        :loading="props.loadingGroups || props.loading"
-        :saving="props.saving"
-        @load-groups="emit('loadGroups')"
+        v-if="groupId"
+        :group-id="groupId"
+        :users="userGroups.users.value"
+        :groups="userGroups.groups.value"
+        :loading="userGroups.loadingGroups.value || userGroups.loading.value"
+        :saving="userGroups.saving.value"
+        @load-groups="userGroupsStore.loadGroups"
         @save-group="saveGroup"
-        @close-group-editor="emit('closeGroupEditor')"
+        @close-group-editor="closeGroupEditor"
       />
 
       <template v-else>
         <GroupsTab
-          :groups="props.groups"
-          :loading="props.loadingGroups || props.loading"
-          @create-group="emit('createGroup')"
-          @select-group="emit('selectGroup', $event)"
-          @delete-group="emit('deleteGroup', $event)"
+          :groups="userGroups.groups.value"
+          :loading="userGroups.loadingGroups.value || userGroups.loading.value"
+          @create-group="createGroup"
+          @select-group="selectGroup"
+          @delete-group="deleteGroup"
         />
 
         <GroupCreateDialog
-          :open="props.creatingGroup"
-          :users="props.users"
-          :groups="props.groups"
-          :saving="props.saving"
-          @close="emit('closeGroupEditor')"
+          :open="creatingGroup"
+          :users="userGroups.users.value"
+          :groups="userGroups.groups.value"
+          :saving="userGroups.saving.value"
+          @close="closeGroupEditor"
           @save-group="saveGroup"
         />
       </template>

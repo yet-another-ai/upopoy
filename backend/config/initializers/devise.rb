@@ -273,10 +273,16 @@ Devise.setup do |config|
 
   config.warden do |manager|
     manager.failure_app = lambda do |_env|
+      body = ApplicationController.render(
+        template: "api/v1/errors/show",
+        formats: :json,
+        locals: { error: "You need to sign in or sign up before continuing." }
+      )
+
       [
         401,
         { "Content-Type" => "application/json" },
-        [ { error: "You need to sign in or sign up before continuing." }.to_json ]
+        [ body ]
       ]
     end
   end

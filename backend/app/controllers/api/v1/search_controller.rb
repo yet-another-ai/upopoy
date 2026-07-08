@@ -7,11 +7,7 @@ module Api
 
       def index
         search_documents = policy_scope(SearchDocument)
-        documents = search_query.blank? ? search_documents.none : scoped_search_documents(search_documents)
-
-        render json: {
-          results: documents.map { |document| search_result_payload(document) }
-        }
+        @documents = search_query.blank? ? search_documents.none : scoped_search_documents(search_documents)
       end
 
       private
@@ -40,19 +36,6 @@ module Api
 
       def limit_param
         params.fetch(:limit, DEFAULT_LIMIT).to_i.clamp(1, MAX_LIMIT)
-      end
-
-      def search_result_payload(document)
-        {
-          slug: document.resource_slug,
-          type: document.resource_type,
-          id: document.searchable_id,
-          title: document.title,
-          snippet: document.content.to_s.truncate(160),
-          api_path: document.api_path,
-          metadata: document.metadata,
-          updated_at: document.resource_updated_at
-        }
       end
     end
   end

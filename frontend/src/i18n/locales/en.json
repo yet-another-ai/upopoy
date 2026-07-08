@@ -11,6 +11,11 @@
     "unableToLoadTask": "Unable to load task",
     "unableToSaveTask": "Unable to save task"
   },
+  "auth": {
+    "finishingSignIn": "Finishing sign in...",
+    "missingToken": "Authentication did not return a token.",
+    "workspaceAccess": "Workspace access"
+  },
   "layout": {
     "editProfile": "Edit Profile",
     "openApps": "Open Apps",
@@ -37,6 +42,11 @@
     "kanbanDescription": "Projects, tasks, and fixed workflow.",
     "usersAndGroupsDescription": "Manage groups and memberships.",
     "adminSettingsDescription": "Configure authentication access."
+  },
+  "users": {
+    "sectionsLabel": "Users and groups sections",
+    "users": "Users",
+    "groups": "Groups"
   },
   "tasks": {
     "board": "Board",
@@ -80,6 +90,10 @@
     "notEstimated": "Not estimated",
     "minutes": "{count} minutes",
     "minutesPlaceholder": "Minutes",
+    "developersLabel": "Dev: {users}",
+    "reviewersLabel": "Review: {users}",
+    "noDevelopers": "No developers",
+    "noReviewers": "No reviewers",
     "saveTask": "Save task",
     "planning": "Planning",
     "priorities": {

@@ -6,15 +6,11 @@ module Api
 
       def index
         authorize Iteration
-        iterations = policy_scope(@project.iterations).ordered
-
-        render json: iterations.map { |iteration| iteration_payload(iteration) }
+        @iterations = policy_scope(@project.iterations).ordered
       end
 
       def show
         authorize @iteration
-
-        render json: iteration_payload(@iteration)
       end
 
       def create
@@ -22,7 +18,8 @@ module Api
         authorize iteration
 
         if iteration.save
-          render json: iteration_payload(iteration), status: :created
+          @iteration = iteration
+          render :show, status: :created
         else
           render_errors(iteration)
         end
@@ -32,7 +29,7 @@ module Api
         authorize @iteration
 
         if @iteration.update(iteration_params)
-          render json: iteration_payload(@iteration)
+          render :show
         else
           render_errors(@iteration)
         end

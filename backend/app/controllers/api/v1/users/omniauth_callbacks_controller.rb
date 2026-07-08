@@ -3,7 +3,6 @@ module Api
     module Users
       class OmniauthCallbacksController < Devise::OmniauthCallbacksController
         include LocalizesRequest
-        include UserPayloads
 
         Rails.application.config.x.auth_provider_names.each do |provider|
           define_method(provider) { authenticate_provider }

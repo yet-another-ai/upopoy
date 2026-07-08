@@ -11,6 +11,11 @@
     "unableToLoadTask": "无法加载任务",
     "unableToSaveTask": "无法保存任务"
   },
+  "auth": {
+    "finishingSignIn": "正在完成登录...",
+    "missingToken": "认证没有返回令牌。",
+    "workspaceAccess": "工作区访问"
+  },
   "layout": {
     "editProfile": "编辑资料",
     "openApps": "打开应用",
@@ -37,6 +42,11 @@
     "kanbanDescription": "管理项目、任务和固定工作流。",
     "usersAndGroupsDescription": "管理用户组和成员关系。",
     "adminSettingsDescription": "配置认证访问方式。"
+  },
+  "users": {
+    "sectionsLabel": "用户与用户组分区",
+    "users": "用户",
+    "groups": "用户组"
   },
   "tasks": {
     "board": "看板",
@@ -80,6 +90,10 @@
     "notEstimated": "未预估",
     "minutes": "{count} 分钟",
     "minutesPlaceholder": "分钟",
+    "developersLabel": "开发：{users}",
+    "reviewersLabel": "评审：{users}",
+    "noDevelopers": "无开发者",
+    "noReviewers": "无评审者",
     "saveTask": "保存任务",
     "planning": "计划",
     "priorities": {

@@ -4,29 +4,23 @@ module Api
       before_action :set_user, only: [ :show, :update ]
 
       def index
-        users = policy_scope(User)
+        @users = policy_scope(User)
           .includes(:groups)
           .order(:email)
           .page(page_param)
           .per(per_page_param)
-
-        render json: {
-          users: users.map { |user| managed_user_payload(user) },
-          meta: pagination_payload(users)
-        }
       end
 
       def show
         authorize @user
-
-        render json: managed_user_payload(@user)
       end
 
       def update
         authorize @user
 
         if @user.update(user_params)
-          render json: managed_user_payload(@user.reload)
+          @user.reload
+          render :show
         else
           render_errors(@user)
         end

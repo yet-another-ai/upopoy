@@ -6,11 +6,9 @@ module Api
 
       def index
         authorize Task
-        tasks = policy_scope(@project.tasks)
+        @tasks = policy_scope(@project.tasks)
           .includes(:developers, :iteration, :reviewers)
           .in_status_order
-
-        render json: tasks.map { |task| task_payload(task) }
       end
 
       def create
@@ -27,15 +25,14 @@ module Api
           task.developer_ids = developer_ids if developer_ids
           task.reviewer_ids = reviewer_ids if reviewer_ids
         end
-        render json: task_payload(task.reload), status: :created
+        @task = task.reload
+        render :show, status: :created
       rescue ActiveRecord::RecordInvalid
         render_errors(task)
       end
 
       def show
         authorize @task
-
-        render json: task_payload(@task)
       end
 
       def update
@@ -51,7 +48,8 @@ module Api
           @task.developer_ids = developer_ids if developer_ids
           @task.reviewer_ids = reviewer_ids if reviewer_ids
         end
-        render json: task_payload(@task.reload)
+        @task.reload
+        render :show
       rescue ActiveRecord::RecordInvalid
         render_errors(@task)
       end
@@ -110,8 +108,10 @@ module Api
       end
 
       def render_invalid_user_ids(attribute)
-        render json: { errors: { attribute => [ I18n.t("api.errors.include_unknown_users") ] } },
-               status: :unprocessable_entity
+        render "api/v1/errors/show",
+          formats: :json,
+          locals: { errors: { attribute => [ I18n.t("api.errors.include_unknown_users") ] } },
+          status: :unprocessable_entity
       end
     end
   end

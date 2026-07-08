@@ -4,15 +4,11 @@ module Api
       before_action :set_group, only: [ :show, :update, :destroy ]
 
       def index
-        groups = policy_scope(Group).includes(:parent_group, :users).order(:name)
-
-        render json: groups.map { |group| group_payload(group) }
+        @groups = policy_scope(Group).includes(:parent_group, :users).order(:name)
       end
 
       def show
         authorize @group
-
-        render json: group_payload(@group)
       end
 
       def create
@@ -52,7 +48,8 @@ module Api
           group.user_ids = user_ids if user_ids
         end
 
-        render json: group_payload(group.reload), status:
+        @group = group.reload
+        render :show, status:
       rescue ActiveRecord::RecordInvalid
         render_errors(group)
       end
@@ -89,8 +86,10 @@ module Api
       end
 
       def render_invalid_user_ids
-        render json: { errors: { user_ids: [ I18n.t("api.errors.include_unknown_users") ] } },
-               status: :unprocessable_entity
+        render "api/v1/errors/show",
+          formats: :json,
+          locals: { errors: { user_ids: [ I18n.t("api.errors.include_unknown_users") ] } },
+          status: :unprocessable_entity
       end
     end
   end

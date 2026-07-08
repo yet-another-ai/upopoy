@@ -1,74 +1,136 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import AdminSettingsView from '@/views/AdminSettingsView.vue'
+import AuthCallbackView from '@/views/AuthCallbackView.vue'
+import AuthView from '@/views/AuthView.vue'
+import BoardWorkspaceView from '@/views/BoardWorkspaceView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import ProjectsView from '@/views/ProjectsView.vue'
+import UserGroupsView from '@/views/UserGroupsView.vue'
 
-const routes = [
+export type ContentClassKind = 'default' | 'wide' | 'workspace'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean
+    titleKey?: string
+    contentClassKind?: ContentClassKind
+  }
+}
+
+const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'auth',
-    component: { template: '<span />' },
+    component: AuthView,
+    meta: { requiresAuth: false },
   },
   {
     path: '/auth/callback',
     name: 'auth-callback',
-    component: { template: '<span />' },
+    component: AuthCallbackView,
+    meta: { requiresAuth: false },
   },
   {
     path: '/',
     name: 'home',
-    component: { template: '<span />' },
+    component: DashboardView,
+    meta: { requiresAuth: true, titleKey: 'navigation.apps' },
   },
   {
     path: '/kanban',
     name: 'board',
-    component: { template: '<span />' },
+    component: BoardWorkspaceView,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.kanban',
+      contentClassKind: 'workspace',
+    },
   },
   {
     path: '/projects',
     name: 'projects',
-    component: { template: '<span />' },
+    component: ProjectsView,
+    meta: { requiresAuth: true, titleKey: 'navigation.projectManagement' },
   },
   {
     path: '/admin-settings',
     name: 'admin-settings',
-    component: { template: '<span />' },
+    component: AdminSettingsView,
+    meta: { requiresAuth: true, titleKey: 'navigation.adminSettings' },
   },
   {
     path: '/users',
     name: 'users',
-    component: { template: '<span />' },
+    component: UserGroupsView,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.usersAndGroups',
+      contentClassKind: 'wide',
+    },
   },
   {
     path: '/users/:userId',
     name: 'user-profile',
-    component: { template: '<span />' },
+    component: UserGroupsView,
     props: true,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.usersAndGroups',
+      contentClassKind: 'wide',
+    },
   },
   {
     path: '/users/:userId/edit',
     name: 'user-edit',
-    component: { template: '<span />' },
+    component: UserGroupsView,
     props: true,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.usersAndGroups',
+      contentClassKind: 'wide',
+    },
   },
   {
     path: '/groups',
     name: 'groups',
-    component: { template: '<span />' },
+    component: UserGroupsView,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.usersAndGroups',
+      contentClassKind: 'wide',
+    },
   },
   {
     path: '/groups/new',
     name: 'group-new',
-    component: { template: '<span />' },
+    component: UserGroupsView,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.usersAndGroups',
+      contentClassKind: 'wide',
+    },
   },
   {
     path: '/groups/:groupId',
     name: 'group-detail',
-    component: { template: '<span />' },
+    component: UserGroupsView,
     props: true,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.usersAndGroups',
+      contentClassKind: 'wide',
+    },
   },
   {
     path: '/tasks/:taskId',
     name: 'task-detail',
-    component: { template: '<span />' },
+    component: BoardWorkspaceView,
     props: true,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.kanban',
+      contentClassKind: 'workspace',
+    },
   },
 ]
 

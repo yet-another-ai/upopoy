@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { onMounted, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useProjectsStore } from '@/stores/projects'
+import { useUserGroupsStore } from '@/stores/userGroups'
 
-const emit = defineEmits<{
-  complete: [token: string]
-  failed: [message: string]
-}>()
+const authStore = useAuthStore()
+const projectsStore = useProjectsStore()
+const userGroupsStore = useUserGroupsStore()
+const router = useRouter()
+const { t } = useI18n()
+const message = shallowRef(t('auth.finishingSignIn'))
 
-const message = shallowRef('Finishing sign in...')
-
-onMounted(() => {
+onMounted(async () => {
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
   const token = params.get('token')
   const error = params.get('error')
@@ -16,12 +21,16 @@ onMounted(() => {
   window.history.replaceState({}, document.title, window.location.pathname)
 
   if (token) {
-    emit('complete', token)
+    await authStore.acceptToken(token)
+    await router.push({ name: 'home' })
+    await projectsStore.loadProjects()
+    await userGroupsStore.loadGroups()
     return
   }
 
-  message.value = error ?? 'Authentication did not return a token.'
-  emit('failed', message.value)
+  message.value = error ?? t('auth.missingToken')
+  authStore.failAuthentication(message.value)
+  await router.replace({ name: 'auth' })
 })
 </script>
 

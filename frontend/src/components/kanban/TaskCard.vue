@@ -17,6 +17,7 @@ import {
 import { useKanbanDrag } from '@/composables/useKanbanDrag'
 import { formatDeadline } from '@/lib/deadline'
 import { formatPriority, priorityBadgeVariant } from '@/lib/priority'
+import { formatShortEstimate, userNames } from '@/lib/taskDisplay'
 import type { CSSProperties } from 'vue'
 import type { Task, TaskInput, TaskStatusOption } from '@/services/api'
 
@@ -144,20 +145,6 @@ function openTaskDetailsFromKeyboard(event: KeyboardEvent) {
   openTaskDetails()
 }
 
-function formatEstimate(minutes: number | null) {
-  if (minutes == null) return null
-  if (minutes < 60) return `${minutes}m`
-
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
-}
-
-function userNames(users: readonly { display_name: string | null; email: string }[]) {
-  if (users.length === 0) return null
-
-  return users.map((user) => user.display_name || user.email).join(', ')
-}
 </script>
 
 <template>
@@ -222,14 +209,14 @@ function userNames(users: readonly { display_name: string | null; email: string 
             <Badge v-if="props.task.deadline" variant="outline">
               {{ t('tasks.due', { date: formatDeadline(props.task.deadline) }) }}
             </Badge>
-            <Badge v-if="formatEstimate(props.task.estimated_minutes)" variant="outline">
-              {{ formatEstimate(props.task.estimated_minutes) }}
+            <Badge v-if="formatShortEstimate(props.task.estimated_minutes)" variant="outline">
+              {{ formatShortEstimate(props.task.estimated_minutes) }}
             </Badge>
             <Badge v-if="userNames(props.task.developers)" variant="outline">
-              Dev: {{ userNames(props.task.developers) }}
+              {{ t('tasks.developersLabel', { users: userNames(props.task.developers) }) }}
             </Badge>
             <Badge v-if="userNames(props.task.reviewers)" variant="outline">
-              Review: {{ userNames(props.task.reviewers) }}
+              {{ t('tasks.reviewersLabel', { users: userNames(props.task.reviewers) }) }}
             </Badge>
           </div>
         </CardContent>

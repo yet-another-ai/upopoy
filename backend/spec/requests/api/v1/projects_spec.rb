@@ -185,5 +185,17 @@ RSpec.describe "Api::V1::Projects", type: :request do
       expect(json_response["statuses"].second["tasks"].pluck("title")).to eq([ "Build" ])
       expect(json_response["statuses"].second["tasks"].first["iteration_name"]).to eq("Inbox")
     end
+
+    it "localizes status names from the Accept-Language header" do
+      project = create(:project)
+
+      get "/api/v1/projects/#{project.id}/board",
+          headers: auth_headers_for(project.user).merge("Accept-Language" => "zh-CN")
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["statuses"].map { |status| status["name"] }).to eq(
+        %w[待办 进行中 待评审 完成]
+      )
+    end
   end
 end

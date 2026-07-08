@@ -1,3 +1,6 @@
+import { i18n } from '@/i18n'
+import { preferredLocaleHeader } from '@/i18n/locales'
+
 export interface Project {
   id: number
   group_id: number
@@ -208,9 +211,12 @@ export interface IterationInput {
   deadline: string
 }
 
-const jsonHeaders = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
+function jsonHeaders() {
+  return {
+    Accept: 'application/json',
+    'Accept-Language': preferredLocaleHeader(),
+    'Content-Type': 'application/json',
+  }
 }
 
 const AUTH_TOKEN_STORAGE_KEY = 'upopoy.authToken'
@@ -245,7 +251,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(path, {
     ...options,
     headers: {
-      ...jsonHeaders,
+      ...jsonHeaders(),
       ...(authToken ? { Authorization: authToken } : {}),
       ...options.headers,
     },
@@ -265,7 +271,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 async function requestAuth(path: string, input: AuthInput): Promise<AuthSession> {
   const response = await fetch(path, {
     method: 'POST',
-    headers: jsonHeaders,
+    headers: jsonHeaders(),
     body: JSON.stringify({ user: input }),
   })
   const data = await parseResponseBody(response)
@@ -275,7 +281,8 @@ async function requestAuth(path: string, input: AuthInput): Promise<AuthSession>
   }
 
   const token = response.headers.get('Authorization')
-  if (!token) throw new ApiError('Authentication token missing', response.status)
+  if (!token)
+    throw new ApiError(i18n.global.t('errors.authenticationTokenMissing'), response.status)
 
   return {
     user: (data as AuthResponse).user,
@@ -301,7 +308,7 @@ function errorMessage(data: unknown) {
     if ('message' in data && typeof data.message === 'string') return data.message
   }
 
-  return 'Request failed'
+  return i18n.global.t('errors.requestFailed')
 }
 
 function userListPath(params: UserListParams = {}) {

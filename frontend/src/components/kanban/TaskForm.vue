@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,6 +38,8 @@ const emit = defineEmits<{
   submit: [input: TaskInput]
   cancel: []
 }>()
+
+const { t } = useI18n()
 
 const form = reactive({
   title: '',
@@ -89,20 +92,20 @@ function submitForm() {
 <template>
   <form class="grid gap-4" @submit.prevent="submitForm">
     <div class="grid gap-1.5">
-      <Label for="task-title">Title</Label>
-      <Input id="task-title" v-model="form.title" placeholder="Write acceptance criteria" />
+      <Label for="task-title">{{ t('tasks.title') }}</Label>
+      <Input id="task-title" v-model="form.title" :placeholder="t('tasks.titlePlaceholder')" />
     </div>
 
     <div class="grid gap-1.5">
-      <Label for="task-description">Description</Label>
+      <Label for="task-description">{{ t('tasks.description') }}</Label>
       <Textarea id="task-description" v-model="form.description" rows="4" />
     </div>
 
     <div v-if="props.showStatus" class="grid gap-1.5">
-      <Label>Status</Label>
+      <Label>{{ t('tasks.status') }}</Label>
       <Select v-model="form.status">
-        <SelectTrigger class="w-full" aria-label="Status">
-          <SelectValue placeholder="Select status" />
+        <SelectTrigger class="w-full" :aria-label="t('tasks.status')">
+          <SelectValue :placeholder="t('tasks.selectStatus')" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem v-for="status in props.statuses" :key="status.id" :value="status.id">
@@ -113,24 +116,24 @@ function submitForm() {
     </div>
 
     <div class="grid gap-1.5">
-      <Label>Priority</Label>
+      <Label>{{ t('tasks.priority') }}</Label>
       <Select v-model="form.priority">
-        <SelectTrigger class="w-full" aria-label="Priority">
-          <SelectValue placeholder="Select priority" />
+        <SelectTrigger class="w-full" :aria-label="t('tasks.priority')">
+          <SelectValue :placeholder="t('tasks.selectPriority')" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem v-for="priority in TASK_PRIORITIES" :key="priority.id" :value="priority.id">
-            {{ priority.name }}
+            {{ t(`tasks.priorities.${priority.id}`) }}
           </SelectItem>
         </SelectContent>
       </Select>
     </div>
 
     <div v-if="props.showIteration" class="grid gap-1.5">
-      <Label>Iteration</Label>
+      <Label>{{ t('tasks.iteration') }}</Label>
       <Select v-model="form.iterationId">
-        <SelectTrigger class="w-full" aria-label="Iteration">
-          <SelectValue placeholder="Select iteration" />
+        <SelectTrigger class="w-full" :aria-label="t('tasks.iteration')">
+          <SelectValue :placeholder="t('tasks.selectIteration')" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem
@@ -146,25 +149,27 @@ function submitForm() {
 
     <div v-if="props.showSchedule" class="grid gap-4 md:grid-cols-2">
       <div class="grid gap-1.5">
-        <Label for="task-deadline">Deadline</Label>
+        <Label for="task-deadline">{{ t('tasks.deadline') }}</Label>
         <DeadlinePicker id="task-deadline" v-model="form.deadline" />
       </div>
 
       <div class="grid gap-1.5">
-        <Label for="task-estimate">Estimated time</Label>
+        <Label for="task-estimate">{{ t('tasks.estimatedTime') }}</Label>
         <Input
           id="task-estimate"
           v-model="form.estimatedMinutes"
           type="number"
           min="0"
           step="15"
-          placeholder="Minutes"
+          :placeholder="t('tasks.minutesPlaceholder')"
         />
       </div>
     </div>
 
     <div class="flex justify-end gap-2">
-      <Button type="button" variant="ghost" @click="emit('cancel')"> Cancel </Button>
+      <Button type="button" variant="ghost" @click="emit('cancel')">
+        {{ t('common.cancel') }}
+      </Button>
       <Button type="submit">
         {{ props.submitLabel }}
       </Button>

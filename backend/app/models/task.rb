@@ -37,14 +37,22 @@ class Task < ApplicationRecord
   }
 
   def self.status_options
-    STATUSES.map.with_index do |(id, name), index|
+    STATUSES.keys.map.with_index do |id, index|
       {
         id: id,
-        name: name,
+        name: status_name(id),
         slug: id,
         position: index
       }
     end
+  end
+
+  def self.status_name(status)
+    I18n.t("tasks.statuses.#{status}", default: STATUSES.fetch(status, status.to_s.humanize))
+  end
+
+  def self.priority_name(priority)
+    I18n.t("tasks.priorities.#{priority}", default: PRIORITIES.fetch(priority, priority.to_s.humanize))
   end
 
   def self.status_order_sql
@@ -60,8 +68,8 @@ class Task < ApplicationRecord
     [
       description,
       iteration&.name,
-      STATUSES[status],
-      PRIORITIES[priority]
+      self.class.status_name(status),
+      self.class.priority_name(priority)
     ].compact.join("\n")
   end
 

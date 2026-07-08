@@ -2,6 +2,7 @@
 import { PlusIcon } from '@lucide/vue'
 import { useElementHover } from '@vueuse/core'
 import { computed, shallowRef, useTemplateRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,6 +35,7 @@ const creatingTask = shallowRef(false)
 const dropZoneRef = useTemplateRef<HTMLElement>('dropZoneRef')
 const kanbanDrag = useKanbanDrag()
 const isHovered = useElementHover(dropZoneRef)
+const { t } = useI18n()
 
 const isDragTarget = computed(() => {
   const taskId = kanbanDrag.draggingTaskId.value
@@ -92,7 +94,12 @@ function forwardTaskUpdate(taskId: number, input: Partial<TaskInput>) {
         </div>
       </div>
       <div class="flex shrink-0 gap-1">
-        <Button size="icon-sm" variant="ghost" aria-label="New task" @click="creatingTask = true">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          :aria-label="t('tasks.newTask')"
+          @click="creatingTask = true"
+        >
           <PlusIcon />
         </Button>
       </div>
@@ -109,13 +116,13 @@ function forwardTaskUpdate(taskId: number, input: Partial<TaskInput>) {
       <Card v-if="props.status.tasks.length === 0" class="border-dashed bg-transparent shadow-none">
         <CardHeader class="p-4">
           <CardTitle class="text-muted-foreground text-sm font-normal">
-            No tasks here yet.
+            {{ t('tasks.noTasksHere') }}
           </CardTitle>
         </CardHeader>
         <CardContent class="p-4 pt-0">
           <Button size="sm" variant="outline" @click="creatingTask = true">
             <PlusIcon />
-            Add task
+            {{ t('tasks.addTask') }}
           </Button>
         </CardContent>
       </Card>
@@ -125,15 +132,17 @@ function forwardTaskUpdate(taskId: number, input: Partial<TaskInput>) {
   <Dialog v-model:open="creatingTask">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>New task</DialogTitle>
-        <DialogDescription> Add a task to {{ props.status.name }}. </DialogDescription>
+        <DialogTitle>{{ t('tasks.newTask') }}</DialogTitle>
+        <DialogDescription>
+          {{ t('tasks.addTaskToStatus', { status: props.status.name }) }}
+        </DialogDescription>
       </DialogHeader>
       <TaskForm
         :statuses="props.statuses"
         :iterations="props.iterations"
         :default-iteration-id="props.inboxIteration?.id"
         :default-status="props.status.id"
-        submit-label="Create task"
+        :submit-label="t('tasks.createTask')"
         show-iteration
         @submit="submitTask"
         @cancel="creatingTask = false"

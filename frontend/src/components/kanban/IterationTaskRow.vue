@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MoreHorizontalIcon } from '@lucide/vue'
 import { computed, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const deleteDialogOpen = shallowRef(false)
+const { t } = useI18n()
 
 const statusName = computed(
   () => props.statuses.find((status) => status.id === props.task.status)?.name ?? props.task.status,
@@ -46,7 +48,7 @@ function openTaskDetailsFromKeyboard(event: KeyboardEvent) {
     class="hover:bg-accent focus-visible:ring-primary grid cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition outline-none focus-visible:ring-2 md:grid-cols-[minmax(0,1fr)_auto]"
     role="link"
     tabindex="0"
-    :aria-label="`Open task ${props.task.title}`"
+    :aria-label="t('tasks.openTask', { title: props.task.title })"
     data-testid="iteration-task-row"
     @click="openTaskDetails"
     @keydown.enter="openTaskDetailsFromKeyboard"
@@ -68,14 +70,14 @@ function openTaskDetailsFromKeyboard(event: KeyboardEvent) {
         {{ formatPriority(props.task.priority) }}
       </Badge>
       <Badge v-if="props.task.deadline" variant="outline">
-        Due {{ formatDeadline(props.task.deadline) }}
+        {{ t('tasks.due', { date: formatDeadline(props.task.deadline) }) }}
       </Badge>
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label="Task actions"
+            :aria-label="t('tasks.taskActions')"
             @click.stop
             @keydown.stop
           >
@@ -83,16 +85,16 @@ function openTaskDetailsFromKeyboard(event: KeyboardEvent) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem @click="openTaskDetails">Edit</DropdownMenuItem>
+          <DropdownMenuItem @click="openTaskDetails">{{ t('tasks.edit') }}</DropdownMenuItem>
           <DropdownMenuItem class="text-destructive" @select="deleteDialogOpen = true">
-            Delete
+            {{ t('tasks.delete') }}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ConfirmDeleteDialog
         v-model:open="deleteDialogOpen"
-        title="Delete task?"
-        :description="`This will permanently delete '${props.task.title}'.`"
+        :title="t('tasks.deleteTaskTitle')"
+        :description="t('tasks.deleteTaskDescription', { title: props.task.title })"
         @confirm="emit('deleteTask', props.task.id)"
       />
     </div>

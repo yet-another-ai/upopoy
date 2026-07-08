@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { LogOutIcon, UserCircleIcon } from '@lucide/vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import type { User } from '@/services/api'
@@ -18,6 +19,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   signOut: []
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -27,7 +30,7 @@ const emit = defineEmits<{
         <RouterLink
           :to="{ name: 'home' }"
           class="focus-visible:ring-ring rounded-md text-base font-semibold outline-none focus-visible:ring-2"
-          aria-label="Open Apps"
+          :aria-label="t('layout.openApps')"
         >
           Upopoy
         </RouterLink>
@@ -42,7 +45,12 @@ const emit = defineEmits<{
           <slot name="header-actions" />
 
           <div class="group relative shrink-0">
-            <Button size="icon" variant="ghost" aria-label="User menu" aria-haspopup="menu">
+            <Button
+              size="icon"
+              variant="ghost"
+              :aria-label="t('layout.userMenu')"
+              aria-haspopup="menu"
+            >
               <UserCircleIcon />
             </Button>
 
@@ -61,7 +69,7 @@ const emit = defineEmits<{
                 @click="emit('signOut')"
               >
                 <LogOutIcon class="size-4" />
-                Sign out
+                {{ t('common.signOut') }}
               </button>
             </div>
           </div>
@@ -77,8 +85,10 @@ const emit = defineEmits<{
       <div
         class="text-muted-foreground mx-auto flex w-full max-w-7xl flex-col gap-1 px-5 py-4 text-xs sm:flex-row sm:items-center sm:justify-between"
       >
-        <span>upopoy workspace</span>
-        <span class="truncate">Signed in as {{ props.currentUser.email }}</span>
+        <span>{{ t('layout.workspace') }}</span>
+        <span class="truncate">{{
+          t('layout.signedInAs', { email: props.currentUser.email })
+        }}</span>
       </div>
     </footer>
   </main>

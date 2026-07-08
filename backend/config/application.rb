@@ -26,6 +26,9 @@ module Backend
 
     # Keep app controllers API-oriented while enabling mounted HTML engines like PgHero.
     config.api_only = false
+    config.i18n.available_locales = [ :en, :"zh-CN" ]
+    config.i18n.default_locale = :en
+    config.i18n.fallbacks = [ :en ]
     config.session_store :cookie_store, key: "_upopoy_session"
     config.assets.prefix = "/rails-assets"
   end

@@ -2,6 +2,7 @@ module Api
   module V1
     module Users
       class SessionsController < Devise::SessionsController
+        include LocalizesRequest
         include UserPayloads
 
         respond_to :json
@@ -9,14 +10,15 @@ module Api
 
         def create
           unless ApplicationSetting.current.email_login_enabled?
-            render json: { error: "Email login is disabled" }, status: :forbidden
+            render json: { error: I18n.t("api.errors.email_login_disabled") }, status: :forbidden
             return
           end
 
           self.resource = warden.authenticate(auth_options)
 
           unless resource
-            render json: { error: "Invalid email or password" }, status: :unauthorized
+            render json: { error: I18n.t("api.errors.invalid_email_or_password") },
+                   status: :unauthorized
             return
           end
 
@@ -28,7 +30,7 @@ module Api
         def destroy
           authenticate_user!
 
-          render json: { message: "Signed out" }, status: :ok
+          render json: { message: I18n.t("api.messages.signed_out") }, status: :ok
         end
       end
     end

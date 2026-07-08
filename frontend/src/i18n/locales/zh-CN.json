@@ -1,0 +1,90 @@
+{
+  "common": {
+    "cancel": "取消",
+    "loading": "加载中...",
+    "refresh": "刷新",
+    "signOut": "退出登录"
+  },
+  "errors": {
+    "requestFailed": "请求失败",
+    "authenticationTokenMissing": "缺少认证令牌",
+    "unableToLoadTask": "无法加载任务",
+    "unableToSaveTask": "无法保存任务"
+  },
+  "layout": {
+    "openApps": "打开应用",
+    "userMenu": "用户菜单",
+    "workspace": "upopoy 工作区",
+    "signedInAs": "当前登录：{email}"
+  },
+  "navigation": {
+    "adminSettings": "管理员设置",
+    "apps": "应用",
+    "dashboard": "仪表盘",
+    "kanban": "看板",
+    "projectManagement": "项目管理",
+    "projects": "项目",
+    "usersAndGroups": "用户与用户组"
+  },
+  "dashboard": {
+    "chooseApp": "选择一个应用继续。",
+    "openProjectManagement": "打开项目管理",
+    "openKanban": "打开看板",
+    "openUsersAndGroups": "打开用户与用户组",
+    "openAdminSettings": "打开管理员设置",
+    "projectsDescription": "创建并选择工作区。",
+    "kanbanDescription": "管理项目、任务和固定工作流。",
+    "usersAndGroupsDescription": "管理用户组和成员关系。",
+    "adminSettingsDescription": "配置认证访问方式。"
+  },
+  "tasks": {
+    "board": "看板",
+    "kanbanBoard": "看板",
+    "noProjectSelected": "未选择项目",
+    "createProjectTitle": "先创建一个项目。",
+    "createProjectDescription": "upopoy 从项目、固定看板流程和任务开始。之后 AI 工作流可以接入这些 API。",
+    "statusesCount": "{count} 个状态",
+    "tasksCount": "{count} 个任务",
+    "newTask": "新建任务",
+    "addTask": "添加任务",
+    "addTaskToStatus": "添加任务到{status}。",
+    "createTask": "创建任务",
+    "noTasksHere": "这里还没有任务。",
+    "taskActions": "任务操作",
+    "edit": "编辑",
+    "delete": "删除",
+    "deleteTaskTitle": "删除任务？",
+    "deleteTaskDescription": "这会永久删除「{title}」。",
+    "due": "截止 {date}",
+    "openTask": "打开任务 {title}",
+    "detail": "任务详情",
+    "loadingTask": "正在加载任务",
+    "fields": "任务字段",
+    "title": "标题",
+    "titlePlaceholder": "填写验收标准",
+    "description": "描述",
+    "editDescription": "编辑描述",
+    "status": "状态",
+    "selectStatus": "选择状态",
+    "priority": "优先级",
+    "priorityWithValue": "{priority}优先级",
+    "noPriority": "无优先级",
+    "selectPriority": "选择优先级",
+    "iteration": "迭代",
+    "selectIteration": "选择迭代",
+    "noIteration": "无迭代",
+    "deadline": "截止日期",
+    "noDeadline": "无截止日期",
+    "estimatedTime": "预估时间",
+    "notEstimated": "未预估",
+    "minutes": "{count} 分钟",
+    "minutesPlaceholder": "分钟",
+    "saveTask": "保存任务",
+    "planning": "计划",
+    "priorities": {
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    }
+  }
+}

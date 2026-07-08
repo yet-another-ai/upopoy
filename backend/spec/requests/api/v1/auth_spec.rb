@@ -77,6 +77,23 @@ RSpec.describe "Api::V1::Auth", type: :request do
       expect(response).to have_http_status(:forbidden)
       expect(json_response["error"]).to eq("Registration is disabled")
     end
+
+    it "returns localized errors from the Accept-Language header" do
+      ApplicationSetting.current.update!(registration_enabled: false)
+
+      post "/api/v1/auth/signup",
+           params: {
+             user: {
+               email: "founder@example.com",
+               password: "password123",
+               password_confirmation: "password123"
+             }
+           },
+           headers: { "Accept-Language" => "zh-CN" }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(json_response["error"]).to eq("注册已禁用")
+    end
   end
 
   describe "POST /api/v1/auth/login" do

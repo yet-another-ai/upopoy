@@ -2,6 +2,7 @@
 import { MoreHorizontalIcon } from '@lucide/vue'
 import { useDraggable } from '@vueuse/core'
 import { computed, shallowRef, useTemplateRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import ConfirmDeleteDialog from '@/components/common/ConfirmDeleteDialog.vue'
 import { Badge } from '@/components/ui/badge'
@@ -36,6 +37,7 @@ const deleteDialogOpen = shallowRef(false)
 const cardRef = useTemplateRef<HTMLElement>('cardRef')
 const kanbanDrag = useKanbanDrag()
 const router = useRouter()
+const { t } = useI18n()
 
 const { x, y } = useDraggable(cardRef, {
   capture: false,
@@ -163,7 +165,7 @@ function formatEstimate(minutes: number | null) {
       :data-task-id="props.task.id"
       role="link"
       tabindex="0"
-      :aria-label="`Open task ${props.task.title}`"
+      :aria-label="t('tasks.openTask', { title: props.task.title })"
       @pointerdown="prepareTaskDetailsOpen"
       @pointermove="trackTaskDetailsOpen"
       @pointerup="openTaskDetailsFromPointer"
@@ -177,21 +179,28 @@ function formatEstimate(minutes: number | null) {
           </CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button size="icon-sm" variant="ghost" aria-label="Task actions" data-no-drag>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                :aria-label="t('tasks.taskActions')"
+                data-no-drag
+              >
                 <MoreHorizontalIcon />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem @click="openTaskDetails"> Edit </DropdownMenuItem>
+              <DropdownMenuItem @click="openTaskDetails">
+                {{ t('tasks.edit') }}
+              </DropdownMenuItem>
               <DropdownMenuItem class="text-destructive" @select="deleteDialogOpen = true">
-                Delete
+                {{ t('tasks.delete') }}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <ConfirmDeleteDialog
             v-model:open="deleteDialogOpen"
-            title="Delete task?"
-            :description="`This will permanently delete '${props.task.title}'.`"
+            :title="t('tasks.deleteTaskTitle')"
+            :description="t('tasks.deleteTaskDescription', { title: props.task.title })"
             @confirm="emit('deleteTask', props.task.id)"
           />
         </CardHeader>
@@ -205,7 +214,7 @@ function formatEstimate(minutes: number | null) {
               {{ props.task.iteration_name }}
             </Badge>
             <Badge v-if="props.task.deadline" variant="outline">
-              Due {{ formatDeadline(props.task.deadline) }}
+              {{ t('tasks.due', { date: formatDeadline(props.task.deadline) }) }}
             </Badge>
             <Badge v-if="formatEstimate(props.task.estimated_minutes)" variant="outline">
               {{ formatEstimate(props.task.estimated_minutes) }}

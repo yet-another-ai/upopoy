@@ -1,0 +1,76 @@
+zh-CN:
+  api:
+    errors:
+      email_login_disabled: "邮箱登录已禁用"
+      forbidden: "无权访问"
+      include_unknown_users: "包含未知用户"
+      invalid_email_or_password: "邮箱或密码不正确"
+      registration_disabled: "注册已禁用"
+    messages:
+      signed_out: "已退出登录"
+  activerecord:
+    attributes:
+      group:
+        description: "描述"
+        name: "名称"
+        parent_group: "父用户组"
+        parent_group_id: "父用户组"
+      project:
+        description: "描述"
+        group: "用户组"
+        group_id: "用户组"
+        name: "名称"
+      task:
+        deadline: "截止日期"
+        description: "描述"
+        estimated_minutes: "预估分钟数"
+        iteration: "迭代"
+        priority: "优先级"
+        status: "状态"
+        title: "标题"
+      user:
+        bio: "简介"
+        display_name: "显示名称"
+        email: "邮箱"
+        password: "密码"
+        password_confirmation: "确认密码"
+        title: "职位"
+    errors:
+      messages:
+        blank: "不能为空"
+        confirmation: "与%{attribute}不匹配"
+        greater_than_or_equal_to: "必须大于或等于%{count}"
+        inclusion: "不在可选范围内"
+        invalid: "无效"
+        not_a_number: "不是数字"
+        taken: "已被使用"
+      models:
+        task:
+          attributes:
+            iteration:
+              blank: "不能为空"
+    models:
+      group: "用户组"
+      project: "项目"
+      task: "任务"
+      user: "用户"
+  errors:
+    format: "%{attribute}%{message}"
+    messages:
+      blank: "不能为空"
+      confirmation: "与%{attribute}不匹配"
+      greater_than_or_equal_to: "必须大于或等于%{count}"
+      inclusion: "不在可选范围内"
+      invalid: "无效"
+      not_a_number: "不是数字"
+      taken: "已被使用"
+  tasks:
+    priorities:
+      high: "高"
+      low: "低"
+      medium: "中"
+    statuses:
+      done: "完成"
+      in_progress: "进行中"
+      todo: "待办"
+      under_review: "待评审"

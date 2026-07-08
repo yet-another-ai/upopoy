@@ -28,4 +28,22 @@
 #       enabled: "ON"
 
 en:
-  hello: "Hello world"
+  api:
+    errors:
+      email_login_disabled: "Email login is disabled"
+      forbidden: "Forbidden"
+      include_unknown_users: "include unknown users"
+      invalid_email_or_password: "Invalid email or password"
+      registration_disabled: "Registration is disabled"
+    messages:
+      signed_out: "Signed out"
+  tasks:
+    priorities:
+      high: "High"
+      low: "Low"
+      medium: "Medium"
+    statuses:
+      done: "Done"
+      in_progress: "In Progress"
+      todo: "To Do"
+      under_review: "Under Review"

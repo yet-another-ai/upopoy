@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, shallowRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import IterationsView from '@/components/kanban/IterationsView.vue'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
@@ -34,6 +35,7 @@ const board = useBoard()
 const userGroups = useUserGroups()
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const ready = shallowRef(false)
 const boardView = shallowRef<BoardView>('kanban')
 
@@ -68,12 +70,12 @@ const userGroupsSection = computed<'users' | 'groups'>(() =>
 )
 
 const authenticatedPageTitle = computed(() => {
-  if (route.name === 'admin-settings') return 'Admin Settings'
-  if (route.name === 'projects') return 'Project management'
-  if (userGroupsRoute.value) return 'Users & Groups'
-  if (route.name === 'board' || route.name === 'task-detail') return 'Kanban'
+  if (route.name === 'admin-settings') return t('navigation.adminSettings')
+  if (route.name === 'projects') return t('navigation.projectManagement')
+  if (userGroupsRoute.value) return t('navigation.usersAndGroups')
+  if (route.name === 'board' || route.name === 'task-detail') return t('navigation.kanban')
 
-  return 'Apps'
+  return t('navigation.apps')
 })
 
 const authenticatedContentClass = computed(() => {
@@ -256,7 +258,7 @@ function isUserGroupsRouteName(routeName: unknown) {
 
 <template>
   <main v-if="!ready" class="bg-background text-muted-foreground grid min-h-svh place-items-center">
-    Loading...
+    {{ t('common.loading') }}
   </main>
 
   <AuthCallbackView

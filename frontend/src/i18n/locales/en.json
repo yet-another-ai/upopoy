@@ -1,0 +1,90 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "refresh": "Refresh",
+    "signOut": "Sign out"
+  },
+  "errors": {
+    "requestFailed": "Request failed",
+    "authenticationTokenMissing": "Authentication token missing",
+    "unableToLoadTask": "Unable to load task",
+    "unableToSaveTask": "Unable to save task"
+  },
+  "layout": {
+    "openApps": "Open Apps",
+    "userMenu": "User menu",
+    "workspace": "upopoy workspace",
+    "signedInAs": "Signed in as {email}"
+  },
+  "navigation": {
+    "adminSettings": "Admin Settings",
+    "apps": "Apps",
+    "dashboard": "Dashboard",
+    "kanban": "Kanban",
+    "projectManagement": "Project management",
+    "projects": "Projects",
+    "usersAndGroups": "Users & Groups"
+  },
+  "dashboard": {
+    "chooseApp": "Choose an app to continue.",
+    "openProjectManagement": "Open Project management",
+    "openKanban": "Open Kanban",
+    "openUsersAndGroups": "Open User and Groups",
+    "openAdminSettings": "Open Admin Settings",
+    "projectsDescription": "Create and select workspaces.",
+    "kanbanDescription": "Projects, tasks, and fixed workflow.",
+    "usersAndGroupsDescription": "Manage groups and memberships.",
+    "adminSettingsDescription": "Configure authentication access."
+  },
+  "tasks": {
+    "board": "Board",
+    "kanbanBoard": "Kanban board",
+    "noProjectSelected": "No project selected",
+    "createProjectTitle": "Create a project to begin.",
+    "createProjectDescription": "upopoy starts with projects, fixed Kanban flow, and tasks. AI workflows can plug into these APIs later.",
+    "statusesCount": "{count} statuses",
+    "tasksCount": "{count} tasks",
+    "newTask": "New task",
+    "addTask": "Add task",
+    "addTaskToStatus": "Add a task to {status}.",
+    "createTask": "Create task",
+    "noTasksHere": "No tasks here yet.",
+    "taskActions": "Task actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTaskTitle": "Delete task?",
+    "deleteTaskDescription": "This will permanently delete '{title}'.",
+    "due": "Due {date}",
+    "openTask": "Open task {title}",
+    "detail": "Task detail",
+    "loadingTask": "Loading task",
+    "fields": "Task fields",
+    "title": "Title",
+    "titlePlaceholder": "Write acceptance criteria",
+    "description": "Description",
+    "editDescription": "Edit description",
+    "status": "Status",
+    "selectStatus": "Select status",
+    "priority": "Priority",
+    "priorityWithValue": "{priority} priority",
+    "noPriority": "No priority",
+    "selectPriority": "Select priority",
+    "iteration": "Iteration",
+    "selectIteration": "Select iteration",
+    "noIteration": "No iteration",
+    "deadline": "Deadline",
+    "noDeadline": "No deadline",
+    "estimatedTime": "Estimated time",
+    "notEstimated": "Not estimated",
+    "minutes": "{count} minutes",
+    "minutesPlaceholder": "Minutes",
+    "saveTask": "Save task",
+    "planning": "Planning",
+    "priorities": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    }
+  }
+}

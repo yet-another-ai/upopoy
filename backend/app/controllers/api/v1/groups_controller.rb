@@ -89,7 +89,7 @@ module Api
       end
 
       def render_invalid_user_ids
-        render json: { errors: { user_ids: [ "include unknown users" ] } },
+        render json: { errors: { user_ids: [ I18n.t("api.errors.include_unknown_users") ] } },
                status: :unprocessable_entity
       end
     end

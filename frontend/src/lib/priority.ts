@@ -1,8 +1,11 @@
 import { TASK_PRIORITIES, type TaskPriority } from '@/services/api'
 import type { BadgeVariants } from '@/components/ui/badge'
+import { i18n } from '@/i18n'
 
 export function formatPriority(priority: TaskPriority | null | undefined) {
-  return TASK_PRIORITIES.find((item) => item.id === priority)?.name ?? 'Medium'
+  const priorityId = TASK_PRIORITIES.find((item) => item.id === priority)?.id ?? 'medium'
+
+  return i18n.global.t(`tasks.priorities.${priorityId}`)
 }
 
 export function priorityBadgeVariant(

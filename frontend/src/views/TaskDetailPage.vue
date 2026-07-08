@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeftIcon, CalendarIcon, ClockIcon, FlagIcon } from '@lucide/vue'
 import { computed, nextTick, reactive, shallowRef, useTemplateRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,7 @@ const emit = defineEmits<{
 const task = shallowRef<Task | null>(null)
 const board = shallowRef<Board | null>(null)
 const router = useRouter()
+const { t } = useI18n()
 const loading = shallowRef(false)
 const saving = shallowRef(false)
 const error = shallowRef<string | null>(null)
@@ -83,7 +85,7 @@ async function loadTask(taskId: number) {
     task.value = loadedTask
     board.value = await api.getBoard(loadedTask.project_id)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unable to load task'
+    error.value = err instanceof Error ? err.message : t('errors.unableToLoadTask')
   } finally {
     loading.value = false
   }
@@ -117,7 +119,7 @@ async function saveTask(input: TaskInput) {
     emit('taskUpdated', updatedTask)
     await router.push({ name: 'board' })
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unable to save task'
+    error.value = err instanceof Error ? err.message : t('errors.unableToSaveTask')
   } finally {
     saving.value = false
   }
@@ -151,8 +153,8 @@ function cancelTaskForm() {
 }
 
 function formatEstimate(minutes: number | null) {
-  if (minutes == null) return 'Not estimated'
-  if (minutes < 60) return `${minutes} minutes`
+  if (minutes == null) return t('tasks.notEstimated')
+  if (minutes < 60) return t('tasks.minutes', { count: minutes })
 
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
@@ -167,14 +169,14 @@ function formatEstimate(minutes: number | null) {
         <Button as-child variant="ghost" size="sm" class="mb-2 -ml-2">
           <RouterLink :to="{ name: 'board' }">
             <ArrowLeftIcon />
-            Board
+            {{ t('tasks.board') }}
           </RouterLink>
         </Button>
         <p class="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-          Task detail
+          {{ t('tasks.detail') }}
         </p>
         <h1 class="truncate text-2xl font-semibold">
-          {{ task?.title ?? 'Loading task' }}
+          {{ task?.title ?? t('tasks.loadingTask') }}
         </h1>
       </div>
       <div class="flex shrink-0 flex-wrap justify-end gap-2">
@@ -191,21 +193,21 @@ function formatEstimate(minutes: number | null) {
       <div class="grid content-start gap-5">
         <Card class="rounded-lg shadow-none">
           <CardHeader>
-            <CardTitle class="text-base">Task fields</CardTitle>
+            <CardTitle class="text-base">{{ t('tasks.fields') }}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p v-if="loading" class="text-muted-foreground text-sm">Loading...</p>
+            <p v-if="loading" class="text-muted-foreground text-sm">{{ t('common.loading') }}</p>
             <p v-else-if="error" class="text-destructive text-sm">
               {{ error }}
             </p>
             <form v-else-if="task" class="grid gap-4" @submit.prevent="submitTaskForm">
               <div class="grid gap-1.5">
-                <Label for="task-title">Title</Label>
+                <Label for="task-title">{{ t('tasks.title') }}</Label>
                 <Input id="task-title" v-model="form.title" />
               </div>
 
               <div class="grid gap-1.5">
-                <Label for="task-description">Description</Label>
+                <Label for="task-description">{{ t('tasks.description') }}</Label>
                 <Textarea
                   v-if="editingDescription"
                   id="task-description"
@@ -218,7 +220,7 @@ function formatEstimate(minutes: number | null) {
                   class="hover:border-primary/50 focus-visible:ring-primary min-h-40 cursor-text rounded-lg border p-3 transition outline-none focus-visible:ring-2"
                   role="button"
                   tabindex="0"
-                  aria-label="Edit description"
+                  :aria-label="t('tasks.editDescription')"
                   @click="editDescription"
                   @keydown.enter.prevent="editDescription"
                   @keydown.space.prevent="editDescription"
@@ -229,10 +231,10 @@ function formatEstimate(minutes: number | null) {
 
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="grid gap-1.5">
-                  <Label>Status</Label>
+                  <Label>{{ t('tasks.status') }}</Label>
                   <Select v-model="form.status">
-                    <SelectTrigger class="w-full" aria-label="Status">
-                      <SelectValue placeholder="Select status" />
+                    <SelectTrigger class="w-full" :aria-label="t('tasks.status')">
+                      <SelectValue :placeholder="t('tasks.selectStatus')" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem v-for="status in statuses" :key="status.id" :value="status.id">
@@ -243,10 +245,10 @@ function formatEstimate(minutes: number | null) {
                 </div>
 
                 <div class="grid gap-1.5">
-                  <Label>Priority</Label>
+                  <Label>{{ t('tasks.priority') }}</Label>
                   <Select v-model="form.priority">
-                    <SelectTrigger class="w-full" aria-label="Priority">
-                      <SelectValue placeholder="Select priority" />
+                    <SelectTrigger class="w-full" :aria-label="t('tasks.priority')">
+                      <SelectValue :placeholder="t('tasks.selectPriority')" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem
@@ -254,7 +256,7 @@ function formatEstimate(minutes: number | null) {
                         :key="priority.id"
                         :value="priority.id"
                       >
-                        {{ priority.name }}
+                        {{ t(`tasks.priorities.${priority.id}`) }}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -263,10 +265,10 @@ function formatEstimate(minutes: number | null) {
 
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="grid gap-1.5">
-                  <Label>Iteration</Label>
+                  <Label>{{ t('tasks.iteration') }}</Label>
                   <Select v-model="form.iterationId">
-                    <SelectTrigger class="w-full" aria-label="Iteration">
-                      <SelectValue placeholder="Select iteration" />
+                    <SelectTrigger class="w-full" :aria-label="t('tasks.iteration')">
+                      <SelectValue :placeholder="t('tasks.selectIteration')" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem
@@ -283,28 +285,28 @@ function formatEstimate(minutes: number | null) {
 
               <div class="grid gap-4 md:grid-cols-2">
                 <div class="grid gap-1.5">
-                  <Label for="task-deadline">Deadline</Label>
+                  <Label for="task-deadline">{{ t('tasks.deadline') }}</Label>
                   <DeadlinePicker id="task-deadline" v-model="form.deadline" />
                 </div>
 
                 <div class="grid gap-1.5">
-                  <Label for="task-estimate">Estimated time</Label>
+                  <Label for="task-estimate">{{ t('tasks.estimatedTime') }}</Label>
                   <Input
                     id="task-estimate"
                     v-model="form.estimatedMinutes"
                     type="number"
                     min="0"
                     step="15"
-                    placeholder="Minutes"
+                    :placeholder="t('tasks.minutesPlaceholder')"
                   />
                 </div>
               </div>
 
               <div class="flex justify-end gap-2">
                 <Button type="button" variant="ghost" :disabled="saving" @click="cancelTaskForm">
-                  Cancel
+                  {{ t('common.cancel') }}
                 </Button>
-                <Button type="submit" :disabled="saving"> Save task </Button>
+                <Button type="submit" :disabled="saving">{{ t('tasks.saveTask') }}</Button>
               </div>
             </form>
           </CardContent>
@@ -314,21 +316,27 @@ function formatEstimate(minutes: number | null) {
       <aside class="grid content-start gap-4">
         <Card class="rounded-lg shadow-none">
           <CardHeader>
-            <CardTitle class="text-base">Planning</CardTitle>
+            <CardTitle class="text-base">{{ t('tasks.planning') }}</CardTitle>
           </CardHeader>
           <CardContent class="grid gap-3 text-sm">
             <div class="flex items-center gap-2">
               <FlagIcon class="text-muted-foreground size-4" />
-              <span>{{ task ? `${formatPriority(task.priority)} priority` : 'No priority' }}</span>
+              <span>
+                {{
+                  task
+                    ? t('tasks.priorityWithValue', { priority: formatPriority(task.priority) })
+                    : t('tasks.noPriority')
+                }}
+              </span>
             </div>
             <div class="flex items-center gap-2">
               <CalendarIcon class="text-muted-foreground size-4" />
-              <span>{{ formatDeadline(task?.deadline) ?? 'No deadline' }}</span>
+              <span>{{ formatDeadline(task?.deadline) ?? t('tasks.noDeadline') }}</span>
             </div>
             <div class="flex items-center gap-2">
               <CalendarIcon class="text-muted-foreground size-4" />
               <span>
-                {{ currentIteration?.name ?? 'No iteration' }}
+                {{ currentIteration?.name ?? t('tasks.noIteration') }}
                 <template v-if="currentIteration?.deadline">
                   - {{ formatDeadline(currentIteration.deadline) }}
                 </template>

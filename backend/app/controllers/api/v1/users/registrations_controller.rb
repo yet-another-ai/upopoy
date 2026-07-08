@@ -2,13 +2,14 @@ module Api
   module V1
     module Users
       class RegistrationsController < Devise::RegistrationsController
+        include LocalizesRequest
         include UserPayloads
 
         respond_to :json
 
         def create
           unless ApplicationSetting.current.registration_enabled?
-            render json: { error: "Registration is disabled" }, status: :forbidden
+            render json: { error: I18n.t("api.errors.registration_disabled") }, status: :forbidden
             return
           end
 

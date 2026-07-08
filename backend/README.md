@@ -17,6 +17,17 @@ Things you may want to cover:
 
 * How to run the test suite
 
+## API docs
+
+OpenAPI documentation is generated from rswag request specs:
+
+```sh
+RAILS_ENV=test mise exec -- ruby bin/rails rswag
+```
+
+The generated spec is written to `openapi/v1/openapi.yaml` and served through
+Swagger UI at `/api-docs`.
+
 * Services (job queues, cache servers, search engines, etc.)
 
 * Deployment instructions

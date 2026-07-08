@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
   mount PgHero::Engine, at: "pghero"
+  mount Rswag::Api::Engine, at: "api-docs"
+  mount Rswag::Ui::Engine, at: "api-docs"
 
   devise_for :users,
     path: "api/v1",
@@ -26,10 +28,10 @@ Rails.application.routes.draw do
       end
 
       resources :users, only: [ :index, :show, :update ]
-      resources :groups
+      resources :groups, only: [ :index, :show, :create, :update, :destroy ]
       get "search", to: "search#index"
 
-      resources :projects do
+      resources :projects, only: [ :index, :show, :create, :update, :destroy ] do
         member do
           get :board
         end

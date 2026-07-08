@@ -1,0 +1,135 @@
+require "openapi_helper"
+
+# rubocop:disable RSpec/NestedGroups, RSpec/RepeatedExampleGroupBody, RSpec/VariableName
+RSpec.describe "Api::V1::Groups", openapi_spec: "v1/openapi.yaml", type: :request do
+  let(:current_user) { create(:user) }
+  let(:Authorization) { auth_headers_for(current_user).fetch("Authorization") }
+
+  path "/api/v1/groups" do
+    get "Lists accessible groups" do
+      tags "Groups"
+      security [ bearer_auth: [] ]
+      produces "application/json"
+
+      response "200", "groups returned" do
+        schema type: :array, items: { "$ref" => "#/components/schemas/group" }
+
+        before do
+          group = create(:group)
+          create(:group_membership, user: current_user, group:)
+        end
+
+        run_test!
+      end
+    end
+
+    post "Creates a group" do
+      tags "Groups"
+      security [ bearer_auth: [] ]
+      consumes "application/json"
+      produces "application/json"
+      parameter name: :request_params, in: :body, schema: { "$ref" => "#/components/schemas/group_request" }
+
+      response "201", "group created" do
+        schema "$ref" => "#/components/schemas/group"
+
+        let(:member) { create(:user) }
+        let(:request_params) do
+          {
+            group: {
+              name: "Product",
+              description: "Product planning",
+              user_ids: [ member.id ]
+            }
+          }
+        end
+
+        run_test!
+      end
+    end
+  end
+
+  path "/api/v1/groups/{id}" do
+    parameter name: :id, in: :path, type: :integer
+
+    get "Returns a group" do
+      tags "Groups"
+      security [ bearer_auth: [] ]
+      produces "application/json"
+
+      response "200", "group returned" do
+        schema "$ref" => "#/components/schemas/group"
+
+        let(:group) { create(:group) }
+        let(:id) { group.id }
+
+        before do
+          create(:group_membership, user: current_user, group:)
+        end
+
+        run_test!
+      end
+    end
+
+    patch "Updates a group" do
+      tags "Groups"
+      security [ bearer_auth: [] ]
+      consumes "application/json"
+      produces "application/json"
+      parameter name: :request_params, in: :body, schema: { "$ref" => "#/components/schemas/group_request" }
+
+      response "200", "group updated" do
+        schema "$ref" => "#/components/schemas/group"
+
+        let(:group) { create(:group) }
+        let(:id) { group.id }
+        let(:request_params) { { group: { name: "Renamed", user_ids: [ current_user.id ] } } }
+
+        before do
+          create(:group_membership, user: current_user, group:)
+        end
+
+        run_test!
+      end
+    end
+
+    put "Replaces a group" do
+      tags "Groups"
+      security [ bearer_auth: [] ]
+      consumes "application/json"
+      produces "application/json"
+      parameter name: :request_params, in: :body, schema: { "$ref" => "#/components/schemas/group_request" }
+
+      response "200", "group updated" do
+        schema "$ref" => "#/components/schemas/group"
+
+        let(:group) { create(:group) }
+        let(:id) { group.id }
+        let(:request_params) { { group: { name: "Renamed", user_ids: [ current_user.id ] } } }
+
+        before do
+          create(:group_membership, user: current_user, group:)
+        end
+
+        run_test!
+      end
+    end
+
+    delete "Deletes a group" do
+      tags "Groups"
+      security [ bearer_auth: [] ]
+
+      response "204", "group deleted" do
+        let(:group) { create(:group) }
+        let(:id) { group.id }
+
+        before do
+          create(:group_membership, user: current_user, group:)
+        end
+
+        run_test!
+      end
+    end
+  end
+end
+# rubocop:enable RSpec/NestedGroups, RSpec/RepeatedExampleGroupBody, RSpec/VariableName

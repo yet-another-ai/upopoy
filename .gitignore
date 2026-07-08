@@ -33,3 +33,4 @@ frontend/src/assets/vue.svg
 
 # APM dependencies
 apm_modules/
+.agents/skills/

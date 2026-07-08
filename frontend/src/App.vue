@@ -47,7 +47,7 @@ const taskDetailId = computed(() => {
 })
 
 const userProfileId = computed(() => {
-  if (route.name !== 'user-profile') return null
+  if (route.name !== 'user-profile' && route.name !== 'user-edit') return null
 
   const userId = Number(route.params.userId)
   return Number.isInteger(userId) && userId > 0 ? userId : null
@@ -62,6 +62,7 @@ const groupDetailId = computed(() => {
 
 const userGroupsRoute = computed(() => isUserGroupsRouteName(route.name))
 const creatingGroup = computed(() => route.name === 'group-new')
+const editingUser = computed(() => route.name === 'user-edit')
 
 const userGroupsSection = computed<'users' | 'groups'>(() =>
   route.name === 'groups' || route.name === 'group-new' || route.name === 'group-detail'
@@ -204,8 +205,22 @@ async function saveGroup(
   await router.push({ name: 'groups' })
 }
 
+async function saveUserProfile(
+  userId: number,
+  input: Parameters<typeof userGroups.updateUserProfile>[1],
+) {
+  await userGroups.updateUserProfile(userId, input)
+  await router.push({ name: 'user-profile', params: { userId } })
+}
+
 function editUser(userId: number) {
   void router.push({ name: 'user-profile', params: { userId } })
+}
+
+function cancelUserEdit() {
+  const userId = userProfileId.value
+  if (userId) void router.push({ name: 'user-profile', params: { userId } })
+  else void router.push({ name: 'users' })
 }
 
 function selectGroup(groupId: number | null) {
@@ -249,6 +264,7 @@ function isUserGroupsRouteName(routeName: unknown) {
   return (
     routeName === 'users' ||
     routeName === 'user-profile' ||
+    routeName === 'user-edit' ||
     routeName === 'groups' ||
     routeName === 'group-new' ||
     routeName === 'group-detail'
@@ -312,6 +328,7 @@ function isUserGroupsRouteName(routeName: unknown) {
       :saving="userGroups.saving.value"
       :section="userGroupsSection"
       :user-id="userProfileId"
+      :editing-user="editingUser"
       :group-id="groupDetailId"
       :creating-group="creatingGroup"
       @save-group="saveGroup"
@@ -319,7 +336,8 @@ function isUserGroupsRouteName(routeName: unknown) {
       @load-users="userGroups.loadUsers"
       @load-user="userGroups.loadUser"
       @load-groups="userGroups.loadGroups"
-      @save-user-profile="userGroups.updateUserProfile"
+      @save-user-profile="saveUserProfile"
+      @cancel-user-edit="cancelUserEdit"
       @edit-user="editUser"
       @select-group="selectGroup"
       @create-group="createGroup"

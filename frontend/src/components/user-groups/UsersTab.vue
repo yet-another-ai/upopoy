@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { PencilIcon } from '@lucide/vue'
+import { EyeIcon } from '@lucide/vue'
 import UserPagination from '@/components/user-groups/UserPagination.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -63,8 +63,8 @@ function userGroupNames(user: ManagedUser) {
           </div>
 
           <Button size="sm" variant="outline" @click="emit('editUser', user.id)">
-            <PencilIcon />
-            Edit profile
+            <EyeIcon />
+            View profile
           </Button>
         </article>
       </div>

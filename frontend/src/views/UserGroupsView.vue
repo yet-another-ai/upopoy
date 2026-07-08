@@ -26,6 +26,7 @@ const props = defineProps<{
   saving: boolean
   section: 'users' | 'groups'
   userId: number | null
+  editingUser: boolean
   groupId: number | null
   creatingGroup: boolean
 }>()
@@ -39,6 +40,7 @@ const emit = defineEmits<{
   selectGroup: [groupId: number]
   closeGroupEditor: []
   saveUserProfile: [userId: number, input: UserProfileInput]
+  cancelUserEdit: []
   saveGroup: [groupId: number | null, input: GroupInput]
   deleteGroup: [groupId: number]
 }>()
@@ -84,9 +86,11 @@ function saveGroup(groupId: number | null, input: GroupInput) {
         :groups="props.groups"
         :loading="props.loadingUsers"
         :saving="props.saving"
+        :editing="props.editingUser"
         @load-user="emit('loadUser', $event)"
         @load-groups="emit('loadGroups')"
         @save-user-profile="saveUserProfile"
+        @cancel-edit="emit('cancelUserEdit')"
       />
 
       <UsersTab

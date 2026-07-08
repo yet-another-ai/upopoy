@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
-import { SaveIcon } from '@lucide/vue'
+import { SaveIcon, XIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,6 +17,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   saveUserProfile: [payload: { userId: number; input: UserProfileInput }]
+  cancelEdit: []
 }>()
 
 const form = reactive({
@@ -102,10 +103,16 @@ function submitProfile() {
           </div>
         </div>
 
-        <Button type="submit" :disabled="props.saving">
-          <SaveIcon />
-          Save profile
-        </Button>
+        <div class="flex flex-wrap gap-2">
+          <Button type="submit" :disabled="props.saving">
+            <SaveIcon />
+            Save profile
+          </Button>
+          <Button type="button" variant="outline" @click="emit('cancelEdit')">
+            <XIcon />
+            Cancel
+          </Button>
+        </div>
       </form>
 
       <p v-else class="text-muted-foreground text-sm">Select a user to edit their profile.</p>

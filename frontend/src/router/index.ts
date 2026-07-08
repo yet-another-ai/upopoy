@@ -43,6 +43,12 @@ const routes = [
     props: true,
   },
   {
+    path: '/users/:userId/edit',
+    name: 'user-edit',
+    component: { template: '<span />' },
+    props: true,
+  },
+  {
     path: '/groups',
     name: 'groups',
     component: { template: '<span />' },

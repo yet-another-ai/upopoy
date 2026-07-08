@@ -2,6 +2,7 @@
 import { computed, onMounted, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import ToastViewport from '@/components/common/ToastViewport.vue'
 import IterationsView from '@/components/kanban/IterationsView.vue'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import ProjectSidebar from '@/components/kanban/ProjectSidebar.vue'
@@ -11,6 +12,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useBoard } from '@/composables/useBoard'
 import { useProjects } from '@/composables/useProjects'
 import { useUserGroups } from '@/composables/useUserGroups'
+import { useToastsStore } from '@/stores/toasts'
 import AdminSettingsView from '@/views/AdminSettingsView.vue'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
 import AuthView from '@/views/AuthView.vue'
@@ -33,6 +35,7 @@ const auth = useAuth()
 const projects = useProjects()
 const board = useBoard()
 const userGroups = useUserGroups()
+const toasts = useToastsStore()
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
@@ -167,26 +170,46 @@ async function signOut() {
   projects.clearProjects()
   board.clearBoard()
   userGroups.clearDirectory()
+  toasts.clearToasts()
   await router.push({ name: 'auth' })
 }
 
 async function createProject(input: ProjectInput) {
-  await projects.createProject(input)
+  try {
+    await projects.createProject(input)
+  } catch (err) {
+    notifyError(err, 'Unable to create project')
+  }
 }
 
 async function refreshBoard() {
   const projectId = projects.selectedProjectId.value
-  if (projectId) await board.loadBoard(projectId)
+  if (!projectId) return
+
+  await board.loadBoard(projectId)
+  if (board.error.value) toasts.error('Unable to refresh board', board.error.value)
 }
 
 async function createTask(_status: TaskStatusOption['id'], input: TaskInput) {
   const projectId = projects.selectedProjectId.value
-  if (projectId) await board.createTask(projectId, input)
+  if (!projectId) return
+
+  try {
+    await board.createTask(projectId, input)
+  } catch (err) {
+    notifyError(err, 'Unable to create task')
+  }
 }
 
 async function createIteration(input: Parameters<typeof board.createIteration>[1]) {
   const projectId = projects.selectedProjectId.value
-  if (projectId) await board.createIteration(projectId, input)
+  if (!projectId) return
+
+  try {
+    await board.createIteration(projectId, input)
+  } catch (err) {
+    notifyError(err, 'Unable to create iteration')
+  }
 }
 
 async function refreshBoardAfterTaskUpdate(task: Task) {
@@ -199,8 +222,13 @@ async function saveGroup(
   groupId: number | null,
   input: Parameters<typeof userGroups.createGroup>[0],
 ) {
-  if (groupId) await userGroups.updateGroup(groupId, input)
-  else await userGroups.createGroup(input)
+  try {
+    if (groupId) await userGroups.updateGroup(groupId, input)
+    else await userGroups.createGroup(input)
+  } catch (err) {
+    notifyError(err, groupId ? 'Unable to update group' : 'Unable to create group')
+    return
+  }
 
   await router.push({ name: 'groups' })
 }
@@ -209,8 +237,38 @@ async function saveUserProfile(
   userId: number,
   input: Parameters<typeof userGroups.updateUserProfile>[1],
 ) {
-  await userGroups.updateUserProfile(userId, input)
+  try {
+    await userGroups.updateUserProfile(userId, input)
+  } catch (err) {
+    notifyError(err, 'Unable to update user profile')
+    return
+  }
+
   await router.push({ name: 'user-profile', params: { userId } })
+}
+
+async function deleteGroup(groupId: number) {
+  try {
+    await userGroups.deleteGroup(groupId)
+  } catch (err) {
+    notifyError(err, 'Unable to delete group')
+  }
+}
+
+async function updateTask(taskId: number, input: Partial<TaskInput>) {
+  try {
+    await board.updateTask(taskId, input)
+  } catch (err) {
+    notifyError(err, 'Unable to update task')
+  }
+}
+
+async function deleteTask(taskId: number) {
+  try {
+    await board.deleteTask(taskId)
+  } catch (err) {
+    notifyError(err, 'Unable to delete task')
+  }
 }
 
 function editUser(userId: number) {
@@ -269,6 +327,10 @@ function isUserGroupsRouteName(routeName: unknown) {
     routeName === 'group-new' ||
     routeName === 'group-detail'
   )
+}
+
+function notifyError(err: unknown, fallback: string) {
+  toasts.error(fallback, err instanceof Error ? err.message : fallback)
 }
 </script>
 
@@ -332,7 +394,7 @@ function isUserGroupsRouteName(routeName: unknown) {
       :group-id="groupDetailId"
       :creating-group="creatingGroup"
       @save-group="saveGroup"
-      @delete-group="userGroups.deleteGroup"
+      @delete-group="deleteGroup"
       @load-users="userGroups.loadUsers"
       @load-user="userGroups.loadUser"
       @load-groups="userGroups.loadGroups"
@@ -370,8 +432,8 @@ function isUserGroupsRouteName(routeName: unknown) {
         :loading="board.loading.value"
         @refresh="refreshBoard"
         @create-task="createTask"
-        @update-task="board.updateTask"
-        @delete-task="board.deleteTask"
+        @update-task="updateTask"
+        @delete-task="deleteTask"
       />
 
       <IterationsView
@@ -383,15 +445,10 @@ function isUserGroupsRouteName(routeName: unknown) {
         @refresh="refreshBoard"
         @create-iteration="createIteration"
         @create-task="createTask"
-        @delete-task="board.deleteTask"
+        @delete-task="deleteTask"
       />
     </template>
   </AuthenticatedLayout>
 
-  <div
-    v-if="projects.error.value || board.error.value || userGroups.error.value"
-    class="bg-destructive text-destructive-foreground fixed bottom-4 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg px-4 py-2 text-sm shadow-lg"
-  >
-    {{ projects.error.value ?? board.error.value ?? userGroups.error.value }}
-  </div>
+  <ToastViewport />
 </template>

@@ -47,7 +47,7 @@ module Api
       def board
         authorize @project
         @project.inbox_iteration
-        tasks_by_status = @project.tasks.includes(:iteration).in_status_order.group_by(&:status)
+        tasks_by_status = @project.tasks.includes(:developers, :iteration, :reviewers).in_status_order.group_by(&:status)
         iterations = @project.iterations.ordered.to_a
 
         render json: {

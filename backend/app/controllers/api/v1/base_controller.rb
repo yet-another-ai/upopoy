@@ -43,6 +43,10 @@ module Api
           description: task.description,
           deadline: task.deadline&.iso8601,
           estimated_minutes: task.estimated_minutes,
+          developer_ids: task.developer_ids,
+          developers: task.developers.map { |user| user_payload(user) },
+          reviewer_ids: task.reviewer_ids,
+          reviewers: task.reviewers.map { |user| user_payload(user) },
           position: task.position,
           created_at: task.created_at,
           updated_at: task.updated_at

@@ -18,6 +18,14 @@ class Task < ApplicationRecord
 
   belongs_to :project
   belongs_to :iteration, optional: true
+  has_and_belongs_to_many :developers,
+                          class_name: "User",
+                          join_table: "task_developers",
+                          association_foreign_key: "user_id"
+  has_and_belongs_to_many :reviewers,
+                          class_name: "User",
+                          join_table: "task_reviewers",
+                          association_foreign_key: "user_id"
 
   before_validation :assign_defaults
 

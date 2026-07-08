@@ -33,6 +33,8 @@ describe('TaskForm', () => {
           description: 'Check the API contract.',
           status: 'todo',
           priority: 'medium',
+          developer_ids: [],
+          reviewer_ids: [],
         },
       ],
     ])

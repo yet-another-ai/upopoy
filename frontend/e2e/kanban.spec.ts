@@ -17,6 +17,16 @@ interface TaskStatusPayload {
   position: number
 }
 
+interface UserPayload {
+  id: number
+  email: string
+  display_name: string | null
+  title: string | null
+  bio: string | null
+  created_at: string
+  updated_at: string
+}
+
 interface TaskPayload {
   id: number
   project_id: number
@@ -31,6 +41,10 @@ interface TaskPayload {
   description: string | null
   deadline: string | null
   estimated_minutes: number | null
+  developer_ids: number[]
+  developers: UserPayload[]
+  reviewer_ids: number[]
+  reviewers: UserPayload[]
   position: number
   created_at: string
   updated_at: string
@@ -79,6 +93,26 @@ async function installMockApi(page: Page) {
     created_at: timestamp,
     updated_at: timestamp,
   }
+  const users: UserPayload[] = [
+    {
+      id: 1,
+      email: 'founder@example.com',
+      display_name: null,
+      title: null,
+      bio: null,
+      created_at: timestamp,
+      updated_at: timestamp,
+    },
+    {
+      id: 2,
+      email: 'ada@example.com',
+      display_name: 'Ada Lovelace',
+      title: 'Engineer',
+      bio: null,
+      created_at: timestamp,
+      updated_at: timestamp,
+    },
+  ]
 
   const statuses: Array<TaskStatusPayload & { tasks: TaskPayload[] }> = [
     {
@@ -136,6 +170,10 @@ async function installMockApi(page: Page) {
 
   function findIteration(iterationId: number | null | undefined) {
     return iterations.find((iteration) => iteration.id === iterationId) ?? iterations[0]
+  }
+
+  function findUsers(userIds: number[] | undefined) {
+    return users.filter((user) => userIds?.includes(user.id))
   }
 
   function isAuthorized(route: Route) {
@@ -292,22 +330,37 @@ async function installMockApi(page: Page) {
 
     const url = new URL(route.request().url())
     const query = url.searchParams.get('q')?.toLowerCase() ?? ''
+    const type = url.searchParams.get('type')
 
     await json(route, {
-      results: query.includes('mvp')
-        ? [
-            {
-              slug: 'project:1',
-              type: 'project',
-              id: 1,
-              title: 'MVP',
-              snippet: 'Initial Kanban surface',
-              api_path: '/api/v1/projects/1',
-              metadata: {},
-              updated_at: timestamp,
-            },
-          ]
-        : [],
+      results:
+        type === 'user' && query.includes('ada')
+          ? [
+              {
+                slug: 'user:2',
+                type: 'user',
+                id: 2,
+                title: 'Ada Lovelace',
+                snippet: 'ada@example.com',
+                api_path: '/api/v1/users/2',
+                metadata: {},
+                updated_at: timestamp,
+              },
+            ]
+          : query.includes('mvp')
+            ? [
+                {
+                  slug: 'project:1',
+                  type: 'project',
+                  id: 1,
+                  title: 'MVP',
+                  snippet: 'Initial Kanban surface',
+                  api_path: '/api/v1/projects/1',
+                  metadata: {},
+                  updated_at: timestamp,
+                },
+              ]
+            : [],
     })
   })
 
@@ -322,6 +375,8 @@ async function installMockApi(page: Page) {
         description?: string
         deadline?: string | null
         estimated_minutes?: number | null
+        developer_ids?: number[]
+        reviewer_ids?: number[]
         iteration_id?: number | null
       }
     }
@@ -340,6 +395,10 @@ async function installMockApi(page: Page) {
       description: requestBody.task.description ?? null,
       deadline: requestBody.task.deadline ?? null,
       estimated_minutes: requestBody.task.estimated_minutes ?? null,
+      developer_ids: requestBody.task.developer_ids ?? [],
+      developers: findUsers(requestBody.task.developer_ids),
+      reviewer_ids: requestBody.task.reviewer_ids ?? [],
+      reviewers: findUsers(requestBody.task.reviewer_ids),
       position: 1,
       created_at: timestamp,
       updated_at: timestamp,
@@ -380,6 +439,8 @@ async function installMockApi(page: Page) {
         description?: string
         deadline?: string | null
         estimated_minutes?: number | null
+        developer_ids?: number[]
+        reviewer_ids?: number[]
         iteration_id?: number | null
         position?: number
       }
@@ -402,6 +463,14 @@ async function installMockApi(page: Page) {
       estimated_minutes: Object.hasOwn(requestBody.task, 'estimated_minutes')
         ? requestBody.task.estimated_minutes!
         : task.estimated_minutes,
+      developer_ids: requestBody.task.developer_ids ?? task.developer_ids,
+      developers: Object.hasOwn(requestBody.task, 'developer_ids')
+        ? findUsers(requestBody.task.developer_ids)
+        : task.developers,
+      reviewer_ids: requestBody.task.reviewer_ids ?? task.reviewer_ids,
+      reviewers: Object.hasOwn(requestBody.task, 'reviewer_ids')
+        ? findUsers(requestBody.task.reviewer_ids)
+        : task.reviewers,
       iteration_id: iteration.id,
       iteration_name: iteration.name,
       iteration_starts_at: iteration.starts_at,

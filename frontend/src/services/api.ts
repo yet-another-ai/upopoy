@@ -106,6 +106,10 @@ export interface Task {
   description: string | null
   deadline: string | null
   estimated_minutes: number | null
+  developer_ids: number[]
+  developers: User[]
+  reviewer_ids: number[]
+  reviewers: User[]
   position: number
   created_at: string
   updated_at: string
@@ -201,6 +205,8 @@ export interface TaskInput {
   description?: string
   deadline?: string | null
   estimated_minutes?: number | null
+  developer_ids?: number[]
+  reviewer_ids?: number[]
   iteration_id?: number | null
   position?: number
 }

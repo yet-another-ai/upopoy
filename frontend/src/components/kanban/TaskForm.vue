@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import UserMultiSelect from '@/components/search/UserMultiSelect.vue'
 import DeadlinePicker from './DeadlinePicker.vue'
 import {
   TASK_PRIORITIES,
@@ -49,6 +50,8 @@ const form = reactive({
   priority: 'medium' as TaskPriority,
   deadline: null as string | null,
   estimatedMinutes: '',
+  developerIds: [] as number[],
+  reviewerIds: [] as number[],
 })
 
 watch(
@@ -60,6 +63,8 @@ watch(
     form.deadline = props.task?.deadline ?? null
     form.estimatedMinutes =
       props.task?.estimated_minutes == null ? '' : String(props.task.estimated_minutes)
+    form.developerIds = props.task?.developer_ids ? [...props.task.developer_ids] : []
+    form.reviewerIds = props.task?.reviewer_ids ? [...props.task.reviewer_ids] : []
     form.status = props.task?.status ?? props.defaultStatus ?? props.statuses[0]?.id ?? ''
     form.iterationId = String(props.task?.iteration_id ?? props.defaultIterationId ?? '')
   },
@@ -74,6 +79,8 @@ function submitForm() {
     description: form.description.trim(),
     status: form.status ? (form.status as TaskStatusOption['id']) : undefined,
     priority: form.priority,
+    developer_ids: form.developerIds,
+    reviewer_ids: form.reviewerIds,
   }
 
   if (props.showIteration) {
@@ -127,6 +134,25 @@ function submitForm() {
           </SelectItem>
         </SelectContent>
       </Select>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <UserMultiSelect
+        v-model="form.developerIds"
+        label="Developers"
+        placeholder="Search developers"
+        search-aria-label="Search users to add as developers"
+        :selected-users="props.task?.developers ?? []"
+        empty-text="No developers selected."
+      />
+      <UserMultiSelect
+        v-model="form.reviewerIds"
+        label="Reviewers"
+        placeholder="Search reviewers"
+        search-aria-label="Search users to add as reviewers"
+        :selected-users="props.task?.reviewers ?? []"
+        empty-text="No reviewers selected."
+      />
     </div>
 
     <div v-if="props.showIteration" class="grid gap-1.5">

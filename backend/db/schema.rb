@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_08_031000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_08_032000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -134,6 +134,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_031000) do
     t.index ["user_id"], name: "index_search_documents_on_user_id"
   end
 
+  create_table "task_developers", id: false, force: :cascade do |t|
+    t.bigint "task_id", null: false
+    t.bigint "user_id", null: false
+    t.index ["task_id", "user_id"], name: "index_task_developers_on_task_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_task_developers_on_user_id"
+  end
+
+  create_table "task_reviewers", id: false, force: :cascade do |t|
+    t.bigint "task_id", null: false
+    t.bigint "user_id", null: false
+    t.index ["task_id", "user_id"], name: "index_task_reviewers_on_task_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_task_reviewers_on_user_id"
+  end
+
   create_table "tasks", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "deadline"
@@ -179,6 +193,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_031000) do
   add_foreign_key "projects", "users"
   add_foreign_key "search_documents", "groups"
   add_foreign_key "search_documents", "users"
+  add_foreign_key "task_developers", "tasks", on_delete: :cascade
+  add_foreign_key "task_developers", "users", on_delete: :cascade
+  add_foreign_key "task_reviewers", "tasks", on_delete: :cascade
+  add_foreign_key "task_reviewers", "users", on_delete: :cascade
   add_foreign_key "tasks", "iterations", on_delete: :nullify
   add_foreign_key "tasks", "projects"
 end

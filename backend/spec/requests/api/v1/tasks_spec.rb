@@ -1,6 +1,42 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Tasks", type: :request do
+  def expect_task_role_payload(role, user)
+    expect(json_response["#{role}_ids"]).to eq([ user.id ])
+    expect(json_response[role.to_s.pluralize].pluck("display_name")).to eq([ user.display_name ])
+  end
+
+  def expect_task_detail_payload(task)
+    expect(json_response).to include(
+      "id" => task.id,
+      "priority" => "low",
+      "deadline" => "2026-07-20T10:30:00Z",
+      "estimated_minutes" => 180
+    )
+  end
+
+  def post_project_task(project, attributes, user: project.user)
+    post "/api/v1/projects/#{project.id}/tasks",
+         params: { task: attributes },
+         headers: auth_headers_for(user)
+  end
+
+  def patch_task(task, attributes)
+    patch "/api/v1/tasks/#{task.id}",
+          params: { task: attributes },
+          headers: auth_headers_for(task.project.user)
+  end
+
+  def create_task_with_role_users(**attributes)
+    developer = create(:user, display_name: "Ada Developer")
+    reviewer = create(:user, display_name: "Grace Reviewer")
+    task = create(:task, **attributes)
+    task.developers << developer
+    task.reviewers << reviewer
+
+    [ task, developer, reviewer ]
+  end
+
   describe "GET /api/v1/projects/:project_id/tasks" do
     it "lists project tasks" do
       project = create(:project)
@@ -52,17 +88,15 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       member = create(:user)
       create(:group_membership, group: project.group, user: member)
 
-      post "/api/v1/projects/#{project.id}/tasks",
-           params: { task: task_params },
-           headers: auth_headers_for(member)
+      post_project_task(project, task_params, user: member)
 
       expect(response).to have_http_status(:created)
-      expect(json_response.slice("title", "status", "priority")).to eq(
+      expect(json_response.slice("title", "status", "priority", "iteration_name")).to eq(
         "title" => "Draft MCP API",
         "status" => "in_progress",
-        "priority" => "high"
+        "priority" => "high",
+        "iteration_name" => "Inbox"
       )
-      expect(json_response["iteration_name"]).to eq("Inbox")
     end
 
     it "creates a task in the selected iteration" do
@@ -76,6 +110,32 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       expect(response).to have_http_status(:created)
       expect(json_response["iteration_id"]).to eq(iteration.id)
       expect(json_response["iteration_name"]).to eq("Sprint 1")
+    end
+
+    it "creates a task with developers and reviewers" do
+      project = create(:project)
+      developer = create(:user, display_name: "Ada Developer")
+      reviewer = create(:user, display_name: "Grace Reviewer")
+      role_params = { developer_ids: [ developer.id ], reviewer_ids: [ reviewer.id ] }
+
+      post_project_task(project, task_params.merge(role_params))
+
+      expect(response).to have_http_status(:created)
+      expect_task_role_payload(:developer, developer)
+      expect_task_role_payload(:reviewer, reviewer)
+    end
+
+    it "rejects unknown task role users" do
+      project = create(:project)
+
+      post "/api/v1/projects/#{project.id}/tasks",
+           params: { task: task_params.merge(developer_ids: [ -1 ]) },
+           headers: auth_headers_for(project.user)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json_response.dig("errors", "developer_ids")).to include(
+        I18n.t("api.errors.include_unknown_users")
+      )
     end
 
     it "rejects an iteration from another project" do
@@ -110,8 +170,7 @@ RSpec.describe "Api::V1::Tasks", type: :request do
 
   describe "GET /api/v1/tasks/:id" do
     it "returns task detail fields" do
-      task = create(
-        :task,
+      task, developer, reviewer = create_task_with_role_users(
         deadline: Time.zone.parse("2026-07-20 10:30:00 UTC"),
         estimated_minutes: 180,
         priority: "low"
@@ -120,10 +179,9 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       get "/api/v1/tasks/#{task.id}", headers: auth_headers_for(task.project.user)
 
       expect(response).to have_http_status(:ok)
-      expect(json_response["id"]).to eq(task.id)
-      expect(json_response["priority"]).to eq("low")
-      expect(json_response["deadline"]).to eq("2026-07-20T10:30:00Z")
-      expect(json_response["estimated_minutes"]).to eq(180)
+      expect_task_detail_payload(task)
+      expect_task_role_payload(:developer, developer)
+      expect_task_role_payload(:reviewer, reviewer)
     end
   end
 
@@ -164,6 +222,21 @@ RSpec.describe "Api::V1::Tasks", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(json_response["priority"]).to eq("high")
+    end
+
+    it "updates task developers and reviewers" do
+      task = create(:task)
+      old_developer = create(:user)
+      developer = create(:user, display_name: "Ada Developer")
+      reviewer = create(:user, display_name: "Grace Reviewer")
+      task.developers << old_developer
+      role_params = { developer_ids: [ developer.id ], reviewer_ids: [ reviewer.id ] }
+
+      patch_task(task, role_params)
+
+      expect(response).to have_http_status(:ok)
+      expect_task_role_payload(:developer, developer)
+      expect_task_role_payload(:reviewer, reviewer)
     end
   end
 

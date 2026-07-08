@@ -2,16 +2,25 @@
 import { onMounted } from 'vue'
 import AuthSettingsForm from '@/components/admin-settings/AuthSettingsForm.vue'
 import { useAdminSettings } from '@/composables/useAdminSettings'
+import { useToastsStore } from '@/stores/toasts'
 import type { AdminSettingsInput } from '@/services/api'
 
 const adminSettings = useAdminSettings()
+const toasts = useToastsStore()
 
 onMounted(() => {
   void adminSettings.loadSettings()
 })
 
 async function saveSettings(input: AdminSettingsInput) {
-  await adminSettings.updateSettings(input)
+  try {
+    await adminSettings.updateSettings(input)
+  } catch (err) {
+    toasts.error(
+      'Unable to update admin settings',
+      err instanceof Error ? err.message : 'Unable to update admin settings',
+    )
+  }
 }
 </script>
 

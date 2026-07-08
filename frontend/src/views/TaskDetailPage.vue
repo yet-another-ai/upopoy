@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeftIcon, CalendarIcon, ClockIcon, FlagIcon } from '@lucide/vue'
+import { ArrowLeftIcon, CalendarIcon, ClockIcon, FlagIcon, UsersRoundIcon } from '@lucide/vue'
 import { computed, nextTick, reactive, shallowRef, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
@@ -18,8 +18,10 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import DeadlinePicker from '@/components/kanban/DeadlinePicker.vue'
 import MarkdownPreview from '@/components/markdown/MarkdownPreview.vue'
+import UserMultiSelect from '@/components/search/UserMultiSelect.vue'
 import { formatDeadline } from '@/lib/deadline'
 import { formatPriority, priorityBadgeVariant } from '@/lib/priority'
+import { useToastsStore } from '@/stores/toasts'
 import {
   api,
   TASK_PRIORITIES,
@@ -42,6 +44,7 @@ const task = shallowRef<Task | null>(null)
 const board = shallowRef<Board | null>(null)
 const router = useRouter()
 const { t } = useI18n()
+const toasts = useToastsStore()
 const loading = shallowRef(false)
 const saving = shallowRef(false)
 const error = shallowRef<string | null>(null)
@@ -56,6 +59,8 @@ const form = reactive({
   priority: 'medium' as TaskPriority,
   deadline: null as string | null,
   estimatedMinutes: '',
+  developerIds: [] as number[],
+  reviewerIds: [] as number[],
 })
 
 const statuses = computed(() => board.value?.statuses ?? [])
@@ -102,6 +107,8 @@ watch(
     form.deadline = task.value?.deadline ?? null
     form.estimatedMinutes =
       task.value?.estimated_minutes == null ? '' : String(task.value.estimated_minutes)
+    form.developerIds = task.value?.developer_ids ? [...task.value.developer_ids] : []
+    form.reviewerIds = task.value?.reviewer_ids ? [...task.value.reviewer_ids] : []
   },
   { immediate: true },
 )
@@ -120,6 +127,7 @@ async function saveTask(input: TaskInput) {
     await router.push({ name: 'board' })
   } catch (err) {
     error.value = err instanceof Error ? err.message : t('errors.unableToSaveTask')
+    toasts.error(t('errors.unableToSaveTask'), error.value)
   } finally {
     saving.value = false
   }
@@ -136,6 +144,8 @@ function submitTaskForm() {
     priority: form.priority,
     deadline: form.deadline,
     estimated_minutes: form.estimatedMinutes !== '' ? Number(form.estimatedMinutes) : null,
+    developer_ids: form.developerIds,
+    reviewer_ids: form.reviewerIds,
   })
 }
 
@@ -159,6 +169,12 @@ function formatEstimate(minutes: number | null) {
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
+}
+
+function userNames(users: readonly { display_name: string | null; email: string }[]) {
+  if (users.length === 0) return null
+
+  return users.map((user) => user.display_name || user.email).join(', ')
 }
 </script>
 
@@ -284,6 +300,25 @@ function formatEstimate(minutes: number | null) {
               </div>
 
               <div class="grid gap-4 md:grid-cols-2">
+                <UserMultiSelect
+                  v-model="form.developerIds"
+                  label="Developers"
+                  placeholder="Search developers"
+                  search-aria-label="Search users to add as developers"
+                  :selected-users="task.developers"
+                  empty-text="No developers selected."
+                />
+                <UserMultiSelect
+                  v-model="form.reviewerIds"
+                  label="Reviewers"
+                  placeholder="Search reviewers"
+                  search-aria-label="Search users to add as reviewers"
+                  :selected-users="task.reviewers"
+                  empty-text="No reviewers selected."
+                />
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
                 <div class="grid gap-1.5">
                   <Label for="task-deadline">{{ t('tasks.deadline') }}</Label>
                   <DeadlinePicker id="task-deadline" v-model="form.deadline" />
@@ -345,6 +380,14 @@ function formatEstimate(minutes: number | null) {
             <div class="flex items-center gap-2">
               <ClockIcon class="text-muted-foreground size-4" />
               <span>{{ formatEstimate(task?.estimated_minutes ?? null) }}</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <UsersRoundIcon class="text-muted-foreground mt-0.5 size-4" />
+              <span>{{ userNames(task?.developers ?? []) ?? 'No developers' }}</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <UsersRoundIcon class="text-muted-foreground mt-0.5 size-4" />
+              <span>{{ userNames(task?.reviewers ?? []) ?? 'No reviewers' }}</span>
             </div>
           </CardContent>
         </Card>

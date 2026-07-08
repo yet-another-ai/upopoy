@@ -44,4 +44,20 @@ Rails.application.routes.draw do
       resources :tasks, only: [ :show, :update, :destroy ]
     end
   end
+
+  frontend_constraints = lambda do |request|
+    request.get? && !request.path.start_with?(
+      "/api",
+      "/api-docs",
+      "/assets",
+      "/favicon",
+      "/icons",
+      "/pghero",
+      "/rails",
+      "/up"
+    )
+  end
+
+  root "frontend#show"
+  get "*path", to: "frontend#show", constraints: frontend_constraints
 end

@@ -25,6 +25,8 @@ class User < ApplicationRecord
   end
 
   def can_access_group?(group_id)
+    return group_id.present? if system_admin?
+
     group_id.present? && accessible_group_ids.include?(group_id)
   end
 
@@ -35,6 +37,8 @@ class User < ApplicationRecord
   end
 
   def can_admin_group?(group_id)
+    return group_id.present? if system_admin?
+
     group_id.present? && adminable_group_ids.include?(group_id)
   end
 

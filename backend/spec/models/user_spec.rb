@@ -53,6 +53,16 @@ RSpec.describe User, type: :model do
     expect(user.can_admin_group?(group.id)).to be(true)
   end
 
+  it "does not load group ids when checking system admin group access" do
+    user = build_stubbed(:user, :system_admin)
+
+    allow(Group).to receive(:ids).and_call_original
+
+    expect(user.can_access_group?(1)).to be(true)
+    expect(user.can_admin_group?(1)).to be(true)
+    expect(Group).not_to have_received(:ids)
+  end
+
   it "creates a user from an OmniAuth payload" do
     auth = OmniAuth::AuthHash.new(
       provider: "developer",

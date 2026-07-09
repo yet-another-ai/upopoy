@@ -54,25 +54,28 @@ describe('api client', () => {
   it('checks /up and emits a server unavailable event after server errors', async () => {
     const serverUnavailable = vi.fn()
     window.addEventListener(SERVER_UNAVAILABLE_EVENT, serverUnavailable)
-    const fetchMock = vi.fn<(input: RequestInfo | URL) => Promise<Response>>(async (input) => {
-      if (responsePath(input) === '/up') return new Response('down', { status: 500 })
 
-      return jsonResponse({ error: 'Server error' }, 500)
-    })
-    vi.stubGlobal('fetch', fetchMock)
+    try {
+      const fetchMock = vi.fn<(input: RequestInfo | URL) => Promise<Response>>(async (input) => {
+        if (responsePath(input) === '/up') return new Response('down', { status: 500 })
 
-    await expect(request('/api/v1/projects')).rejects.toMatchObject({
-      status: 500,
-      message: 'Server error',
-    })
+        return jsonResponse({ error: 'Server error' }, 500)
+      })
+      vi.stubGlobal('fetch', fetchMock)
 
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(fetchMock.mock.calls.map(([input]) => responsePath(input))).toEqual([
-      '/api/v1/projects',
-      '/up',
-    ])
-    expect(serverUnavailable).toHaveBeenCalledOnce()
+      await expect(request('/api/v1/projects')).rejects.toMatchObject({
+        status: 500,
+        message: 'Server error',
+      })
 
-    window.removeEventListener(SERVER_UNAVAILABLE_EVENT, serverUnavailable)
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(fetchMock.mock.calls.map(([input]) => responsePath(input))).toEqual([
+        '/api/v1/projects',
+        '/up',
+      ])
+      expect(serverUnavailable).toHaveBeenCalledOnce()
+    } finally {
+      window.removeEventListener(SERVER_UNAVAILABLE_EVENT, serverUnavailable)
+    }
   })
 })

@@ -7,18 +7,19 @@ ARG RUBY_VERSION=4.0.5
 
 FROM docker.io/library/node:${NODE_VERSION}-bookworm-slim AS frontend-build
 
-WORKDIR /app/frontend
+WORKDIR /app
 
 ENV PNPM_HOME="/pnpm" \
     PATH="/pnpm:$PATH"
 
 RUN corepack enable && corepack prepare "pnpm@${PNPM_VERSION}" --activate
 
-COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY frontend/package.json frontend/package.json
+RUN pnpm install --frozen-lockfile --filter frontend
 
-COPY frontend/ ./
-RUN pnpm build
+COPY frontend/ frontend/
+RUN pnpm --filter frontend build
 
 FROM docker.io/library/ruby:${RUBY_VERSION}-slim AS base
 

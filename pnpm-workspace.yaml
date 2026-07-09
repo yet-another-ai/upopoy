@@ -1,4 +1,8 @@
+packages:
+  - frontend
+
 allowBuilds:
   esbuild: true
   vue-demi: true
+
 confirmModulesPurge: false

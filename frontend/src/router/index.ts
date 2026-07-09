@@ -5,6 +5,7 @@ import AuthView from '@/views/AuthView.vue'
 import BoardWorkspaceView from '@/views/BoardWorkspaceView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
+import ServerErrorView from '@/views/ServerErrorView.vue'
 import UserGroupsView from '@/views/UserGroupsView.vue'
 
 export type ContentClassKind = 'default' | 'wide' | 'workspace'
@@ -28,6 +29,12 @@ const routes: RouteRecordRaw[] = [
     path: '/auth/callback',
     name: 'auth-callback',
     component: AuthCallbackView,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: '/server-error',
+    name: 'server-error',
+    component: ServerErrorView,
     meta: { requiresAuth: false },
   },
   {

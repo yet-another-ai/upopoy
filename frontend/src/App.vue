@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import ToastViewport from '@/components/common/ToastViewport.vue'
@@ -13,7 +13,7 @@ import { useProjectsStore } from '@/stores/projects'
 import { useToastsStore } from '@/stores/toasts'
 import { useUserGroupsStore } from '@/stores/userGroups'
 import type { ContentClassKind } from '@/router'
-import type { SearchResult } from '@/services/api'
+import { SERVER_UNAVAILABLE_EVENT, type SearchResult } from '@/services/api'
 
 const authStore = useAuthStore()
 const projectsStore = useProjectsStore()
@@ -31,7 +31,12 @@ const authenticatedPageTitle = computed(() => t(route.meta.titleKey ?? 'navigati
 const authenticatedContentClass = computed(() => contentClassFor(route.meta.contentClassKind))
 
 onMounted(() => {
+  window.addEventListener(SERVER_UNAVAILABLE_EVENT, handleServerUnavailable)
   void initializeApp()
+})
+
+onUnmounted(() => {
+  window.removeEventListener(SERVER_UNAVAILABLE_EVENT, handleServerUnavailable)
 })
 
 watch(
@@ -64,6 +69,12 @@ async function initializeApp() {
 async function enforceRouteAccess() {
   const nextRoute = nextRouteForAccess(route, auth.authenticated.value)
   if (nextRoute) await router.replace(nextRoute)
+}
+
+function handleServerUnavailable() {
+  if (router.currentRoute.value.name === 'server-error') return
+
+  void router.replace({ name: 'server-error' })
 }
 
 async function preloadWorkspaceData() {

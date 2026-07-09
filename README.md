@@ -13,7 +13,7 @@ upopoy is an AI-collaborative SaaS MVP. The first implementation focuses on proj
 ```sh
 mise install
 mise exec -- bundle install --gemfile backend/Gemfile
-cd frontend && pnpm install
+pnpm install
 ```
 
 ## Development
@@ -60,3 +60,7 @@ mise run backend-lint
 mise run frontend-test
 mise run frontend-lint
 ```
+
+The frontend is a pnpm workspace package. From the repository root, use
+`pnpm --filter frontend <script>` or the root aliases such as
+`pnpm frontend:build`.

@@ -59,6 +59,9 @@ jobs:
       - name: Run RSpec
         run: bundle exec rspec
 
+      - name: Verify OpenAPI documentation
+        run: bundle exec rake openapi:check
+
   frontend:
     name: Frontend tests
     runs-on: ubuntu-latest

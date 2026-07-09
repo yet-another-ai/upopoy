@@ -28,6 +28,12 @@ RAILS_ENV=test mise exec -- ruby bin/rails rswag
 The generated spec is written to `openapi/v1/openapi.yaml` and served through
 Swagger UI at `/api-docs`.
 
+To verify the committed spec is up to date without rewriting it:
+
+```sh
+RAILS_ENV=test mise exec -- bundle exec rake openapi:check
+```
+
 * Services (job queues, cache servers, search engines, etc.)
 
 * Deployment instructions

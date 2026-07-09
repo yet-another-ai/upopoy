@@ -14,8 +14,7 @@ run = "bundle exec falcon serve --bind http://127.0.0.1:3001 --config config.ru 
 
 [tasks.frontend]
 description = "Run the Vite frontend"
-dir = "frontend"
-run = "pnpm dev --host 0.0.0.0"
+run = "pnpm --filter frontend dev --host 0.0.0.0"
 
 [tasks.dev]
 description = "Run backend and frontend together with Falcon host"
@@ -25,21 +24,21 @@ run = "cd backend && bundle exec falcon host ../falcon.rb"
 description = "Run backend, frontend unit, and frontend integration tests"
 run = [
   "cd backend && bundle exec rspec",
-  "cd frontend && pnpm test",
+  "pnpm --filter frontend test",
 ]
 
 [tasks.lint]
 description = "Run backend and frontend linters"
 run = [
   "cd backend && bundle exec rubocop",
-  "cd frontend && pnpm lint && pnpm format:check",
+  "pnpm --filter frontend lint && pnpm --filter frontend format:check",
 ]
 
 [tasks.format]
 description = "Auto-format backend and frontend code"
 run = [
   "cd backend && bundle exec rubocop -A",
-  "cd frontend && pnpm format",
+  "pnpm --filter frontend format",
 ]
 
 [tasks.backend-test]
@@ -54,10 +53,8 @@ run = "bundle exec rubocop"
 
 [tasks.frontend-test]
 description = "Run frontend type checks, unit tests, and Playwright tests"
-dir = "frontend"
-run = "pnpm test"
+run = "pnpm --filter frontend test"
 
 [tasks.frontend-lint]
 description = "Run frontend ESLint and Prettier checks"
-dir = "frontend"
-run = "pnpm lint && pnpm format:check"
+run = "pnpm --filter frontend lint && pnpm --filter frontend format:check"

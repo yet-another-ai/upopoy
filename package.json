@@ -1,0 +1,17 @@
+{
+  "name": "upopoy",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "frontend:dev": "pnpm --filter frontend dev",
+    "frontend:type-check": "pnpm --filter frontend type-check",
+    "frontend:test": "pnpm --filter frontend test",
+    "frontend:test:unit": "pnpm --filter frontend test:unit",
+    "frontend:test:e2e": "pnpm --filter frontend test:e2e",
+    "frontend:lint": "pnpm --filter frontend lint",
+    "frontend:format": "pnpm --filter frontend format",
+    "frontend:format:check": "pnpm --filter frontend format:check",
+    "frontend:build": "pnpm --filter frontend build",
+    "frontend:preview": "pnpm --filter frontend preview"
+  }
+}

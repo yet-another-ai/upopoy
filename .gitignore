@@ -1,5 +1,7 @@
 .DS_Store
 
+node_modules/
+
 # Rails
 backend/.bundle/
 backend/.kamal/secrets

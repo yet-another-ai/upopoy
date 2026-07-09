@@ -33,7 +33,7 @@ class User < ApplicationRecord
   def adminable_group_ids
     return Group.ids if system_admin?
 
-    GroupHierarchy.adminable_group_ids_for(self).pluck(:descendant_group_id)
+    @adminable_group_ids ||= GroupHierarchy.adminable_group_ids_for(self).pluck(:descendant_group_id)
   end
 
   def can_admin_group?(group_id)

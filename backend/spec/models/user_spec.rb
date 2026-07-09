@@ -45,6 +45,18 @@ RSpec.describe User, type: :model do
     expect(user.can_admin_group?(child.id)).to be(true)
   end
 
+  it "memoizes adminable group ids for repeated admin checks" do
+    user = create(:user)
+    group = create(:group)
+    create(:group_membership, :admin, user:, group:)
+
+    allow(GroupHierarchy).to receive(:adminable_group_ids_for).and_call_original
+
+    expect(user.can_admin_group?(group.id)).to be(true)
+    expect(user.can_admin_group?(group.id)).to be(true)
+    expect(GroupHierarchy).to have_received(:adminable_group_ids_for).once
+  end
+
   it "treats system admins as admins of every group" do
     user = create(:user, :system_admin)
     group = create(:group)

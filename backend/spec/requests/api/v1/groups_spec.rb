@@ -179,6 +179,33 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
 
+    it "updates a child group for direct child admins without parent admin rights" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, :admin, user:, group: child)
+
+      patch "/api/v1/groups/#{child.id}",
+            params: { group: { name: "Renamed child" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["name"]).to eq("Renamed child")
+    end
+
+    it "does not move a group under a parent the requester cannot admin" do
+      user = create(:user)
+      child = create(:group)
+      new_parent = create(:group)
+      create(:group_membership, :admin, user:, group: child)
+
+      patch "/api/v1/groups/#{child.id}",
+            params: { group: { parent_group_id: new_parent.id } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
     it "updates a descendant group for ancestor admins" do
       user = create(:user)
       parent = create(:group)

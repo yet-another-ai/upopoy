@@ -41,6 +41,8 @@ class GroupPolicy < ApplicationPolicy
   end
 
   def allowed_parent_group?
+    return true unless record.will_save_change_to_parent_group_id?
+
     record.parent_group_id.blank? || user.can_admin_group?(record.parent_group_id)
   end
 end

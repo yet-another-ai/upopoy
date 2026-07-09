@@ -26,11 +26,11 @@ RSpec.describe "Api::V1::Search", type: :request do
 
     it "searches resources visible to the current user" do
       user = create(:user)
-      group = create(:group)
-      create(:group_membership, user:, group:)
+      organization = create(:organization)
+      create(:organization_membership, user:, organization:)
       owner = create(:user)
-      create(:group_membership, user: owner, group:)
-      project = create(:project, user: owner, group:, name: "Apollo", description: "Moonshot roadmap")
+      create(:organization_membership, user: owner, organization:)
+      project = create(:project, user: owner, owner: organization, name: "Apollo", description: "Moonshot roadmap")
       create(:project, name: "Other Apollo")
 
       get "/api/v1/search", params: { q: "Apollo" }, headers: auth_headers_for(user)
@@ -41,15 +41,12 @@ RSpec.describe "Api::V1::Search", type: :request do
       expect(slugs).not_to include(SearchDocument.find_by(title: "Other Apollo").resource_slug)
     end
 
-    it "searches resources in descendant groups" do
+    it "searches resources in user-owned projects" do
       user = create(:user)
-      parent = create(:group)
-      child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      project = create(:project, group: child, name: "Nested Apollo")
-      task = create(:task, project:, title: "Nested Apollo task")
+      project = create(:project, :user_owned, user:, name: "Personal Apollo")
+      task = create(:task, project:, title: "Personal Apollo task")
 
-      get "/api/v1/search", params: { q: "Nested Apollo" }, headers: auth_headers_for(user)
+      get "/api/v1/search", params: { q: "Personal Apollo" }, headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["results"].pluck("slug")).to include(
@@ -60,9 +57,9 @@ RSpec.describe "Api::V1::Search", type: :request do
 
     it "searches drive folders and files visible to the current user" do
       user = create(:user)
-      group = create(:group)
-      create(:group_membership, user:, group:)
-      project = create(:project, group:)
+      organization = create(:organization)
+      create(:organization_membership, user:, organization:)
+      project = create(:project, owner: organization)
       folder = create(:drive_item, project:, name: "Architecture")
       file = create(:drive_item, :file, project:, name: "Budget.xlsx")
       hidden_file = create(:drive_item, :file, name: "Budget hidden.xlsx")
@@ -72,12 +69,12 @@ RSpec.describe "Api::V1::Search", type: :request do
       expect(json_response["results"].pluck("slug")).not_to include("drive_item:#{hidden_file.id}")
     end
 
-    it "includes global users and member groups for authenticated users" do
+    it "includes global users and member organizations for authenticated users" do
       user = create(:user)
       target = create(:user, display_name: "Ada Lovelace")
-      group = create(:group, name: "Research Guild")
-      hidden_group = create(:group, name: "Research Vault")
-      create(:group_membership, user:, group:)
+      organization = create(:organization, name: "Research Guild")
+      hidden_organization = create(:organization, name: "Research Vault")
+      create(:organization_membership, user:, organization:)
 
       get "/api/v1/search", params: { q: "Ada" }, headers: auth_headers_for(user)
 
@@ -87,8 +84,8 @@ RSpec.describe "Api::V1::Search", type: :request do
       get "/api/v1/search", params: { q: "Research" }, headers: auth_headers_for(user)
 
       slugs = json_response["results"].pluck("slug")
-      expect(slugs).to include("group:#{group.id}")
-      expect(slugs).not_to include("group:#{hidden_group.id}")
+      expect(slugs).to include("organization:#{organization.id}")
+      expect(slugs).not_to include("organization:#{hidden_organization.id}")
     end
 
     it "orders exact slug matches first" do

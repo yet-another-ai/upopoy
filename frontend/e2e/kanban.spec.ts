@@ -2,8 +2,9 @@ import { expect, test, type Page, type Route } from '@playwright/test'
 
 interface ProjectPayload {
   id: number
-  group_id: number
-  group_name: string | null
+  owner_type: 'User' | 'Organization'
+  owner_id: number
+  owner_name: string
   name: string
   description: string | null
   created_at: string
@@ -87,8 +88,9 @@ async function installMockApi(page: Page) {
 
   const project: ProjectPayload = {
     id: 1,
-    group_id: 1,
-    group_name: 'Engineering',
+    owner_type: 'Organization',
+    owner_id: 1,
+    owner_name: 'Engineering',
     name: 'MVP',
     description: 'Initial Kanban surface',
     created_at: timestamp,
@@ -284,7 +286,7 @@ async function installMockApi(page: Page) {
     await json(route, project, 201)
   })
 
-  await page.route('**/api/v1/groups', async (route) => {
+  await page.route('**/api/v1/organizations', async (route) => {
     if (!(await requireAuth(route))) return
 
     await json(route, [
@@ -292,8 +294,6 @@ async function installMockApi(page: Page) {
         id: 1,
         name: 'Engineering',
         description: 'Product engineering workspace',
-        parent_group_id: null,
-        parent_group_name: null,
         user_ids: [1],
         users_count: 1,
         admin_user_ids: [1],

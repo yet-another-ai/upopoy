@@ -59,17 +59,17 @@ const openIterationIds = shallowRef<Set<number>>(new Set())
 
 const inboxIteration = computed(() => props.iterations.find((iteration) => iteration.inbox) ?? null)
 const tasksByIteration = computed(() => {
-  const grouped = new Map<number, Task[]>()
+  const organizationed = new Map<number, Task[]>()
 
   for (const status of props.statuses) {
     for (const task of status.tasks) {
-      const tasks = grouped.get(task.iteration_id) ?? []
+      const tasks = organizationed.get(task.iteration_id) ?? []
       tasks.push(task)
-      grouped.set(task.iteration_id, tasks)
+      organizationed.set(task.iteration_id, tasks)
     }
   }
 
-  return grouped
+  return organizationed
 })
 const iterationSections = computed(() =>
   props.iterations.map((iteration) => ({

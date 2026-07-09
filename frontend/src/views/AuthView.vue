@@ -6,12 +6,12 @@ import { useRouter } from 'vue-router'
 import AuthForm from '@/components/auth/AuthForm.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
-import { useUserGroupsStore } from '@/stores/userGroups'
+import { useOrganizationsStore } from '@/stores/organizations'
 import { api, type AuthInput, type AuthProvider, type AuthSettings } from '@/services/api'
 
 const authStore = useAuthStore()
 const projectsStore = useProjectsStore()
-const userGroupsStore = useUserGroupsStore()
+const organizationsStore = useOrganizationsStore()
 const auth = storeToRefs(authStore)
 const router = useRouter()
 const { t } = useI18n()
@@ -61,7 +61,7 @@ async function authenticate(input: AuthInput) {
 
   await router.push({ name: 'home' })
   await projectsStore.loadProjects()
-  await userGroupsStore.loadGroups()
+  await organizationsStore.loadOrganizations()
 }
 </script>
 

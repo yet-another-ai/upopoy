@@ -88,7 +88,7 @@ function resultTypeLabel(type: SearchResultType) {
     project: 'Project',
     task: 'Task',
     user: 'User',
-    group: 'Group',
+    organization: 'Organization',
   }[type]
 }
 </script>

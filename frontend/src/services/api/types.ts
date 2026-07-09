@@ -1,12 +1,15 @@
 export interface Project {
   id: number
-  group_id: number
-  group_name: string | null
+  owner_type: ProjectOwnerType
+  owner_id: number
+  owner_name: string | null
   name: string
   description: string | null
   created_at: string
   updated_at: string
 }
+
+export type ProjectOwnerType = 'User' | 'Organization'
 
 export interface User {
   id: number
@@ -20,16 +23,14 @@ export interface User {
 }
 
 export interface ManagedUser extends User {
-  group_ids: number[]
-  groups_count: number
+  organization_ids: number[]
+  organizations_count: number
 }
 
-export interface Group {
+export interface Organization {
   id: number
   name: string
   description: string | null
-  parent_group_id: number | null
-  parent_group_name: string | null
   user_ids: number[]
   users_count: number
   admin_user_ids: number[]
@@ -185,7 +186,7 @@ export interface DriveItemContent {
   content: string
 }
 
-export type SearchResultType = 'drive_item' | 'project' | 'task' | 'user' | 'group'
+export type SearchResultType = 'drive_item' | 'project' | 'task' | 'user' | 'organization'
 
 export interface SearchResult {
   slug: string
@@ -211,13 +212,13 @@ export interface SearchParams {
 export interface ProjectInput {
   name: string
   description?: string
-  group_id: number
+  owner_type: ProjectOwnerType
+  owner_id: number
 }
 
-export interface GroupInput {
+export interface OrganizationInput {
   name: string
   description?: string
-  parent_group_id?: number | null
   user_ids?: number[]
   admin_user_ids?: number[]
 }
@@ -245,6 +246,63 @@ export interface PaginatedUsers {
 export interface UserListParams {
   page?: number
   perPage?: number
+}
+
+export type ChatConversationKind = 'direct' | 'channel' | 'thread'
+
+export interface ChatMessage {
+  id: number
+  chat_conversation_id: number
+  conversation_id: number
+  author: User
+  body: string
+  thread_conversation_id: number | null
+  thread_reply_count: number
+  thread_last_message_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatConversation {
+  id: number
+  kind: ChatConversationKind
+  title: string
+  organization_id: number | null
+  organization_name: string | null
+  channel_id: number | null
+  channel_name: string | null
+  participants: User[]
+  other_participant: User | null
+  parent_message: ChatMessage | null
+  last_message_at: string | null
+  can_manage: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatChannel {
+  id: number
+  organization_id: number
+  name: string
+  description: string | null
+  conversation_id: number
+  can_manage: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatChannelInput {
+  name: string
+  description?: string
+}
+
+export interface ChatMessageInput {
+  body: string
+}
+
+export interface ChatMessageListParams {
+  beforeId?: number
+  limit?: number
 }
 
 export interface TaskInput {

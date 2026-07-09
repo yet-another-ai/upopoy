@@ -9,18 +9,20 @@ import GlobalSearch from '@/components/search/GlobalSearch.vue'
 import { nextRouteForAccess } from '@/router/access'
 import { useAuthStore } from '@/stores/auth'
 import { useBoardStore } from '@/stores/board'
+import { useChatsStore } from '@/stores/chats'
 import { useDriveStore } from '@/stores/drive'
 import { useProjectsStore } from '@/stores/projects'
 import { useToastsStore } from '@/stores/toasts'
-import { useUserGroupsStore } from '@/stores/userGroups'
+import { useOrganizationsStore } from '@/stores/organizations'
 import type { ContentClassKind } from '@/router'
 import { SERVER_UNAVAILABLE_EVENT, type SearchResult } from '@/services/api'
 
 const authStore = useAuthStore()
 const projectsStore = useProjectsStore()
 const boardStore = useBoardStore()
+const chatsStore = useChatsStore()
 const driveStore = useDriveStore()
-const userGroupsStore = useUserGroupsStore()
+const organizationsStore = useOrganizationsStore()
 const toasts = useToastsStore()
 const auth = storeToRefs(authStore)
 const route = useRoute()
@@ -80,15 +82,16 @@ function handleServerUnavailable() {
 }
 
 async function preloadWorkspaceData() {
-  await Promise.all([projectsStore.loadProjects(), userGroupsStore.loadGroups()])
+  await Promise.all([projectsStore.loadProjects(), organizationsStore.loadOrganizations()])
 }
 
 async function signOut() {
   await authStore.logout()
   projectsStore.clearProjects()
   boardStore.clearBoard()
+  chatsStore.clearChats()
   driveStore.clearDrive()
-  userGroupsStore.clearDirectory()
+  organizationsStore.clearDirectory()
   toasts.clearToasts()
   await router.push({ name: 'auth' })
 }
@@ -122,7 +125,7 @@ async function openSearchResult(result: SearchResult) {
     return
   }
 
-  await router.push({ name: 'group-detail', params: { groupId: result.id } })
+  await router.push({ name: 'organization-detail', params: { organizationId: result.id } })
 }
 
 function contentClassFor(kind: ContentClassKind = 'default') {

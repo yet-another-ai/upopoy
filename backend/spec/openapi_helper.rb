@@ -136,10 +136,10 @@ RSpec.configure do |config|
               system_admin: { type: :boolean },
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" },
-              group_ids: { type: :array, items: { type: :integer } },
-              groups_count: { type: :integer }
+              organization_ids: { type: :array, items: { type: :integer } },
+              organizations_count: { type: :integer }
             },
-            required: %w[id email display_name title bio system_admin created_at updated_at group_ids groups_count]
+            required: %w[id email display_name title bio system_admin created_at updated_at organization_ids organizations_count]
           },
           users_index: {
             type: :object,
@@ -178,14 +178,12 @@ RSpec.configure do |config|
             },
             required: %w[current_page total_pages total_count per_page]
           },
-          group: {
+          organization: {
             type: :object,
             properties: {
               id: { type: :integer },
               name: { type: :string },
               description: { type: :string, nullable: true },
-              parent_group_id: { type: :integer, nullable: true },
-              parent_group_name: { type: :string, nullable: true },
               user_ids: { type: :array, items: { type: :integer } },
               users_count: { type: :integer },
               admin_user_ids: { type: :array, items: { type: :integer } },
@@ -194,36 +192,120 @@ RSpec.configure do |config|
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" }
             },
-            required: %w[id name description parent_group_id parent_group_name user_ids users_count admin_user_ids admins_count can_admin created_at updated_at]
+            required: %w[id name description user_ids users_count admin_user_ids admins_count can_admin created_at updated_at]
           },
-          group_request: {
+          organization_request: {
             type: :object,
             properties: {
-              group: {
+              organization: {
                 type: :object,
                 properties: {
                   name: { type: :string },
                   description: { type: :string },
-                  parent_group_id: { type: :integer, nullable: true },
                   user_ids: { type: :array, items: { type: :integer } },
                   admin_user_ids: { type: :array, items: { type: :integer } }
                 }
               }
             },
-            required: %w[group]
+            required: %w[organization]
+          },
+          chat_channel: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              organization_id: { type: :integer },
+              name: { type: :string },
+              description: { type: :string, nullable: true },
+              conversation_id: { type: :integer },
+              can_manage: { type: :boolean },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id organization_id name description conversation_id can_manage created_at updated_at]
+          },
+          chat_channel_request: {
+            type: :object,
+            properties: {
+              chat_channel: {
+                type: :object,
+                properties: {
+                  name: { type: :string },
+                  description: { type: :string }
+                },
+                required: %w[name]
+              }
+            },
+            required: %w[chat_channel]
+          },
+          chat_message: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              chat_conversation_id: { type: :integer },
+              conversation_id: { type: :integer },
+              author: { "$ref" => "#/components/schemas/user" },
+              body: { type: :string },
+              thread_conversation_id: { type: :integer, nullable: true },
+              thread_reply_count: { type: :integer },
+              thread_last_message_at: { type: :string, format: :"date-time", nullable: true },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id chat_conversation_id conversation_id author body thread_conversation_id thread_reply_count thread_last_message_at created_at updated_at]
+          },
+          chat_message_request: {
+            type: :object,
+            properties: {
+              message: {
+                type: :object,
+                properties: {
+                  body: { type: :string }
+                },
+                required: %w[body]
+              }
+            },
+            required: %w[message]
+          },
+          chat_conversation: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              kind: { type: :string, enum: %w[direct channel thread] },
+              title: { type: :string },
+              organization_id: { type: :integer, nullable: true },
+              organization_name: { type: :string, nullable: true },
+              channel_id: { type: :integer, nullable: true },
+              channel_name: { type: :string, nullable: true },
+              participants: { type: :array, items: { "$ref" => "#/components/schemas/user" } },
+              other_participant: { "$ref" => "#/components/schemas/user", nullable: true },
+              parent_message: { "$ref" => "#/components/schemas/chat_message", nullable: true },
+              last_message_at: { type: :string, format: :"date-time", nullable: true },
+              can_manage: { type: :boolean },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id kind title organization_id organization_name channel_id channel_name participants other_participant parent_message last_message_at can_manage created_at updated_at]
+          },
+          direct_conversation_request: {
+            type: :object,
+            properties: {
+              user_id: { type: :integer }
+            },
+            required: %w[user_id]
           },
           project: {
             type: :object,
             properties: {
               id: { type: :integer },
-              group_id: { type: :integer, nullable: true },
+              owner_type: { type: :string, enum: %w[User Organization] },
+              owner_id: { type: :integer },
+              owner_name: { type: :string, nullable: true },
               name: { type: :string },
               description: { type: :string, nullable: true },
-              group_name: { type: :string, nullable: true },
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" }
             },
-            required: %w[id group_id name description group_name created_at updated_at]
+            required: %w[id owner_type owner_id owner_name name description created_at updated_at]
           },
           project_request: {
             type: :object,
@@ -233,7 +315,8 @@ RSpec.configure do |config|
                 properties: {
                   name: { type: :string },
                   description: { type: :string },
-                  group_id: { type: :integer, nullable: true }
+                  owner_type: { type: :string, enum: %w[User Organization] },
+                  owner_id: { type: :integer }
                 }
               }
             },

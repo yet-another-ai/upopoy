@@ -4,7 +4,7 @@ module Api
       before_action :set_project, only: [ :show, :update, :destroy, :board ]
 
       def index
-        @projects = policy_scope(Project).includes(:group).order(created_at: :desc)
+        @projects = policy_scope(Project).includes(:owner).order(created_at: :desc)
       end
 
       def show
@@ -53,11 +53,11 @@ module Api
       private
 
       def set_project
-        @project = policy_scope(Project).includes(:group).find(params[:id])
+        @project = policy_scope(Project).includes(:owner).find(params[:id])
       end
 
       def project_params
-        params.require(:project).permit(:name, :description, :group_id)
+        params.require(:project).permit(:name, :description, :owner_type, :owner_id)
       end
     end
   end

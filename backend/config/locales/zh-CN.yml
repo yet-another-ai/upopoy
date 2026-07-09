@@ -10,16 +10,15 @@ zh-CN:
       signed_out: "已退出登录"
   activerecord:
     attributes:
-      group:
+      organization:
         description: "描述"
         name: "名称"
-        parent_group: "父用户组"
-        parent_group_id: "父用户组"
       project:
         description: "描述"
-        group: "用户组"
-        group_id: "用户组"
         name: "名称"
+        owner: "归属方"
+        owner_id: "归属方"
+        owner_type: "归属类型"
       task:
         deadline: "截止日期"
         description: "描述"
@@ -50,7 +49,7 @@ zh-CN:
             iteration:
               blank: "不能为空"
     models:
-      group: "用户组"
+      organization: "组织"
       project: "项目"
       task: "任务"
       user: "用户"

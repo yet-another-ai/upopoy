@@ -28,8 +28,23 @@ Rails.application.routes.draw do
       end
 
       resources :users, only: [ :index, :show, :update ]
-      resources :groups, only: [ :index, :show, :create, :update, :destroy ]
+      resources :organizations, only: [ :index, :show, :create, :update, :destroy ] do
+        resources :chat_channels, only: [ :index, :create ]
+      end
       get "search", to: "search#index"
+
+      namespace :chats do
+        resources :conversations, only: [ :index, :show ] do
+          resources :messages, only: [ :index, :create ]
+        end
+        resources :direct_conversations, only: [ :create ]
+        resources :messages, only: [] do
+          member do
+            post :thread
+          end
+        end
+      end
+      resources :chat_channels, only: [ :update, :destroy ]
 
       resources :projects, only: [ :index, :show, :create, :update, :destroy ] do
         member do

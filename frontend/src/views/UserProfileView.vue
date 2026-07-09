@@ -2,15 +2,15 @@
 import { computed, onMounted, watch } from 'vue'
 import { ArrowLeftIcon, PencilIcon } from '@lucide/vue'
 import { RouterLink } from 'vue-router'
-import UserProfileDetails from '@/components/user-groups/UserProfileDetails.vue'
-import UserProfileForm from '@/components/user-groups/UserProfileForm.vue'
+import UserProfileDetails from '@/components/organizations/UserProfileDetails.vue'
+import UserProfileForm from '@/components/organizations/UserProfileForm.vue'
 import { Button } from '@/components/ui/button'
-import type { Group, ManagedUser, UserProfileInput } from '@/services/api'
+import type { Organization, ManagedUser, UserProfileInput } from '@/services/api'
 
 const props = defineProps<{
   userId: number
   users: readonly ManagedUser[]
-  groups: readonly Group[]
+  organizations: readonly Organization[]
   loading: boolean
   saving: boolean
   editing: boolean
@@ -19,7 +19,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   loadUser: [userId: number]
-  loadGroups: []
+  loadOrganizations: []
   saveUserProfile: [userId: number, input: UserProfileInput]
   cancelEdit: []
 }>()
@@ -41,7 +41,7 @@ watch(
 
 function loadProfile() {
   emit('loadUser', props.userId)
-  if (props.groups.length === 0) emit('loadGroups')
+  if (props.organizations.length === 0) emit('loadOrganizations')
 }
 </script>
 
@@ -73,7 +73,7 @@ function loadProfile() {
     <UserProfileForm
       v-else-if="props.editing && user"
       :user="user"
-      :groups="props.groups"
+      :organizations="props.organizations"
       :saving="props.saving"
       :can-manage-system-admins="props.canManageSystemAdmins"
       @save-user-profile="emit('saveUserProfile', $event.userId, $event.input)"
@@ -85,6 +85,6 @@ function loadProfile() {
       <p class="text-muted-foreground mt-1 text-sm">This user may have been deleted.</p>
     </div>
 
-    <UserProfileDetails v-else :user="user" :groups="props.groups" />
+    <UserProfileDetails v-else :user="user" :organizations="props.organizations" />
   </div>
 </template>

@@ -34,28 +34,31 @@
     "apps": "Apps",
     "dashboard": "Dashboard",
     "drive": "Drive",
+    "chats": "Chats",
     "kanban": "Kanban",
     "projectManagement": "Project management",
     "projects": "Projects",
-    "usersAndGroups": "Users & Groups"
+    "usersAndOrganizations": "Users & Organizations"
   },
   "dashboard": {
     "chooseApp": "Choose an app to continue.",
     "openProjectManagement": "Open Project management",
     "openKanban": "Open Kanban",
     "openDrive": "Open Drive",
-    "openUsersAndGroups": "Open User and Groups",
+    "openChats": "Open Chats",
+    "openUsersAndOrganizations": "Open Users and Organizations",
     "openAdminSettings": "Open Admin Settings",
     "projectsDescription": "Create and select workspaces.",
     "kanbanDescription": "Projects, tasks, and fixed workflow.",
     "driveDescription": "Folders, files, and Markdown documents.",
-    "usersAndGroupsDescription": "Manage groups and memberships.",
+    "chatsDescription": "Direct messages, channels, and threads.",
+    "usersAndOrganizationsDescription": "Manage organizations and memberships.",
     "adminSettingsDescription": "Configure authentication access."
   },
   "users": {
-    "sectionsLabel": "Users and groups sections",
+    "sectionsLabel": "Users and organizations sections",
     "users": "Users",
-    "groups": "Groups"
+    "organizations": "Organizations"
   },
   "tasks": {
     "board": "Board",

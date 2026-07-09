@@ -4,19 +4,19 @@ class DriveItemPolicy < ApplicationPolicy
   end
 
   def show?
-    project_group_member?
+    project_accessible?
   end
 
   def create?
-    project_group_member?
+    project_accessible?
   end
 
   def update?
-    project_group_member?
+    project_accessible?
   end
 
   def destroy?
-    project_group_member?
+    project_accessible?
   end
 
   def content?
@@ -43,16 +43,14 @@ class DriveItemPolicy < ApplicationPolicy
     def resolve
       return scope.none if user.blank?
 
-      scope.joins(:project).where(projects: { group_id: GroupHierarchy.accessible_group_ids_for(user) })
+      project_ids = ProjectPolicy::Scope.new(user, Project).resolve.select(:id)
+      scope.where(project_id: project_ids)
     end
   end
 
   private
 
-  def project_group_member?
-    return false if user.blank?
-
-    group_id = record.project&.group_id
-    user.can_access_group?(group_id)
+  def project_accessible?
+    ProjectPolicy.new(user, record.project).show?
   end
 end

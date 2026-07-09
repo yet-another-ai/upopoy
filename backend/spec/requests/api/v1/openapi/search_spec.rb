@@ -11,7 +11,7 @@ RSpec.describe "Api::V1::Search", openapi_spec: "v1/openapi.yaml", type: :reques
       security [ bearer_auth: [] ]
       produces "application/json"
       parameter name: :q, in: :query, type: :string, required: true
-      parameter name: :type, in: :query, type: :string, required: false, enum: %w[group project task user]
+      parameter name: :type, in: :query, type: :string, required: false, enum: %w[organization project task user]
 
       response "200", "results returned" do
         schema "$ref" => "#/components/schemas/search_response"

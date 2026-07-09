@@ -42,7 +42,7 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       project = create(:project)
       create(:task, project:, title: "First task")
       member = create(:user)
-      create(:group_membership, group: project.group, user: member)
+      create(:organization_membership, organization: project.owner, user: member)
 
       get "/api/v1/projects/#{project.id}/tasks", headers: auth_headers_for(member)
 
@@ -50,18 +50,15 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       expect(json_response.pluck("title")).to eq([ "First task" ])
     end
 
-    it "lists tasks in descendant group projects" do
+    it "lists tasks in user-owned projects for the owner" do
       user = create(:user)
-      parent = create(:group)
-      child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      project = create(:project, group: child)
-      create(:task, project:, title: "Inherited task")
+      project = create(:project, :user_owned, user:)
+      create(:task, project:, title: "Personal task")
 
       get "/api/v1/projects/#{project.id}/tasks", headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
-      expect(json_response.pluck("title")).to eq([ "Inherited task" ])
+      expect(json_response.pluck("title")).to eq([ "Personal task" ])
     end
 
     it "does not list another user's project tasks" do
@@ -86,7 +83,7 @@ RSpec.describe "Api::V1::Tasks", type: :request do
     it "creates a task in the requested status" do
       project = create(:project)
       member = create(:user)
-      create(:group_membership, group: project.group, user: member)
+      create(:organization_membership, organization: project.owner, user: member)
 
       post_project_task(project, task_params, user: member)
 
@@ -152,12 +149,9 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       )
     end
 
-    it "creates a task in a descendant group project" do
+    it "creates a task in a user-owned project" do
       user = create(:user)
-      parent = create(:group)
-      child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      project = create(:project, group: child)
+      project = create(:project, :user_owned, user:)
 
       post "/api/v1/projects/#{project.id}/tasks",
            params: { task: task_params },
@@ -190,7 +184,7 @@ RSpec.describe "Api::V1::Tasks", type: :request do
       project = create(:project)
       task = create(:task, project:)
       member = create(:user)
-      create(:group_membership, group: project.group, user: member)
+      create(:organization_membership, organization: project.owner, user: member)
 
       patch "/api/v1/tasks/#{task.id}",
             params: { task: { status: "done", position: 4 } },
@@ -244,7 +238,7 @@ RSpec.describe "Api::V1::Tasks", type: :request do
     it "deletes a task" do
       task = create(:task)
       member = create(:user)
-      create(:group_membership, group: task.project.group, user: member)
+      create(:organization_membership, organization: task.project.owner, user: member)
 
       expect {
         delete "/api/v1/tasks/#{task.id}", headers: auth_headers_for(member)

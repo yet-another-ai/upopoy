@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import MarkdownEditor from '@/components/markdown/MarkdownEditor.vue'
 import {
   Select,
   SelectContent,
@@ -11,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import UserMultiSelect from '@/components/search/UserMultiSelect.vue'
 import DeadlinePicker from './DeadlinePicker.vue'
 import {
@@ -105,7 +105,15 @@ function submitForm() {
 
     <div class="grid gap-1.5">
       <Label for="task-description">{{ t('tasks.description') }}</Label>
-      <Textarea id="task-description" v-model="form.description" rows="4" />
+      <MarkdownEditor
+        v-model="form.description"
+        textarea-id="task-description"
+        editor-label="Task description"
+        mode="edit"
+        empty-text="No description yet."
+        textarea-class="min-h-28"
+        :rows="4"
+      />
     </div>
 
     <div v-if="props.showStatus" class="grid gap-1.5">

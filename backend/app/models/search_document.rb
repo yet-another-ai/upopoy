@@ -4,12 +4,11 @@ class SearchDocument < ApplicationRecord
     "project" => "Project",
     "task" => "Task",
     "user" => "User",
-    "group" => "Group"
+    "organization" => "Organization"
   }.freeze
 
   belongs_to :searchable, polymorphic: true
-  belongs_to :user, optional: true
-  belongs_to :group, optional: true
+  belongs_to :owner, polymorphic: true, optional: true
 
   validates :resource_slug, presence: true, uniqueness: true
   validates :resource_type, presence: true, inclusion: { in: RESOURCE_TYPES.keys }
@@ -22,18 +21,18 @@ class SearchDocument < ApplicationRecord
   scope :visible_to, lambda { |user|
     return none if user.blank?
 
-    where(user_id: nil, group_id: nil)
-      .or(where(user_id: user.id))
-      .or(where(group_id: GroupHierarchy.accessible_group_ids_for(user)))
+    where(owner_type: nil, owner_id: nil)
+      .or(where(owner: user))
+      .or(where(owner_type: "Organization", owner_id: OrganizationMembership.accessible_organization_ids_for(user)))
   }
 
   scope :of_resource_type, ->(resource_type) { where(resource_type:) if resource_type.present? }
 
   def self.upsert_for(resource)
     document = find_or_initialize_by(searchable: resource)
+    owner = resource.search_owner if resource.respond_to?(:search_owner)
     document.assign_attributes(
-      user_id: resource.search_owner_user_id,
-      group_id: resource.respond_to?(:search_owner_group_id) ? resource.search_owner_group_id : nil,
+      owner:,
       resource_slug: resource.resource_slug,
       resource_type: resource.class.search_resource_type,
       title: resource.search_title,

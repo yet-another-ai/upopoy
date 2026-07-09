@@ -32,19 +32,19 @@ RSpec.describe "Api::V1::Projects", openapi_spec: "v1/openapi.yaml", type: :requ
       response "201", "project created" do
         schema "$ref" => "#/components/schemas/project"
 
-        let(:group) { create(:group) }
+        let(:organization) { create(:organization) }
         let(:request_params) do
           {
             project: {
               name: "AI Ops",
               description: "Agent-managed work.",
-              group_id: group.id
+              owner_type: "Organization", owner_id: organization.id
             }
           }
         end
 
         before do
-          create(:group_membership, :admin, user: current_user, group:)
+          create(:organization_membership, :admin, user: current_user, organization:)
         end
 
         run_test!

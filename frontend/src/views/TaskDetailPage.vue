@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeftIcon, CalendarIcon, ClockIcon, FlagIcon, UsersRoundIcon } from '@lucide/vue'
-import { computed, nextTick, reactive, shallowRef, useTemplateRef, watch } from 'vue'
+import { computed, reactive, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 import { Badge } from '@/components/ui/badge'
@@ -15,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import DeadlinePicker from '@/components/kanban/DeadlinePicker.vue'
+import MarkdownEditor from '@/components/markdown/MarkdownEditor.vue'
 import MarkdownPreview from '@/components/markdown/MarkdownPreview.vue'
 import UserMultiSelect from '@/components/search/UserMultiSelect.vue'
 import { formatDeadline } from '@/lib/deadline'
@@ -50,7 +50,6 @@ const loading = shallowRef(false)
 const saving = shallowRef(false)
 const error = shallowRef<string | null>(null)
 const editingDescription = shallowRef(false)
-const descriptionRef = useTemplateRef<HTMLTextAreaElement>('descriptionRef')
 
 const form = reactive({
   title: '',
@@ -150,12 +149,10 @@ function submitTaskForm() {
   })
 }
 
-async function editDescription() {
+function editDescription() {
   if (loading.value || !task.value) return
 
   editingDescription.value = true
-  await nextTick()
-  descriptionRef.value?.focus()
 }
 
 function cancelTaskForm() {
@@ -211,12 +208,15 @@ function cancelTaskForm() {
 
               <div class="grid gap-1.5">
                 <Label for="task-description">{{ t('tasks.description') }}</Label>
-                <Textarea
+                <MarkdownEditor
                   v-if="editingDescription"
-                  id="task-description"
-                  ref="descriptionRef"
                   v-model="form.description"
-                  rows="8"
+                  textarea-id="task-description"
+                  editor-label="Task description"
+                  mode="split"
+                  empty-text="No description yet."
+                  textarea-class="min-h-48"
+                  :rows="8"
                 />
                 <div
                   v-else

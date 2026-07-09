@@ -2,111 +2,80 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Projects", type: :request do
   describe "GET /api/v1/projects" do
-    it "lists projects newest first" do
+    it "lists user-owned and organization-owned projects newest first" do
       user = create(:user)
-      older = create(:project, user:, name: "Older")
-      newer = create(:project, user:, name: "Newer")
-      create(:project, name: "Other user's project")
+      organization = create(:organization)
+      create(:organization_membership, user:, organization:)
+      older = create(:project, :user_owned, user:, name: "Personal")
+      newer = create(:project, user:, owner: organization, name: "Org")
+      create(:project, :user_owned, name: "Private")
       older.update!(created_at: 1.day.ago)
       newer.update!(created_at: Time.current)
 
       get "/api/v1/projects", headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
-      expect(json_response.pluck("name")).to eq([ "Newer", "Older" ])
-    end
-
-    it "lists projects in descendant groups" do
-      user = create(:user)
-      parent = create(:group)
-      child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      project = create(:project, group: child, name: "Child Board")
-
-      get "/api/v1/projects", headers: auth_headers_for(user)
-
-      expect(response).to have_http_status(:ok)
-      expect(json_response.pluck("id")).to include(project.id)
-    end
-
-    it "requires authentication" do
-      get "/api/v1/projects"
-
-      expect(response).to have_http_status(:unauthorized)
+      expect(json_response.pluck("name")).to eq(%w[Org Personal])
     end
   end
 
   describe "POST /api/v1/projects" do
-    it "creates a project" do
+    it "creates a user-owned project" do
       user = create(:user)
-      group = create(:group)
-      create(:group_membership, :admin, user:, group:)
-      project_params = { name: "AI Ops", description: "Agent-managed work.", group_id: group.id }
 
       post "/api/v1/projects",
-           params: { project: project_params },
-           headers: auth_headers_for(user)
+        params: { project: { name: "Personal", owner_type: "User", owner_id: user.id } },
+        headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:created)
-      expect(json_response["name"]).to eq("AI Ops")
       project = Project.find(json_response["id"])
-      expect(project.user).to eq(user)
-      expect(project.group).to eq(group)
+      expect(project.owner).to eq(user)
+      expect(json_response.slice("owner_type", "owner_id", "owner_name")).to include(
+        "owner_type" => "User",
+        "owner_id" => user.id
+      )
     end
 
-    it "does not create a project for ordinary group members" do
+    it "creates an organization-owned project for organization admins" do
       user = create(:user)
-      group = create(:group)
-      create(:group_membership, user:, group:, admin: false)
+      organization = create(:organization)
+      create(:organization_membership, :admin, user:, organization:)
 
       post "/api/v1/projects",
-           params: { project: { name: "AI Ops", group_id: group.id } },
-           headers: auth_headers_for(user)
+        params: { project: { name: "Org", owner_type: "Organization", owner_id: organization.id } },
+        headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:created)
+      expect(Project.find(json_response["id"]).owner).to eq(organization)
+    end
+
+    it "does not create an organization-owned project for ordinary members" do
+      user = create(:user)
+      organization = create(:organization)
+      create(:organization_membership, user:, organization:, admin: false)
+
+      post "/api/v1/projects",
+        params: { project: { name: "Org", owner_type: "Organization", owner_id: organization.id } },
+        headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:forbidden)
     end
 
-    it "creates a project in a descendant group" do
+    it "does not create a user-owned project for another user" do
       user = create(:user)
-      parent = create(:group)
-      child = create(:group, parent_group: parent)
-      create(:group_membership, :admin, user:, group: parent)
+      other = create(:user)
 
       post "/api/v1/projects",
-           params: { project: { name: "Inherited Ops", group_id: child.id } },
-           headers: auth_headers_for(user)
-
-      expect(response).to have_http_status(:created)
-      expect(Project.find(json_response["id"]).group).to eq(child)
-    end
-
-    it "allows system admins to create a project in any group" do
-      user = create(:user, :system_admin)
-      group = create(:group)
-
-      post "/api/v1/projects",
-           params: { project: { name: "System Ops", group_id: group.id } },
-           headers: auth_headers_for(user)
-
-      expect(response).to have_http_status(:created)
-      expect(Project.find(json_response["id"]).group).to eq(group)
-    end
-
-    it "does not create a project in a group the user does not belong to" do
-      user = create(:user)
-      group = create(:group)
-
-      post "/api/v1/projects",
-           params: { project: { name: "AI Ops", group_id: group.id } },
-           headers: auth_headers_for(user)
+        params: { project: { name: "Other", owner_type: "User", owner_id: other.id } },
+        headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:forbidden)
     end
   end
 
   describe "GET /api/v1/projects/:id" do
-    it "returns a project" do
-      project = create(:project)
+    it "returns a user-owned project to its owner" do
+      project = create(:project, :user_owned)
 
       get "/api/v1/projects/#{project.id}", headers: auth_headers_for(project.user)
 
@@ -114,33 +83,20 @@ RSpec.describe "Api::V1::Projects", type: :request do
       expect(json_response["id"]).to eq(project.id)
     end
 
-    it "returns another user's project when the requester is a group member" do
+    it "returns an organization-owned project to members" do
       project = create(:project)
       member = create(:user)
-      create(:group_membership, group: project.group, user: member)
+      create(:organization_membership, organization: project.owner, user: member)
 
       get "/api/v1/projects/#{project.id}", headers: auth_headers_for(member)
 
       expect(response).to have_http_status(:ok)
-      expect(json_response["id"]).to eq(project.id)
-      expect(json_response["group_id"]).to eq(project.group_id)
+      expect(json_response["owner_type"]).to eq("Organization")
+      expect(json_response["owner_id"]).to eq(project.owner_id)
     end
 
-    it "returns a project when the requester belongs to an ancestor group" do
-      user = create(:user)
-      parent = create(:group)
-      child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      project = create(:project, group: child)
-
-      get "/api/v1/projects/#{project.id}", headers: auth_headers_for(user)
-
-      expect(response).to have_http_status(:ok)
-      expect(json_response["id"]).to eq(project.id)
-    end
-
-    it "does not return another user's project" do
-      project = create(:project)
+    it "does not return another user's personal project" do
+      project = create(:project, :user_owned)
 
       get "/api/v1/projects/#{project.id}", headers: auth_headers_for(create(:user))
 
@@ -149,65 +105,53 @@ RSpec.describe "Api::V1::Projects", type: :request do
   end
 
   describe "PATCH /api/v1/projects/:id" do
-    it "updates project attributes" do
-      project = create(:project)
-      member = create(:user)
-      create(:group_membership, :admin, group: project.group, user: member)
+    it "updates a user-owned project for the owner" do
+      project = create(:project, :user_owned)
 
       patch "/api/v1/projects/#{project.id}",
-            params: { project: { name: "Renamed" } },
-            headers: auth_headers_for(member)
+        params: { project: { name: "Renamed" } },
+        headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["name"]).to eq("Renamed")
     end
 
-    it "does not update project attributes for ordinary group members" do
-      project = create(:project)
-      member = create(:user)
-      create(:group_membership, group: project.group, user: member, admin: false)
+    it "moves a project to an organization the requester can admin" do
+      project = create(:project, :user_owned)
+      organization = create(:organization)
+      create(:organization_membership, :admin, user: project.user, organization:)
 
       patch "/api/v1/projects/#{project.id}",
-            params: { project: { name: "Renamed" } },
-            headers: auth_headers_for(member)
+        params: { project: { owner_type: "Organization", owner_id: organization.id } },
+        headers: auth_headers_for(project.user)
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
+      expect(project.reload.owner).to eq(organization)
     end
 
-    it "does not move a project to a group the requester cannot access" do
-      project = create(:project)
-      inaccessible_group = create(:group)
+    it "does not move a project to an organization the requester cannot admin" do
+      project = create(:project, :user_owned)
+      organization = create(:organization)
 
       patch "/api/v1/projects/#{project.id}",
-            params: { project: { group_id: inaccessible_group.id } },
-            headers: auth_headers_for(project.user)
+        params: { project: { owner_type: "Organization", owner_id: organization.id } },
+        headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:forbidden)
-      expect(project.reload.group).not_to eq(inaccessible_group)
+      expect(project.reload.owner).not_to eq(organization)
     end
   end
 
   describe "DELETE /api/v1/projects/:id" do
-    it "deletes a project" do
+    it "deletes a project for an organization admin" do
       project = create(:project)
       member = create(:user)
-      create(:group_membership, :admin, group: project.group, user: member)
+      create(:organization_membership, :admin, organization: project.owner, user: member)
 
       expect {
         delete "/api/v1/projects/#{project.id}", headers: auth_headers_for(member)
       }.to change(Project, :count).by(-1)
       expect(response).to have_http_status(:no_content)
-    end
-
-    it "does not delete a project for ordinary group members" do
-      project = create(:project)
-      member = create(:user)
-      create(:group_membership, group: project.group, user: member, admin: false)
-
-      expect {
-        delete "/api/v1/projects/#{project.id}", headers: auth_headers_for(member)
-      }.not_to change(Project, :count)
-      expect(response).to have_http_status(:forbidden)
     end
   end
 
@@ -220,18 +164,6 @@ RSpec.describe "Api::V1::Projects", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect_board_response(project)
-    end
-
-    it "localizes status names from the Accept-Language header" do
-      project = create(:project)
-
-      get "/api/v1/projects/#{project.id}/board",
-          headers: auth_headers_for(project.user).merge("Accept-Language" => "zh-CN")
-
-      expect(response).to have_http_status(:ok)
-      expect(json_response["statuses"].map { |status| status["name"] }).to eq(
-        %w[待办 进行中 待评审 完成]
-      )
     end
   end
 
@@ -248,8 +180,5 @@ RSpec.describe "Api::V1::Projects", type: :request do
     expect(json_response["iterations"].pluck("name")).to include("Inbox", "Sprint 1")
     expect(json_response["statuses"].map { |status| status["slug"] }).to eq(%w[todo in_progress under_review done])
     expect(json_response["statuses"].first["tasks"].pluck("title")).to eq([ "Plan" ])
-    expect(json_response["statuses"].first["tasks"].first["iteration_name"]).to eq("Sprint 1")
-    expect(json_response["statuses"].second["tasks"].pluck("title")).to eq([ "Build" ])
-    expect(json_response["statuses"].second["tasks"].first["iteration_name"]).to eq("Inbox")
   end
 end

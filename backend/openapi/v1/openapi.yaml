@@ -355,6 +355,161 @@ components:
               nullable: true
       required:
       - project
+    drive_item:
+      type: object
+      properties:
+        id:
+          type: integer
+        project_id:
+          type: integer
+        parent_id:
+          type: integer
+          nullable: true
+        kind:
+          type: string
+          enum:
+          - folder
+          - file
+        name:
+          type: string
+        text_content_cache:
+          type: string
+        markdown:
+          type: boolean
+        content_type:
+          type: string
+          nullable: true
+        byte_size:
+          type: integer
+          nullable: true
+        download_path:
+          type: string
+          nullable: true
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        versions_count:
+          type: integer
+        latest_version_number:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - project_id
+      - parent_id
+      - kind
+      - name
+      - text_content_cache
+      - markdown
+      - content_type
+      - byte_size
+      - download_path
+      - deleted_at
+      - versions_count
+      - latest_version_number
+      - created_at
+      - updated_at
+    drive_item_version:
+      type: object
+      properties:
+        id:
+          type: integer
+        drive_item_id:
+          type: integer
+        version_number:
+          type: integer
+        name:
+          type: string
+        content_type:
+          type: string
+          nullable: true
+        byte_size:
+          type: integer
+          nullable: true
+        text_content_cache:
+          type: string
+        markdown:
+          type: boolean
+        download_path:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - drive_item_id
+      - version_number
+      - name
+      - content_type
+      - byte_size
+      - text_content_cache
+      - markdown
+      - download_path
+      - created_at
+      - updated_at
+    drive_item_request:
+      type: object
+      properties:
+        drive_item:
+          type: object
+          properties:
+            kind:
+              type: string
+              enum:
+              - folder
+              - file
+            name:
+              type: string
+            parent_id:
+              type: integer
+              nullable: true
+            content:
+              type: string
+            base_version_number:
+              type: integer
+              nullable: true
+      required:
+      - drive_item
+    drive_item_upload_request:
+      type: object
+      properties:
+        drive_item:
+          type: object
+          properties:
+            kind:
+              type: string
+              enum:
+              - file
+            name:
+              type: string
+            parent_id:
+              type: integer
+              nullable: true
+            file:
+              type: string
+              format: binary
+            base_version_number:
+              type: integer
+              nullable: true
+      required:
+      - drive_item
+    drive_item_content:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+      - content
     iteration:
       type: object
       properties:
@@ -803,6 +958,267 @@ paths:
                     type: string
                 required:
                 - message
+  "/api/v1/projects/{project_id}/drive_items":
+    parameters:
+    - name: project_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: parent_id
+      in: query
+      required: false
+      nullable: true
+      schema:
+        type: integer
+    get:
+      summary: Lists project drive items
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: drive items returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/drive_item"
+    post:
+      summary: Creates a drive item
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: drive item created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - "$ref": "#/components/schemas/drive_item_request"
+              - "$ref": "#/components/schemas/drive_item_upload_request"
+          multipart/form-data:
+            schema:
+              oneOf:
+              - "$ref": "#/components/schemas/drive_item_request"
+              - "$ref": "#/components/schemas/drive_item_upload_request"
+  "/api/v1/drive_items/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Returns a drive item
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: drive item returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item"
+    patch:
+      summary: Updates a drive item
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: drive item updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/drive_item_request"
+    delete:
+      summary: Deletes a drive item
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: drive item deleted
+  "/api/v1/drive_items/{id}/file":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Uploads a new file version
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: file version uploaded
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: file
+  "/api/v1/drive_items/{id}/content":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Returns markdown content
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: markdown content returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item_content"
+    patch:
+      summary: Updates markdown content
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: markdown content updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item_content"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/drive_item_request"
+  "/api/v1/drive_items/{id}/versions":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Lists drive item versions
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: drive item versions returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/drive_item_version"
+  "/api/v1/drive_items/{id}/download":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Downloads a file
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '302':
+          description: redirected to blob
+  "/api/v1/drive_item_versions/{id}/content":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Returns version markdown content
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: version markdown content returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item_content"
+  "/api/v1/drive_item_versions/{id}/download":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Downloads a version file
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '302':
+          description: redirected to version blob
+  "/api/v1/drive_item_versions/{id}/restore":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Restores a drive item version
+      tags:
+      - Drive
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: version restored
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/drive_item"
   "/api/v1/groups":
     get:
       summary: Lists accessible groups

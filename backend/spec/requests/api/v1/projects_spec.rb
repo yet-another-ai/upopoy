@@ -40,7 +40,7 @@ RSpec.describe "Api::V1::Projects", type: :request do
     it "creates a project" do
       user = create(:user)
       group = create(:group)
-      create(:group_membership, user:, group:)
+      create(:group_membership, :admin, user:, group:)
       project_params = { name: "AI Ops", description: "Agent-managed work.", group_id: group.id }
 
       post "/api/v1/projects",
@@ -70,7 +70,7 @@ RSpec.describe "Api::V1::Projects", type: :request do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
+      create(:group_membership, :admin, user:, group: parent)
 
       post "/api/v1/projects",
            params: { project: { name: "Inherited Ops", group_id: child.id } },
@@ -152,7 +152,7 @@ RSpec.describe "Api::V1::Projects", type: :request do
     it "updates project attributes" do
       project = create(:project)
       member = create(:user)
-      create(:group_membership, group: project.group, user: member)
+      create(:group_membership, :admin, group: project.group, user: member)
 
       patch "/api/v1/projects/#{project.id}",
             params: { project: { name: "Renamed" } },
@@ -191,7 +191,7 @@ RSpec.describe "Api::V1::Projects", type: :request do
     it "deletes a project" do
       project = create(:project)
       member = create(:user)
-      create(:group_membership, group: project.group, user: member)
+      create(:group_membership, :admin, group: project.group, user: member)
 
       expect {
         delete "/api/v1/projects/#{project.id}", headers: auth_headers_for(member)

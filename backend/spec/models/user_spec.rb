@@ -39,7 +39,7 @@ RSpec.describe User, type: :model do
     user = create(:user)
     parent = create(:group)
     child = create(:group, parent_group: parent)
-    create(:group_membership, user:, group: parent)
+    create(:group_membership, :admin, user:, group: parent)
 
     expect(user.can_admin_group?(parent.id)).to be(true)
     expect(user.can_admin_group?(child.id)).to be(true)

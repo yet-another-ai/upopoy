@@ -8,7 +8,7 @@ FactoryBot.define do
     after(:create) do |project|
       next if GroupMembership.exists?(group: project.group, user: project.user)
 
-      create(:group_membership, group: project.group, user: project.user)
+      create(:group_membership, :admin, group: project.group, user: project.user)
     end
   end
 end

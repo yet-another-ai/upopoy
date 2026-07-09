@@ -120,7 +120,7 @@ module Api
       end
 
       def ensure_group_has_admin!(group)
-        return if group.group_memberships.reload.any?(&:admin?)
+        return if group.group_memberships.where(admin: true).exists?
 
         group.errors.add(:admin_user_ids, :blank)
         raise ActiveRecord::RecordInvalid, group

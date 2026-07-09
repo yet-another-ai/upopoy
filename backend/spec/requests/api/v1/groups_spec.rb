@@ -84,7 +84,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
+      create(:group_membership, :admin, user:, group: parent)
 
       post "/api/v1/groups",
            params: { group: { name: "Nested", parent_group_id: child.id } },
@@ -113,7 +113,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
       user = create(:user)
       member = create(:user)
       group = create(:group)
-      create(:group_membership, user:, group:)
+      create(:group_membership, :admin, user:, group:)
       group_params = { group: { name: "Renamed", user_ids: [ member.id ], admin_user_ids: [ member.id ] } }
 
       patch "/api/v1/groups/#{group.id}",
@@ -129,7 +129,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
     it "rejects removing the final direct admin" do
       user = create(:user)
       group = create(:group)
-      create(:group_membership, user:, group:)
+      create(:group_membership, :admin, user:, group:)
 
       patch "/api/v1/groups/#{group.id}",
             params: { group: { admin_user_ids: [] } },
@@ -144,8 +144,8 @@ RSpec.describe "Api::V1::Groups", type: :request do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      create(:group_membership, user:, group: child)
+      create(:group_membership, :admin, user:, group: parent)
+      create(:group_membership, :admin, user:, group: child)
 
       patch "/api/v1/groups/#{parent.id}",
             params: { group: { parent_group_id: child.id } },
@@ -183,8 +183,8 @@ RSpec.describe "Api::V1::Groups", type: :request do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      create(:group_membership, group: child)
+      create(:group_membership, :admin, user:, group: parent)
+      create(:group_membership, :admin, group: child)
 
       patch "/api/v1/groups/#{child.id}",
             params: { group: { name: "Renamed child" } },
@@ -197,7 +197,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
     it "allows system admins to update any group" do
       user = create(:user, :system_admin)
       group = create(:group)
-      create(:group_membership, group:)
+      create(:group_membership, :admin, group:)
 
       patch "/api/v1/groups/#{group.id}",
             params: { group: { name: "System renamed" } },
@@ -212,7 +212,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
     it "deletes a group" do
       user = create(:user)
       group = create(:group)
-      create(:group_membership, user:, group:)
+      create(:group_membership, :admin, user:, group:)
 
       expect {
         delete "/api/v1/groups/#{group.id}", headers: auth_headers_for(user)

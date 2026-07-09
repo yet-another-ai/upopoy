@@ -1,5 +1,5 @@
 user_ids = group.user_ids
-admin_user_ids = group.group_memberships.select(&:admin?).map(&:user_id)
+admin_user_ids = group.group_memberships.filter_map { |membership| membership.user_id if membership.admin? }
 parent_group_visible = group.parent_group_id.present? && viewer.can_access_group?(group.parent_group_id)
 
 json.extract! group, :id, :name, :description, :parent_group_id, :created_at, :updated_at

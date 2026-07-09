@@ -44,7 +44,7 @@ RSpec.describe "Api::V1::Projects", openapi_spec: "v1/openapi.yaml", type: :requ
         end
 
         before do
-          create(:group_membership, user: current_user, group:)
+          create(:group_membership, :admin, user: current_user, group:)
         end
 
         run_test!

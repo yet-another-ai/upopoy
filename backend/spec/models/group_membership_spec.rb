@@ -16,7 +16,7 @@ RSpec.describe GroupMembership, type: :model do
   end
 
   it "does not allow the final group admin to be demoted" do
-    membership = create(:group_membership)
+    membership = create(:group_membership, :admin)
 
     membership.admin = false
 
@@ -25,15 +25,15 @@ RSpec.describe GroupMembership, type: :model do
   end
 
   it "does not allow the final group admin membership to be destroyed" do
-    membership = create(:group_membership)
+    membership = create(:group_membership, :admin)
 
     expect(membership.destroy).to be(false)
     expect(membership.errors[:admin]).to be_present
   end
 
   it "allows an admin to be demoted when another direct admin remains" do
-    membership = create(:group_membership)
-    create(:group_membership, group: membership.group)
+    membership = create(:group_membership, :admin)
+    create(:group_membership, :admin, group: membership.group)
 
     membership.update!(admin: false)
 

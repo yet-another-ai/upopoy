@@ -38,10 +38,28 @@ Rails.application.routes.draw do
 
         resources :iterations, only: [ :index, :create ]
         resources :tasks, only: [ :index, :create ]
+        resources :drive_items, only: [ :index, :create ]
       end
 
       resources :iterations, only: [ :show, :update, :destroy ]
       resources :tasks, only: [ :show, :update, :destroy ]
+      resources :drive_items, only: [ :show, :update, :destroy ] do
+        member do
+          get :content
+          patch :content, action: :update_content
+          get :download
+          patch :file, action: :update_file
+          get :versions
+        end
+      end
+
+      resources :drive_item_versions, only: [] do
+        member do
+          get :content
+          get :download
+          post :restore
+        end
+      end
     end
   end
 end

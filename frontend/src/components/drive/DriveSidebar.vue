@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarRangeIcon, FolderKanbanIcon, KanbanIcon } from '@lucide/vue'
+import { FolderKanbanIcon, FolderOpenIcon } from '@lucide/vue'
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { Button } from '@/components/ui/button'
@@ -11,21 +11,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import type { Component } from 'vue'
 import type { Project } from '@/services/api'
-
-type KanbanView = 'kanban' | 'iterations'
 
 const props = defineProps<{
   projects: readonly Project[]
   selectedProjectId: number | null
-  activeView: KanbanView
   loading: boolean
 }>()
 
 const emit = defineEmits<{
   selectProject: [projectId: number]
-  selectView: [view: KanbanView]
 }>()
 
 const selectedProjectValue = computed({
@@ -42,11 +37,6 @@ const selectedProjectName = computed(
   () =>
     props.projects.find((project) => project.id === props.selectedProjectId)?.name ?? 'No project',
 )
-
-const views: Array<{ id: KanbanView; label: string; icon: Component }> = [
-  { id: 'kanban', label: 'Kanban', icon: KanbanIcon },
-  { id: 'iterations', label: 'Iterations', icon: CalendarRangeIcon },
-]
 </script>
 
 <template>
@@ -57,17 +47,15 @@ const views: Array<{ id: KanbanView; label: string; icon: Component }> = [
       <div class="flex items-center justify-between gap-3">
         <div class="min-w-0">
           <p class="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            Project
+            Drive
           </p>
           <h2 class="truncate text-xl leading-tight font-semibold">
             {{ selectedProjectName }}
           </h2>
         </div>
-        <Button as-child size="icon" variant="outline" aria-label="Project management">
-          <RouterLink :to="{ name: 'projects' }">
-            <FolderKanbanIcon />
-          </RouterLink>
-        </Button>
+        <div class="bg-muted grid size-9 shrink-0 place-items-center rounded-lg">
+          <FolderOpenIcon class="size-5" />
+        </div>
       </div>
 
       <Select v-if="props.projects.length > 0" v-model="selectedProjectValue">
@@ -86,22 +74,16 @@ const views: Array<{ id: KanbanView; label: string; icon: Component }> = [
       </Select>
 
       <p v-else-if="!props.loading" class="text-muted-foreground text-sm">
-        Create a project in Project management to start shaping the board.
+        Create a project in Project management to start storing project documents.
       </p>
     </div>
 
     <Separator class="my-4" />
 
-    <nav class="grid gap-1" aria-label="Kanban views">
-      <Button
-        v-for="view in views"
-        :key="view.id"
-        class="justify-start"
-        :variant="props.activeView === view.id ? 'secondary' : 'ghost'"
-        @click="emit('selectView', view.id)"
-      >
-        <component :is="view.icon" />
-        {{ view.label }}
+    <nav class="grid gap-1" aria-label="Drive app">
+      <Button class="justify-start" variant="secondary">
+        <FolderOpenIcon />
+        Drive
       </Button>
     </nav>
 

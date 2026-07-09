@@ -7,6 +7,7 @@ class Project < ApplicationRecord
   belongs_to :group
   has_many :iterations, dependent: :destroy
   has_many :tasks, dependent: :destroy
+  has_many :drive_items, dependent: :destroy
 
   after_create :ensure_inbox_iteration
 

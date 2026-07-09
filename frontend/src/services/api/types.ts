@@ -139,7 +139,53 @@ export interface Board {
   statuses: BoardStatus[]
 }
 
-export type SearchResultType = 'project' | 'task' | 'user' | 'group'
+export type DriveItemKind = 'folder' | 'file'
+
+export interface DriveItem {
+  id: number
+  project_id: number
+  parent_id: number | null
+  kind: DriveItemKind
+  name: string
+  text_content_cache: string
+  markdown: boolean
+  content_type: string | null
+  byte_size: number | null
+  download_path: string | null
+  deleted_at: string | null
+  versions_count: number
+  latest_version_number: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface DriveItemVersion {
+  id: number
+  drive_item_id: number
+  version_number: number
+  name: string
+  content_type: string | null
+  byte_size: number | null
+  text_content_cache: string
+  markdown: boolean
+  download_path: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DriveItemInput {
+  kind: DriveItemKind
+  name?: string
+  parent_id?: number | null
+  content?: string
+  base_version_number?: number | null
+}
+
+export interface DriveItemContent {
+  content: string
+}
+
+export type SearchResultType = 'drive_item' | 'project' | 'task' | 'user' | 'group'
 
 export interface SearchResult {
   slug: string

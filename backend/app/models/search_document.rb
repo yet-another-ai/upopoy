@@ -1,5 +1,6 @@
 class SearchDocument < ApplicationRecord
   RESOURCE_TYPES = {
+    "drive_item" => "DriveItem",
     "project" => "Project",
     "task" => "Task",
     "user" => "User",

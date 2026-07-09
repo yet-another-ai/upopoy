@@ -10,10 +10,39 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_091000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "application_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -22,6 +51,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_091000) do
     t.integer "singleton_guard", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["singleton_guard"], name: "index_application_settings_on_singleton_guard", unique: true
+  end
+
+  create_table "drive_item_versions", force: :cascade do |t|
+    t.bigint "byte_size"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.bigint "drive_item_id", null: false
+    t.string "name", null: false
+    t.text "text_content_cache", default: "", null: false
+    t.datetime "updated_at", null: false
+    t.integer "version_number", null: false
+    t.index ["drive_item_id", "version_number"], name: "index_drive_item_versions_on_drive_item_id_and_version_number", unique: true
+    t.index ["drive_item_id"], name: "index_drive_item_versions_on_drive_item_id"
+  end
+
+  create_table "drive_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.string "kind", null: false
+    t.string "name", null: false
+    t.bigint "parent_id"
+    t.bigint "project_id", null: false
+    t.text "text_content_cache", default: "", null: false
+    t.datetime "updated_at", null: false
+    t.index "project_id, lower((name)::text)", name: "index_drive_items_on_project_root_name", unique: true, where: "((parent_id IS NULL) AND (deleted_at IS NULL))"
+    t.index "project_id, parent_id, lower((name)::text)", name: "index_drive_items_on_project_parent_name", unique: true, where: "((parent_id IS NOT NULL) AND (deleted_at IS NULL))"
+    t.index ["deleted_at"], name: "index_drive_items_on_deleted_at"
+    t.index ["parent_id"], name: "index_drive_items_on_parent_id"
+    t.index ["project_id", "kind"], name: "index_drive_items_on_project_id_and_kind"
+    t.index ["project_id"], name: "index_drive_items_on_project_id"
   end
 
   create_table "group_hierarchies", force: :cascade do |t|
@@ -185,6 +244,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_091000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "drive_item_versions", "drive_items", on_delete: :cascade
+  add_foreign_key "drive_items", "drive_items", column: "parent_id", on_delete: :cascade
+  add_foreign_key "drive_items", "projects", on_delete: :cascade
   add_foreign_key "group_hierarchies", "groups", column: "ancestor_group_id", on_delete: :cascade
   add_foreign_key "group_hierarchies", "groups", column: "descendant_group_id", on_delete: :cascade
   add_foreign_key "group_memberships", "groups", on_delete: :cascade

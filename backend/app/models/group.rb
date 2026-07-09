@@ -18,6 +18,8 @@ class Group < ApplicationRecord
   has_many :group_memberships, dependent: :destroy
   has_many :users, through: :group_memberships
   has_many :projects, dependent: :destroy
+  has_many :chat_conversations, dependent: :destroy
+  has_many :chat_channels, dependent: :destroy
   has_many :ancestor_group_hierarchies,
            class_name: "GroupHierarchy",
            foreign_key: :descendant_group_id,

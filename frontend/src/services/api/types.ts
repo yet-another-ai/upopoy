@@ -247,6 +247,63 @@ export interface UserListParams {
   perPage?: number
 }
 
+export type ChatConversationKind = 'direct' | 'channel' | 'thread'
+
+export interface ChatMessage {
+  id: number
+  chat_conversation_id: number
+  conversation_id: number
+  author: User
+  body: string
+  thread_conversation_id: number | null
+  thread_reply_count: number
+  thread_last_message_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatConversation {
+  id: number
+  kind: ChatConversationKind
+  title: string
+  group_id: number | null
+  group_name: string | null
+  channel_id: number | null
+  channel_name: string | null
+  participants: User[]
+  other_participant: User | null
+  parent_message: ChatMessage | null
+  last_message_at: string | null
+  can_manage: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatChannel {
+  id: number
+  group_id: number
+  name: string
+  description: string | null
+  conversation_id: number
+  can_manage: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatChannelInput {
+  name: string
+  description?: string
+}
+
+export interface ChatMessageInput {
+  body: string
+}
+
+export interface ChatMessageListParams {
+  beforeId?: number
+  limit?: number
+}
+
 export interface TaskInput {
   status?: TaskStatus
   priority?: TaskPriority

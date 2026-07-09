@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -51,6 +51,57 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_103000) do
     t.integer "singleton_guard", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["singleton_guard"], name: "index_application_settings_on_singleton_guard", unique: true
+  end
+
+  create_table "chat_channels", force: :cascade do |t|
+    t.bigint "chat_conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.text "description"
+    t.bigint "group_id", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index "group_id, lower((name)::text)", name: "index_chat_channels_on_group_and_lower_name", unique: true
+    t.index ["chat_conversation_id"], name: "index_chat_channels_on_chat_conversation_id", unique: true
+    t.index ["created_by_id"], name: "index_chat_channels_on_created_by_id"
+    t.index ["group_id"], name: "index_chat_channels_on_group_id"
+  end
+
+  create_table "chat_conversation_participants", force: :cascade do |t|
+    t.bigint "chat_conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["chat_conversation_id", "user_id"], name: "index_chat_participants_on_conversation_and_user", unique: true
+    t.index ["user_id"], name: "index_chat_conversation_participants_on_user_id"
+  end
+
+  create_table "chat_conversations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "direct_key"
+    t.bigint "group_id"
+    t.string "kind", null: false
+    t.datetime "last_message_at"
+    t.bigint "parent_message_id"
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_chat_conversations_on_created_by_id"
+    t.index ["direct_key"], name: "index_chat_conversations_on_direct_key", unique: true, where: "(direct_key IS NOT NULL)"
+    t.index ["group_id", "kind"], name: "index_chat_conversations_on_group_id_and_kind"
+    t.index ["group_id"], name: "index_chat_conversations_on_group_id"
+    t.index ["kind"], name: "index_chat_conversations_on_kind"
+    t.index ["parent_message_id"], name: "index_chat_conversations_on_parent_message_id", unique: true, where: "(parent_message_id IS NOT NULL)"
+  end
+
+  create_table "chat_messages", force: :cascade do |t|
+    t.bigint "author_id", null: false
+    t.text "body", null: false
+    t.bigint "chat_conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_chat_messages_on_author_id"
+    t.index ["chat_conversation_id", "id"], name: "index_chat_messages_on_chat_conversation_id_and_id"
+    t.index ["chat_conversation_id"], name: "index_chat_messages_on_chat_conversation_id"
   end
 
   create_table "drive_item_versions", force: :cascade do |t|
@@ -236,6 +287,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_103000) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.json "skills", default: [], null: false
     t.boolean "system_admin", default: false, null: false
     t.string "title"
     t.datetime "updated_at", null: false
@@ -246,6 +298,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_103000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "chat_channels", "chat_conversations", on_delete: :cascade
+  add_foreign_key "chat_channels", "groups", on_delete: :cascade
+  add_foreign_key "chat_channels", "users", column: "created_by_id"
+  add_foreign_key "chat_conversation_participants", "chat_conversations", on_delete: :cascade
+  add_foreign_key "chat_conversation_participants", "users", on_delete: :cascade
+  add_foreign_key "chat_conversations", "chat_messages", column: "parent_message_id", on_delete: :cascade
+  add_foreign_key "chat_conversations", "groups"
+  add_foreign_key "chat_conversations", "users", column: "created_by_id"
+  add_foreign_key "chat_messages", "chat_conversations", on_delete: :cascade
+  add_foreign_key "chat_messages", "users", column: "author_id"
   add_foreign_key "drive_item_versions", "drive_items", on_delete: :cascade
   add_foreign_key "drive_items", "drive_items", column: "parent_id", on_delete: :cascade
   add_foreign_key "drive_items", "projects", on_delete: :cascade

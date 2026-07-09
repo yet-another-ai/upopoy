@@ -3,6 +3,7 @@ import {
   FolderKanbanIcon,
   FolderOpenIcon,
   KanbanIcon,
+  MessageCircleIcon,
   SettingsIcon,
   UsersRoundIcon,
 } from '@lucide/vue'
@@ -76,6 +77,23 @@ const canManageAdminSettings = computed(() => Boolean(user.value?.system_admin))
         <span class="grid gap-1">
           <span class="text-lg font-semibold">{{ t('navigation.drive') }}</span>
           <span class="text-muted-foreground text-sm">{{ t('dashboard.driveDescription') }}</span>
+        </span>
+      </RouterLink>
+
+      <RouterLink
+        :to="{ name: 'chats' }"
+        class="border-border bg-card text-card-foreground hover:border-primary/40 hover:bg-accent focus-visible:ring-ring grid min-h-36 gap-4 rounded-lg border p-5 transition outline-none focus-visible:ring-2"
+        :aria-label="t('dashboard.openChats')"
+      >
+        <span
+          class="bg-primary text-primary-foreground grid size-12 place-items-center rounded-md"
+          aria-hidden="true"
+        >
+          <MessageCircleIcon class="size-6" />
+        </span>
+        <span class="grid gap-1">
+          <span class="text-lg font-semibold">{{ t('navigation.chats') }}</span>
+          <span class="text-muted-foreground text-sm">{{ t('dashboard.chatsDescription') }}</span>
         </span>
       </RouterLink>
 

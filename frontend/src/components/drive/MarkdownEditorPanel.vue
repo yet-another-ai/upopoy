@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, shallowRef, watch } from 'vue'
-import { EyeIcon, HistoryIcon, RotateCcwIcon, SaveIcon, XIcon } from '@lucide/vue'
+import { HistoryIcon, RotateCcwIcon, SaveIcon, XIcon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import MarkdownPreview from '@/components/markdown/MarkdownPreview.vue'
+import MarkdownEditor from '@/components/markdown/MarkdownEditor.vue'
 import type { DriveItem, DriveItemVersion } from '@/services/api'
 
 const props = defineProps<{
@@ -20,7 +19,6 @@ const emit = defineEmits<{
 }>()
 
 const draft = shallowRef('')
-const preview = shallowRef(true)
 
 const changed = computed(() => draft.value !== props.content)
 
@@ -28,7 +26,6 @@ watch(
   () => [props.item?.id, props.content] as const,
   () => {
     draft.value = props.content
-    preview.value = true
   },
   { immediate: true },
 )
@@ -41,9 +38,6 @@ watch(
         <h3 class="truncate text-base font-semibold">{{ props.item.name }}</h3>
       </div>
       <div class="ml-auto flex gap-1">
-        <Button size="icon-sm" variant="ghost" aria-label="Toggle preview" @click="preview = !preview">
-          <EyeIcon />
-        </Button>
         <Button size="icon-sm" variant="ghost" :disabled="props.saving || !changed" aria-label="Save Markdown" @click="emit('save', draft)">
           <SaveIcon />
         </Button>
@@ -54,15 +48,15 @@ watch(
     </div>
 
     <div class="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_13rem]">
-      <Textarea
+      <MarkdownEditor
         v-model="draft"
-        class="h-full min-h-[20rem] resize-none font-mono text-sm lg:min-h-0"
-        aria-label="Markdown content"
+        class="lg:col-span-2"
+        mode="split"
+        editor-label="Markdown content"
+        empty-text="Empty document"
+        textarea-class="h-full min-h-[28rem] lg:min-h-[28rem]"
+        preview-class="min-h-[28rem] lg:min-h-[28rem]"
       />
-
-      <div v-show="preview" class="border-border min-h-[20rem] overflow-auto rounded-lg border p-4 lg:min-h-0">
-        <MarkdownPreview :source="draft" empty-text="Empty document" />
-      </div>
 
       <div class="border-border grid min-h-[20rem] content-start gap-2 overflow-auto rounded-lg border p-3 lg:min-h-0">
         <div class="text-muted-foreground flex items-center gap-1.5 text-xs font-medium uppercase">

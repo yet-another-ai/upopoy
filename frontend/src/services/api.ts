@@ -1,4 +1,5 @@
 import { authApi } from './api/auth'
+import { chatsApi } from './api/chats'
 import { groupsApi } from './api/groups'
 import { driveApi } from './api/drive'
 import { projectsApi } from './api/projects'
@@ -14,6 +15,7 @@ export const api = {
   ...settingsApi,
   ...authApi,
   ...usersApi,
+  ...chatsApi,
   ...groupsApi,
   ...driveApi,
   ...searchApi,

@@ -310,6 +310,171 @@ components:
                 type: integer
       required:
       - group
+    chat_channel:
+      type: object
+      properties:
+        id:
+          type: integer
+        group_id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        conversation_id:
+          type: integer
+        can_manage:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - group_id
+      - name
+      - description
+      - conversation_id
+      - can_manage
+      - created_at
+      - updated_at
+    chat_channel_request:
+      type: object
+      properties:
+        chat_channel:
+          type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+          required:
+          - name
+      required:
+      - chat_channel
+    chat_message:
+      type: object
+      properties:
+        id:
+          type: integer
+        chat_conversation_id:
+          type: integer
+        conversation_id:
+          type: integer
+        author:
+          "$ref": "#/components/schemas/user"
+        body:
+          type: string
+        thread_conversation_id:
+          type: integer
+          nullable: true
+        thread_reply_count:
+          type: integer
+        thread_last_message_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - chat_conversation_id
+      - conversation_id
+      - author
+      - body
+      - thread_conversation_id
+      - thread_reply_count
+      - thread_last_message_at
+      - created_at
+      - updated_at
+    chat_message_request:
+      type: object
+      properties:
+        message:
+          type: object
+          properties:
+            body:
+              type: string
+          required:
+          - body
+      required:
+      - message
+    chat_conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+          enum:
+          - direct
+          - channel
+          - thread
+        title:
+          type: string
+        group_id:
+          type: integer
+          nullable: true
+        group_name:
+          type: string
+          nullable: true
+        channel_id:
+          type: integer
+          nullable: true
+        channel_name:
+          type: string
+          nullable: true
+        participants:
+          type: array
+          items:
+            "$ref": "#/components/schemas/user"
+        other_participant:
+          "$ref": "#/components/schemas/user"
+          nullable: true
+        parent_message:
+          "$ref": "#/components/schemas/chat_message"
+          nullable: true
+        last_message_at:
+          type: string
+          format: date-time
+          nullable: true
+        can_manage:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - kind
+      - title
+      - group_id
+      - group_name
+      - channel_id
+      - channel_name
+      - participants
+      - other_participant
+      - parent_message
+      - last_message_at
+      - can_manage
+      - created_at
+      - updated_at
+    direct_conversation_request:
+      type: object
+      properties:
+        user_id:
+          type: integer
+      required:
+      - user_id
     project:
       type: object
       properties:
@@ -958,6 +1123,210 @@ paths:
                     type: string
                 required:
                 - message
+  "/api/v1/chats/conversations":
+    get:
+      summary: Lists accessible chat conversations
+      tags:
+      - Chats
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: conversations returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/chat_conversation"
+  "/api/v1/chats/conversations/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Returns a chat conversation
+      tags:
+      - Chats
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: conversation returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/chat_conversation"
+  "/api/v1/chats/direct_conversations":
+    post:
+      summary: Creates or returns a direct conversation
+      tags:
+      - Chats
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: direct conversation returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/chat_conversation"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/direct_conversation_request"
+  "/api/v1/groups/{group_id}/chat_channels":
+    parameters:
+    - name: group_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Lists group chat channels
+      tags:
+      - Chat Channels
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: channels returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/chat_channel"
+    post:
+      summary: Creates a group chat channel
+      tags:
+      - Chat Channels
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: channel created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/chat_channel"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/chat_channel_request"
+  "/api/v1/chat_channels/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: Updates a chat channel
+      tags:
+      - Chat Channels
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: channel updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/chat_channel"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/chat_channel_request"
+    delete:
+      summary: Deletes a chat channel
+      tags:
+      - Chat Channels
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: channel deleted
+  "/api/v1/chats/conversations/{conversation_id}/messages":
+    parameters:
+    - name: conversation_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Lists chat messages
+      tags:
+      - Chat Messages
+      security:
+      - bearer_auth: []
+      parameters:
+      - name: before_id
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: messages returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/chat_message"
+    post:
+      summary: Creates a chat message
+      tags:
+      - Chat Messages
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: message created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/chat_message"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/chat_message_request"
+  "/api/v1/chats/messages/{id}/thread":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Creates or returns a message thread
+      tags:
+      - Chat Messages
+      security:
+      - bearer_auth: []
+      responses:
+        '201':
+          description: thread conversation returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/chat_conversation"
   "/api/v1/projects/{project_id}/drive_items":
     parameters:
     - name: project_id

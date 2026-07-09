@@ -16,6 +16,24 @@ class User < ApplicationRecord
   has_many :projects, dependent: :destroy
   has_many :group_memberships, dependent: :destroy
   has_many :groups, through: :group_memberships
+  has_many :created_chat_conversations,
+           class_name: "ChatConversation",
+           foreign_key: :created_by_id,
+           dependent: :restrict_with_error,
+           inverse_of: :created_by
+  has_many :created_chat_channels,
+           class_name: "ChatChannel",
+           foreign_key: :created_by_id,
+           dependent: :restrict_with_error,
+           inverse_of: :created_by
+  has_many :chat_conversation_participants, dependent: :destroy
+  has_many :direct_chat_conversations,
+           through: :chat_conversation_participants,
+           source: :chat_conversation
+  has_many :chat_messages,
+           foreign_key: :author_id,
+           dependent: :restrict_with_error,
+           inverse_of: :author
   has_many :oauth_identities, dependent: :destroy
 
   def accessible_group_ids

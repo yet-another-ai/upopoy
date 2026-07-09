@@ -3,6 +3,7 @@ import AdminSettingsView from '@/views/AdminSettingsView.vue'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
 import AuthView from '@/views/AuthView.vue'
 import BoardWorkspaceView from '@/views/BoardWorkspaceView.vue'
+import ChatsView from '@/views/ChatsView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
 import ServerErrorView from '@/views/ServerErrorView.vue'
@@ -71,6 +72,16 @@ const routes: RouteRecordRaw[] = [
     meta: {
       requiresAuth: true,
       titleKey: 'navigation.drive',
+      contentClassKind: 'workspace',
+    },
+  },
+  {
+    path: '/chats',
+    name: 'chats',
+    component: ChatsView,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.chats',
       contentClassKind: 'workspace',
     },
   },

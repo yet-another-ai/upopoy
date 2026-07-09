@@ -212,6 +212,90 @@ RSpec.configure do |config|
             },
             required: %w[group]
           },
+          chat_channel: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              group_id: { type: :integer },
+              name: { type: :string },
+              description: { type: :string, nullable: true },
+              conversation_id: { type: :integer },
+              can_manage: { type: :boolean },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id group_id name description conversation_id can_manage created_at updated_at]
+          },
+          chat_channel_request: {
+            type: :object,
+            properties: {
+              chat_channel: {
+                type: :object,
+                properties: {
+                  name: { type: :string },
+                  description: { type: :string }
+                },
+                required: %w[name]
+              }
+            },
+            required: %w[chat_channel]
+          },
+          chat_message: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              chat_conversation_id: { type: :integer },
+              conversation_id: { type: :integer },
+              author: { "$ref" => "#/components/schemas/user" },
+              body: { type: :string },
+              thread_conversation_id: { type: :integer, nullable: true },
+              thread_reply_count: { type: :integer },
+              thread_last_message_at: { type: :string, format: :"date-time", nullable: true },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id chat_conversation_id conversation_id author body thread_conversation_id thread_reply_count thread_last_message_at created_at updated_at]
+          },
+          chat_message_request: {
+            type: :object,
+            properties: {
+              message: {
+                type: :object,
+                properties: {
+                  body: { type: :string }
+                },
+                required: %w[body]
+              }
+            },
+            required: %w[message]
+          },
+          chat_conversation: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              kind: { type: :string, enum: %w[direct channel thread] },
+              title: { type: :string },
+              group_id: { type: :integer, nullable: true },
+              group_name: { type: :string, nullable: true },
+              channel_id: { type: :integer, nullable: true },
+              channel_name: { type: :string, nullable: true },
+              participants: { type: :array, items: { "$ref" => "#/components/schemas/user" } },
+              other_participant: { "$ref" => "#/components/schemas/user", nullable: true },
+              parent_message: { "$ref" => "#/components/schemas/chat_message", nullable: true },
+              last_message_at: { type: :string, format: :"date-time", nullable: true },
+              can_manage: { type: :boolean },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id kind title group_id group_name channel_id channel_name participants other_participant parent_message last_message_at can_manage created_at updated_at]
+          },
+          direct_conversation_request: {
+            type: :object,
+            properties: {
+              user_id: { type: :integer }
+            },
+            required: %w[user_id]
+          },
           project: {
             type: :object,
             properties: {

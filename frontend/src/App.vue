@@ -9,6 +9,7 @@ import GlobalSearch from '@/components/search/GlobalSearch.vue'
 import { nextRouteForAccess } from '@/router/access'
 import { useAuthStore } from '@/stores/auth'
 import { useBoardStore } from '@/stores/board'
+import { useChatsStore } from '@/stores/chats'
 import { useDriveStore } from '@/stores/drive'
 import { useProjectsStore } from '@/stores/projects'
 import { useToastsStore } from '@/stores/toasts'
@@ -19,6 +20,7 @@ import { SERVER_UNAVAILABLE_EVENT, type SearchResult } from '@/services/api'
 const authStore = useAuthStore()
 const projectsStore = useProjectsStore()
 const boardStore = useBoardStore()
+const chatsStore = useChatsStore()
 const driveStore = useDriveStore()
 const userGroupsStore = useUserGroupsStore()
 const toasts = useToastsStore()
@@ -87,6 +89,7 @@ async function signOut() {
   await authStore.logout()
   projectsStore.clearProjects()
   boardStore.clearBoard()
+  chatsStore.clearChats()
   driveStore.clearDrive()
   userGroupsStore.clearDirectory()
   toasts.clearToasts()

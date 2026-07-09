@@ -5,6 +5,7 @@ describe('router', () => {
   it('marks login and OAuth callback routes as public', () => {
     expect(router.resolve({ name: 'auth' }).meta.requiresAuth).toBe(false)
     expect(router.resolve({ name: 'auth-callback' }).meta.requiresAuth).toBe(false)
+    expect(router.resolve({ name: 'server-error' }).meta.requiresAuth).toBe(false)
   })
 
   it('marks workspace routes as authenticated and assigns layout metadata', () => {

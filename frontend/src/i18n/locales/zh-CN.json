@@ -11,6 +11,12 @@
     "unableToLoadTask": "无法加载任务",
     "unableToSaveTask": "无法保存任务"
   },
+  "serverError": {
+    "status": "服务器不可用",
+    "title": "无法连接 Upopoy",
+    "description": "应用未能通过服务器健康检查。服务恢复后请重试。",
+    "retry": "重试"
+  },
   "auth": {
     "finishingSignIn": "正在完成登录...",
     "missingToken": "认证没有返回令牌。",

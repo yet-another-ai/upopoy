@@ -11,6 +11,12 @@
     "unableToLoadTask": "Unable to load task",
     "unableToSaveTask": "Unable to save task"
   },
+  "serverError": {
+    "status": "Server unavailable",
+    "title": "Unable to reach Upopoy",
+    "description": "The app could not confirm the server health check. Try again after the service is back online.",
+    "retry": "Retry"
+  },
   "auth": {
     "finishingSignIn": "Finishing sign in...",
     "missingToken": "Authentication did not return a token.",

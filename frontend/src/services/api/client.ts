@@ -1,3 +1,4 @@
+import ky, { type Options } from 'ky'
 import { i18n } from '@/i18n'
 import { preferredLocaleHeader } from '@/i18n/locales'
 import type { AuthInput, AuthResponse, AuthSession } from './types'
@@ -11,9 +12,16 @@ function jsonHeaders() {
 }
 
 const AUTH_TOKEN_STORAGE_KEY = 'upopoy.authToken'
+export const SERVER_UNAVAILABLE_EVENT = 'upopoy:server-unavailable'
 
 let authToken =
   typeof localStorage === 'undefined' ? null : localStorage.getItem(AUTH_TOKEN_STORAGE_KEY)
+let serverHealthCheck: Promise<void> | null = null
+
+const apiClient = ky.create({
+  retry: 0,
+  throwHttpErrors: false,
+})
 
 export class ApiError extends Error {
   readonly status: number
@@ -38,21 +46,19 @@ export function getAuthToken() {
   return authToken
 }
 
-export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
-    ...options,
-    headers: {
-      ...jsonHeaders(),
-      ...(authToken ? { Authorization: authToken } : {}),
-      ...options.headers,
-    },
-  })
+export async function request<T>(path: string, options: Options = {}): Promise<T> {
+  const response = await sendRequest(path, options, true)
 
   if (response.status === 204) return undefined as T
 
-  const data = await parseResponseBody(response)
+  const data = await parseResponseBody(response).catch((error: unknown) => {
+    if (!response.ok) return null
+
+    throw error
+  })
 
   if (!response.ok) {
+    if (shouldCheckServerHealth(response.status)) await checkServerHealth()
     throw new ApiError(errorMessage(data), response.status)
   }
 
@@ -60,14 +66,18 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
 }
 
 export async function requestAuth(path: string, input: AuthInput): Promise<AuthSession> {
-  const response = await fetch(path, {
+  const response = await sendRequest(path, {
     method: 'POST',
-    headers: jsonHeaders(),
     body: JSON.stringify({ user: input }),
   })
-  const data = await parseResponseBody(response)
+  const data = await parseResponseBody(response).catch((error: unknown) => {
+    if (!response.ok) return null
+
+    throw error
+  })
 
   if (!response.ok) {
+    if (shouldCheckServerHealth(response.status)) await checkServerHealth()
     throw new ApiError(errorMessage(data), response.status)
   }
 
@@ -81,11 +91,75 @@ export async function requestAuth(path: string, input: AuthInput): Promise<AuthS
   }
 }
 
+async function sendRequest(path: string, options: Options = {}, includeAuth = false) {
+  try {
+    return await apiClient(requestUrl(path), {
+      ...options,
+      headers: requestHeaders(options.headers, includeAuth),
+    })
+  } catch (error) {
+    await checkServerHealth()
+    throw error instanceof Error ? error : new ApiError(i18n.global.t('errors.requestFailed'), 0)
+  }
+}
+
+function requestHeaders(headers: Options['headers'], includeAuth: boolean) {
+  const mergedHeaders = new Headers(jsonHeaders())
+  if (includeAuth && authToken) mergedHeaders.set('Authorization', authToken)
+
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      mergedHeaders.set(key, value)
+    })
+  } else if (Array.isArray(headers)) {
+    for (const [key, value] of headers) mergedHeaders.set(key, value)
+  } else if (headers) {
+    for (const [key, value] of Object.entries(headers)) {
+      if (value !== undefined) mergedHeaders.set(key, value)
+    }
+  }
+
+  return mergedHeaders
+}
+
 async function parseResponseBody(response: Response) {
   const contentType = response.headers.get('Content-Type') ?? ''
   if (contentType.includes('application/json')) return response.json()
 
   return response.text()
+}
+
+function shouldCheckServerHealth(status: number) {
+  return status >= 500
+}
+
+async function checkServerHealth() {
+  serverHealthCheck ??= ky
+    .get(requestUrl('/up'), {
+      retry: 0,
+      timeout: 3000,
+    })
+    .then(() => undefined)
+    .catch(() => {
+      notifyServerUnavailable()
+    })
+    .finally(() => {
+      serverHealthCheck = null
+    })
+
+  await serverHealthCheck
+}
+
+function requestUrl(path: string) {
+  if (typeof window === 'undefined') return path
+
+  return new URL(path, window.location.origin).toString()
+}
+
+function notifyServerUnavailable() {
+  if (typeof window === 'undefined') return
+
+  window.dispatchEvent(new CustomEvent(SERVER_UNAVAILABLE_EVENT))
 }
 
 function errorMessage(data: unknown) {

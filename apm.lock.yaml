@@ -1,10 +1,12 @@
 lockfile_version: '1'
-generated_at: '2026-07-07T13:10:17.088858+00:00'
-apm_version: 0.21.0
+generated_at: '2026-07-09T04:36:34.009954+00:00'
+apm_version: 0.24.0
 dependencies:
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/pinia
   is_virtual: true
   package_type: claude_skill
@@ -35,8 +37,10 @@ dependencies:
     .agents/skills/pinia/references/features-plugins.md: sha256:f5cc105231d80f1fdf5e54369f283fda3acbad7da27f3a0b61c9b0c62fd6c3d7
   content_hash: sha256:b2fe5e5a8bfce301114a1e0bd40244cda310572a1804cf49e3fd64e4e5852e0a
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/pnpm
   is_virtual: true
   package_type: claude_skill
@@ -81,8 +85,10 @@ dependencies:
     .agents/skills/pnpm/references/features-supply-chain-security.md: sha256:d4150af2f526319349a7d18ccdd4fcb712e5ef30b7e98e6f8ff0a3e33819bf54
   content_hash: sha256:958942320cc486c87f355f21f799bf21177ecda58ef37f069b99cf064166f57d
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/vite
   is_virtual: true
   package_type: claude_skill
@@ -107,8 +113,10 @@ dependencies:
     .agents/skills/vite/references/rolldown-migration.md: sha256:ba9860f8960e9794c880454b238a3a3c1962c80f9b3860399938618730bf7f72
   content_hash: sha256:7a96b654c210b97a50498495ebbb69f6f3c4a7dc9e403ad8e89efa17c25e8825
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/vue
   is_virtual: true
   package_type: claude_skill
@@ -127,8 +135,10 @@ dependencies:
     .agents/skills/vue/references/script-setup-macros.md: sha256:ad47db85f8fbda6c055cedcc1d4175cd79d414e9be3ebf1e631d0e493eb4480a
   content_hash: sha256:64c5282303420a497eab1347e97845ec772ccdcac56104cbe1e0d35a1db6ce79
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/vue-best-practices
   is_virtual: true
   package_type: claude_skill
@@ -187,8 +197,10 @@ dependencies:
     .agents/skills/vue-best-practices/references/updated-hook-performance.md: sha256:ded08ce93f9b23082538846f84e8d159d84af757c27b2c6b43a9283df803a32b
   content_hash: sha256:66bf09d99563e5ae1c695c8b0fb48ad9a9c061a25439803e1a326ad04bed2251
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/vue-router-best-practices
   is_virtual: true
   package_type: claude_skill
@@ -219,8 +231,10 @@ dependencies:
     .agents/skills/vue-router-best-practices/reference/router-use-vue-router-for-production.md: sha256:4212de1b50d1f53d5f831ca6945d53994e8e2cfbfb11b0a0c232bc53c032c8a1
   content_hash: sha256:deec7c255e902cb969f656850d41f90a98e7848c2e44275e30247ce3f5fa0ba8
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/vue-testing-best-practices
   is_virtual: true
   package_type: claude_skill
@@ -257,8 +271,10 @@ dependencies:
     .agents/skills/vue-testing-best-practices/reference/testing-vitest-recommended-for-vue.md: sha256:acfa0b3986e092f43d4cd8090864860cff07ffa3aaa62a10c5a622770ccaeb6b
   content_hash: sha256:c847c2529ce512210ce2b5541b1d4e1cc06f7f38b605e1646564f964fd0abbe2
 - repo_url: antfu/skills
+  name: skills
   host: github.com
   resolved_commit: a74f281a27dadc02397bc1a174b0f2c97531b6ae
+  version: unknown
   virtual_path: skills/vueuse-functions
   is_virtual: true
   package_type: claude_skill
@@ -803,8 +819,10 @@ dependencies:
     .agents/skills/vueuse-functions/references/whenever.md: sha256:3f414db7da638478ae17699ed57c1ea470c8c8c5f17373a469f35f1241333553
   content_hash: sha256:b240598d86d3c81e37e9b0df37476b625f5732b0d78a255a061b097be1be6cf3
 - repo_url: anthropics/skills
+  name: skills
   host: github.com
   resolved_commit: 9d2f1ae187231d8199c64b5b762e1bdf2244733d
+  version: unknown
   virtual_path: skills/frontend-design
   is_virtual: true
   package_type: claude_skill
@@ -817,8 +835,10 @@ dependencies:
     .agents/skills/frontend-design/SKILL.md: sha256:1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd
   content_hash: sha256:4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336
 - repo_url: anthropics/skills
+  name: skills
   host: github.com
   resolved_commit: 9d2f1ae187231d8199c64b5b762e1bdf2244733d
+  version: unknown
   virtual_path: skills/skill-creator
   is_virtual: true
   package_type: claude_skill
@@ -863,8 +883,10 @@ dependencies:
     .agents/skills/skill-creator/scripts/utils.py: sha256:3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1
   content_hash: sha256:b2bfe91d69ca99994c0566baede889e7d2b9bb8791c6b6106c5d387392f717f6
 - repo_url: vueuse/skills
+  name: skills
   host: github.com
   resolved_commit: b6bb79b99fb1f1dba1f907829676a651735bbc10
+  version: b6bb79b
   package_type: marketplace_plugin
   deployed_files:
   - .agents/skills/vueuse-functions

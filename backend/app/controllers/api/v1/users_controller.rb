@@ -33,7 +33,13 @@ module Api
       end
 
       def user_params
-        permitted_fields = [ :email, :display_name, :title, :bio ]
+        permitted_fields = [
+          :email,
+          :display_name,
+          :title,
+          :bio,
+          { skills: [ :name, :level, :note ] }
+        ]
         permitted_fields << :system_admin if current_user.system_admin?
 
         params.require(:user).permit(*permitted_fields)

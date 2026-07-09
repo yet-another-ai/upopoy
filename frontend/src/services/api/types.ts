@@ -14,9 +14,18 @@ export interface User {
   display_name: string | null
   title: string | null
   bio: string | null
+  skills: UserSkill[]
   system_admin: boolean
   created_at: string
   updated_at: string
+}
+
+export type UserSkillLevel = 'learning' | 'working' | 'advanced' | 'expert'
+
+export interface UserSkill {
+  name: string
+  level: UserSkillLevel
+  note: string
 }
 
 export interface ManagedUser extends User {
@@ -227,6 +236,7 @@ export interface UserProfileInput {
   display_name?: string
   title?: string
   bio?: string
+  skills?: UserSkill[]
   system_admin?: boolean
 }
 

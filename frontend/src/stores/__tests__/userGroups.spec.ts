@@ -24,6 +24,7 @@ const users: ManagedUser[] = [
     display_name: 'Ada Lovelace',
     title: null,
     bio: null,
+    skills: [],
     system_admin: false,
     group_ids: [],
     groups_count: 0,

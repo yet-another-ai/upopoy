@@ -54,11 +54,24 @@ RSpec.configure do |config|
               display_name: { type: :string, nullable: true },
               title: { type: :string, nullable: true },
               bio: { type: :string, nullable: true },
+              skills: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/profile_skill" }
+              },
               system_admin: { type: :boolean },
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" }
             },
-            required: %w[id email display_name title bio system_admin created_at updated_at]
+            required: %w[id email display_name title bio skills system_admin created_at updated_at]
+          },
+          profile_skill: {
+            type: :object,
+            properties: {
+              name: { type: :string },
+              level: { type: :string, enum: %w[learning working advanced expert] },
+              note: { type: :string }
+            },
+            required: %w[name level note]
           },
           user_response: {
             type: :object,
@@ -133,13 +146,17 @@ RSpec.configure do |config|
               display_name: { type: :string, nullable: true },
               title: { type: :string, nullable: true },
               bio: { type: :string, nullable: true },
+              skills: {
+                type: :array,
+                items: { "$ref" => "#/components/schemas/profile_skill" }
+              },
               system_admin: { type: :boolean },
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" },
               group_ids: { type: :array, items: { type: :integer } },
               groups_count: { type: :integer }
             },
-            required: %w[id email display_name title bio system_admin created_at updated_at group_ids groups_count]
+            required: %w[id email display_name title bio skills system_admin created_at updated_at group_ids groups_count]
           },
           users_index: {
             type: :object,
@@ -162,6 +179,10 @@ RSpec.configure do |config|
                   display_name: { type: :string },
                   title: { type: :string },
                   bio: { type: :string },
+                  skills: {
+                    type: :array,
+                    items: { "$ref" => "#/components/schemas/profile_skill" }
+                  },
                   system_admin: { type: :boolean }
                 }
               }

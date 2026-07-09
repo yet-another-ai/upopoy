@@ -2,7 +2,12 @@ class User < ApplicationRecord
   include SearchableResource
   include Devise::JWT::RevocationStrategies::JTIMatcher
 
-  search_index_attributes :email, :display_name, :title, :bio
+  SKILL_LEVELS = %w[learning working advanced expert].freeze
+
+  search_index_attributes :email, :display_name, :title, :bio, :skills
+
+  before_validation :normalize_skills
+  validate :skills_are_well_formed
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
@@ -63,7 +68,8 @@ class User < ApplicationRecord
     [
       email,
       title,
-      bio
+      bio,
+      skill_search_content
     ].compact.join("\n")
   end
 
@@ -72,10 +78,44 @@ class User < ApplicationRecord
   end
 
   def search_metadata
-    {}
+    { skills: }
   end
 
   def search_api_path
     "/api/v1/users/#{id}"
+  end
+
+  private
+
+  def normalize_skills
+    self.skills = Array(skills).filter_map do |skill|
+      next unless skill.respond_to?(:to_h)
+
+      attributes = skill.to_h.stringify_keys
+      name = attributes["name"].to_s.strip
+      next if name.blank?
+
+      {
+        "name" => name,
+        "level" => attributes["level"].to_s.presence || "working",
+        "note" => attributes["note"].to_s.strip
+      }
+    end
+  end
+
+  def skills_are_well_formed
+    errors.add(:skills, "must include no more than 50 items") if skills.size > 50
+
+    skills.each do |skill|
+      errors.add(:skills, "name is too long") if skill["name"].to_s.length > 100
+      errors.add(:skills, "level is invalid") unless SKILL_LEVELS.include?(skill["level"])
+      errors.add(:skills, "note is too long") if skill["note"].to_s.length > 500
+    end
+  end
+
+  def skill_search_content
+    skills.map do |skill|
+      [ skill["name"], skill["level"], skill["note"] ].compact_blank.join(" ")
+    end.join("\n")
   end
 end

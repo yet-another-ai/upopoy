@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
-import { SaveIcon, XIcon } from '@lucide/vue'
+import { PlusIcon, SaveIcon, Trash2Icon, XIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import type { Group, ManagedUser, UserProfileInput } from '@/services/api'
+import type { Group, ManagedUser, UserProfileInput, UserSkillLevel } from '@/services/api'
 
 const props = defineProps<{
   user: ManagedUser | null
@@ -21,11 +28,28 @@ const emit = defineEmits<{
   cancelEdit: []
 }>()
 
+interface SkillFormItem {
+  localId: string
+  name: string
+  level: UserSkillLevel
+  note: string
+}
+
+const skillLevels: readonly { value: UserSkillLevel; label: string }[] = [
+  { value: 'learning', label: 'Learning' },
+  { value: 'working', label: 'Working' },
+  { value: 'advanced', label: 'Advanced' },
+  { value: 'expert', label: 'Expert' },
+]
+
+let nextSkillId = 0
+
 const form = reactive({
   email: '',
   displayName: '',
   title: '',
   bio: '',
+  skills: [] as SkillFormItem[],
   systemAdmin: false,
 })
 
@@ -47,10 +71,34 @@ watch(
     form.displayName = user?.display_name ?? ''
     form.title = user?.title ?? ''
     form.bio = user?.bio ?? ''
+    form.skills = (user?.skills ?? []).map((skill) => createSkillFormItem(skill))
     form.systemAdmin = user?.system_admin ?? false
   },
   { immediate: true },
 )
+
+function createSkillFormItem(skill?: {
+  name?: string
+  level?: UserSkillLevel
+  note?: string
+}): SkillFormItem {
+  nextSkillId += 1
+
+  return {
+    localId: `skill-${nextSkillId}`,
+    name: skill?.name ?? '',
+    level: skill?.level ?? 'working',
+    note: skill?.note ?? '',
+  }
+}
+
+function addSkill() {
+  form.skills = [...form.skills, createSkillFormItem()]
+}
+
+function removeSkill(localId: string) {
+  form.skills = form.skills.filter((skill) => skill.localId !== localId)
+}
 
 function submitProfile() {
   if (!props.user || !form.email.trim()) return
@@ -60,6 +108,13 @@ function submitProfile() {
     display_name: form.displayName.trim(),
     title: form.title.trim(),
     bio: form.bio.trim(),
+    skills: form.skills
+      .map((skill) => ({
+        name: skill.name.trim(),
+        level: skill.level,
+        note: skill.note.trim(),
+      }))
+      .filter((skill) => skill.name.length > 0),
   }
   if (props.canManageSystemAdmins) input.system_admin = form.systemAdmin
 
@@ -96,6 +151,80 @@ function submitProfile() {
           <Label for="user-bio">Bio</Label>
           <Textarea id="user-bio" v-model="form.bio" rows="5" />
         </div>
+
+        <fieldset class="grid gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="text-sm font-medium">Skills</p>
+            <Button type="button" variant="outline" size="sm" @click="addSkill">
+              <PlusIcon />
+              Add skill
+            </Button>
+          </div>
+
+          <div class="grid gap-2">
+            <div
+              v-for="skill in form.skills"
+              :key="skill.localId"
+              class="border-border grid gap-3 rounded-lg border p-3 sm:grid-cols-[minmax(8rem,1fr)_10rem_auto] sm:items-start"
+            >
+              <div class="grid gap-1.5">
+                <Label :for="`${skill.localId}-name`">Skill</Label>
+                <Input
+                  :id="`${skill.localId}-name`"
+                  v-model="skill.name"
+                  placeholder="Product discovery"
+                />
+              </div>
+
+              <div class="grid gap-1.5">
+                <Label :for="`${skill.localId}-level`">Level</Label>
+                <Select v-model="skill.level">
+                  <SelectTrigger
+                    :id="`${skill.localId}-level`"
+                    class="w-full"
+                    aria-label="Skill level"
+                  >
+                    <SelectValue placeholder="Level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="level in skillLevels"
+                      :key="level.value"
+                      :value="level.value"
+                    >
+                      {{ level.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="mt-6"
+                aria-label="Remove skill"
+                @click="removeSkill(skill.localId)"
+              >
+                <Trash2Icon />
+              </Button>
+
+              <div class="grid gap-1.5 sm:col-span-3">
+                <Label :for="`${skill.localId}-note`">Notes</Label>
+                <Textarea
+                  :id="`${skill.localId}-note`"
+                  v-model="skill.note"
+                  rows="2"
+                  placeholder="Scope, tools, domain context, or achievements"
+                />
+              </div>
+            </div>
+
+            <p v-if="form.skills.length === 0" class="text-muted-foreground text-sm">
+              No skills listed.
+            </p>
+          </div>
+        </fieldset>
 
         <div class="grid gap-2">
           <p class="text-sm font-medium">Groups</p>

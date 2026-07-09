@@ -54,6 +54,10 @@ components:
         bio:
           type: string
           nullable: true
+        skills:
+          type: array
+          items:
+            "$ref": "#/components/schemas/profile_skill"
         system_admin:
           type: boolean
         created_at:
@@ -68,9 +72,28 @@ components:
       - display_name
       - title
       - bio
+      - skills
       - system_admin
       - created_at
       - updated_at
+    profile_skill:
+      type: object
+      properties:
+        name:
+          type: string
+        level:
+          type: string
+          enum:
+          - learning
+          - working
+          - advanced
+          - expert
+        note:
+          type: string
+      required:
+      - name
+      - level
+      - note
     user_response:
       type: object
       properties:
@@ -166,6 +189,10 @@ components:
         bio:
           type: string
           nullable: true
+        skills:
+          type: array
+          items:
+            "$ref": "#/components/schemas/profile_skill"
         system_admin:
           type: boolean
         created_at:
@@ -186,6 +213,7 @@ components:
       - display_name
       - title
       - bio
+      - skills
       - system_admin
       - created_at
       - updated_at
@@ -218,6 +246,10 @@ components:
               type: string
             bio:
               type: string
+            skills:
+              type: array
+              items:
+                "$ref": "#/components/schemas/profile_skill"
             system_admin:
               type: boolean
       required:

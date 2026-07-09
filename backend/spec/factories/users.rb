@@ -4,6 +4,7 @@ FactoryBot.define do
     sequence(:display_name) { |index| "User #{index}" }
     title { "Contributor" }
     bio { "Keeps the work moving." }
+    skills { [] }
     password { "password123" }
     password_confirmation { password }
 

@@ -21,7 +21,7 @@ namespace :openapi do
         "RAILS_ENV" => "test"
       }
 
-      unless system(env, RbConfig.ruby, "bin/rails", "rswag")
+      unless system(env, RbConfig.ruby, Rails.root.join("bin/rails").to_s, "rswag")
         abort "Failed to regenerate OpenAPI documentation."
       end
 
@@ -31,6 +31,9 @@ namespace :openapi do
         puts "OpenAPI spec is up to date."
         next
       end
+
+      generated_copy = Rails.root.join("tmp/openapi-check-generated.yaml")
+      FileUtils.cp(generated, generated_copy)
 
       abort <<~MESSAGE
         OpenAPI spec is out of date.
@@ -42,7 +45,7 @@ namespace :openapi do
           #{expected.relative_path_from(Rails.root)}
 
         To inspect the difference:
-          diff -u #{expected} #{generated}
+          diff -u #{expected} #{generated_copy}
       MESSAGE
     end
   end

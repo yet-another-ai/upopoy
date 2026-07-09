@@ -2,7 +2,7 @@ require "rails_helper"
 require "rswag/specs"
 
 RSpec.configure do |config|
-  config.openapi_root = ENV.fetch("OPENAPI_ROOT", Rails.root.join("openapi").to_s)
+  config.openapi_root = ENV["OPENAPI_ROOT"].to_s.empty? ? Rails.root.join("openapi").to_s : ENV["OPENAPI_ROOT"]
   config.openapi_format = :yaml
   config.rswag_dry_run = false
 

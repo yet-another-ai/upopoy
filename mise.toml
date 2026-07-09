@@ -24,7 +24,7 @@ run = "cd backend && bundle exec falcon host ../falcon.rb"
 description = "Run backend, OpenAPI, frontend unit, and frontend integration tests"
 run = [
   "cd backend && bundle exec rspec",
-  "cd backend && ruby -S rake openapi:check",
+  "cd backend && bundle exec rake openapi:check",
   "pnpm --filter frontend test",
 ]
 
@@ -50,7 +50,7 @@ run = "bundle exec rspec"
 [tasks.backend-openapi-check]
 description = "Verify generated OpenAPI documentation is up to date"
 dir = "backend"
-run = "ruby -S rake openapi:check"
+run = "bundle exec rake openapi:check"
 
 [tasks.backend-lint]
 description = "Run backend RuboCop"

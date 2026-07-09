@@ -98,4 +98,26 @@ RSpec.describe User, type: :model do
 
     expect(described_class.from_omniauth(auth)).to eq(identity.user)
   end
+
+  it "normalizes and validates profile skills" do
+    user = build(
+      :user,
+      skills: [
+        { name: "  Rails  ", level: "advanced", note: "  API design  " },
+        { name: "   ", level: "expert", note: "ignored" }
+      ]
+    )
+
+    expect(user).to be_valid
+    expect(user.skills).to eq([
+      { "name" => "Rails", "level" => "advanced", "note" => "API design" }
+    ])
+  end
+
+  it "rejects unknown skill levels" do
+    user = build(:user, skills: [ { name: "Rails", level: "legendary", note: "" } ])
+
+    expect(user).not_to be_valid
+    expect(user.errors[:skills]).to include("level is invalid")
+  end
 end

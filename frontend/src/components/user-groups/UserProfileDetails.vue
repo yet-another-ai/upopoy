@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { Group, ManagedUser } from '@/services/api'
+import type { Group, ManagedUser, UserSkillLevel } from '@/services/api'
 
 const props = defineProps<{
   user: ManagedUser
@@ -17,6 +17,13 @@ const memberships = computed(() =>
     .map((groupId) => groupNames.value.get(groupId))
     .filter((name): name is string => Boolean(name)),
 )
+
+const skillLevelLabels: Record<UserSkillLevel, string> = {
+  learning: 'Learning',
+  working: 'Working',
+  advanced: 'Advanced',
+  expert: 'Expert',
+}
 </script>
 
 <template>
@@ -54,6 +61,26 @@ const memberships = computed(() =>
           <p class="text-muted-foreground whitespace-pre-wrap text-sm">
             {{ props.user.bio || 'No bio yet.' }}
           </p>
+        </div>
+
+        <div class="grid gap-2">
+          <p class="text-muted-foreground text-xs font-medium uppercase">Skills</p>
+          <div v-if="props.user.skills.length > 0" class="grid gap-2">
+            <div
+              v-for="skill in props.user.skills"
+              :key="`${skill.name}-${skill.level}`"
+              class="border-border grid gap-1 rounded-lg border p-3"
+            >
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="min-w-0 break-words text-sm font-medium">{{ skill.name }}</p>
+                <Badge variant="secondary">{{ skillLevelLabels[skill.level] }}</Badge>
+              </div>
+              <p v-if="skill.note" class="text-muted-foreground whitespace-pre-wrap text-sm">
+                {{ skill.note }}
+              </p>
+            </div>
+          </div>
+          <p v-else class="text-muted-foreground text-sm">No skills listed yet.</p>
         </div>
       </CardContent>
     </Card>

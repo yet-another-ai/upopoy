@@ -14,6 +14,7 @@ const props = defineProps<{
   loading: boolean
   saving: boolean
   editing: boolean
+  canEditProfile: boolean
   canManageSystemAdmins: boolean
 }>()
 
@@ -26,9 +27,12 @@ const emit = defineEmits<{
 
 const user = computed(() => props.users.find((item) => item.id === props.userId) ?? null)
 const pageTitle = computed(() => user.value?.display_name || user.value?.email || 'User profile')
-const pageDescription = computed(() =>
-  props.editing ? 'Edit profile details for this user.' : 'View profile details for this user.',
-)
+const pageDescription = computed(() => {
+  if (props.editing && props.canEditProfile) return 'Edit profile details for this user.'
+  if (props.editing) return 'You can view this profile, but only the owner or a system admin can edit it.'
+
+  return 'View profile details for this user.'
+})
 
 onMounted(() => {
   loadProfile()
@@ -60,7 +64,12 @@ function loadProfile() {
         </h2>
         <p class="text-muted-foreground text-sm">{{ pageDescription }}</p>
       </div>
-      <Button v-if="user && !props.editing" as-child size="sm" class="ml-auto">
+      <Button
+        v-if="user && !props.editing && props.canEditProfile"
+        as-child
+        size="sm"
+        class="ml-auto"
+      >
         <RouterLink :to="{ name: 'user-edit', params: { userId: props.userId } }">
           <PencilIcon />
           Edit
@@ -71,7 +80,7 @@ function loadProfile() {
     <p v-if="props.loading && !user" class="text-muted-foreground text-sm">Loading profile...</p>
 
     <UserProfileForm
-      v-else-if="props.editing && user"
+      v-else-if="props.editing && user && props.canEditProfile"
       :user="user"
       :groups="props.groups"
       :saving="props.saving"

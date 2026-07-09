@@ -30,7 +30,7 @@ RSpec.describe "Api::V1::Users", type: :request do
 
   describe "PATCH /api/v1/users/:id" do
     it "updates user profile fields" do
-      user, target = create(:user), create(:user)
+      user = create(:user)
       user_params = {
         email: "new@example.com",
         display_name: "Grace Hopper",
@@ -38,12 +38,77 @@ RSpec.describe "Api::V1::Users", type: :request do
         bio: "Compiler pioneer."
       }
 
-      patch "/api/v1/users/#{target.id}",
+      patch "/api/v1/users/#{user.id}",
             params: { user: user_params },
             headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response).to include(user_params.stringify_keys)
+    end
+
+    it "updates profile skills" do
+      user = create(:user)
+      skills = [
+        { name: "Product discovery", level: "advanced", note: "Led 12 customer interviews." },
+        { name: "Rails", level: "working", note: "" }
+      ]
+
+      patch "/api/v1/users/#{user.id}",
+            params: { user: { email: user.email, skills: } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["skills"]).to eq(JSON.parse(skills.to_json))
+    end
+
+    it "rejects invalid profile skill levels" do
+      user = create(:user)
+      user_params = { email: user.email, skills: [ { name: "Rails", level: "legendary", note: "" } ] }
+
+      patch "/api/v1/users/#{user.id}",
+            params: { user: user_params },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(422)
+      expect(json_response.dig("errors", "skills")).to include("Skills level is invalid")
+    end
+
+    it "normalizes blank profile skill names" do
+      user = create(:user)
+      skills = [
+        { name: " ", level: "advanced", note: "Ignored" },
+        { name: "Rails", level: "working", note: "" }
+      ]
+
+      patch "/api/v1/users/#{user.id}",
+            params: { user: { email: user.email, skills: } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["skills"]).to eq([ { "name" => "Rails", "level" => "working", "note" => "" } ])
+    end
+
+    it "does not allow regular users to update another profile" do
+      user, target = create(:user), create(:user)
+
+      patch "/api/v1/users/#{target.id}",
+            params: { user: { email: "new@example.com" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
+      expect(target.reload.email).not_to eq("new@example.com")
+    end
+
+    it "allows system admins to update another profile" do
+      user = create(:user, :system_admin)
+      target = create(:user)
+
+      patch "/api/v1/users/#{target.id}",
+            params: { user: { email: "new@example.com" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(target.reload.email).to eq("new@example.com")
     end
 
     it "allows system admins to update system admin status" do
@@ -61,15 +126,14 @@ RSpec.describe "Api::V1::Users", type: :request do
 
     it "does not allow regular users to update system admin status" do
       user = create(:user)
-      target = create(:user)
 
-      patch "/api/v1/users/#{target.id}",
-            params: { user: { email: target.email, system_admin: true } },
+      patch "/api/v1/users/#{user.id}",
+            params: { user: { email: user.email, system_admin: true } },
             headers: auth_headers_for(user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["system_admin"]).to be(false)
-      expect(target.reload).not_to be_system_admin
+      expect(user.reload).not_to be_system_admin
     end
   end
 

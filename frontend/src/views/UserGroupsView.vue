@@ -35,6 +35,11 @@ const groupId = computed(() => positiveIntegerRouteParam(route, 'groupId'))
 const editingUser = computed(() => route.name === 'user-edit')
 const creatingGroup = computed(() => route.name === 'group-new')
 const canManageSystemAdmins = computed(() => Boolean(auth.user.value?.system_admin))
+const canEditSelectedUser = computed(() => {
+  if (!userId.value) return false
+
+  return canManageSystemAdmins.value || auth.user.value?.id === userId.value
+})
 
 onMounted(() => {
   void userGroupsStore.loadDirectory()
@@ -50,13 +55,16 @@ watch(
 )
 
 async function saveUserProfile(userId: number, input: UserProfileInput) {
+  let updatedUser
+
   try {
-    await userGroupsStore.updateUserProfile(userId, input)
+    updatedUser = await userGroupsStore.updateUserProfile(userId, input)
   } catch (err) {
     notifyError(err, 'Unable to update user profile')
     return
   }
 
+  authStore.replaceCurrentUser(updatedUser)
   await router.push({ name: 'user-profile', params: { userId } })
 }
 
@@ -137,6 +145,7 @@ function notifyError(err: unknown, fallback: string) {
         :loading="userGroups.loadingUsers.value"
         :saving="userGroups.saving.value"
         :editing="editingUser"
+        :can-edit-profile="canEditSelectedUser"
         :can-manage-system-admins="canManageSystemAdmins"
         @load-user="userGroupsStore.loadUser"
         @load-groups="userGroupsStore.loadGroups"

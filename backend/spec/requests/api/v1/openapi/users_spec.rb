@@ -55,14 +55,17 @@ RSpec.describe "Api::V1::Users", openapi_spec: "v1/openapi.yaml", type: :request
       response "200", "user updated" do
         schema "$ref" => "#/components/schemas/managed_user"
 
-        let(:id) { create(:user).id }
+        let(:id) { current_user.id }
         let(:request_params) do
           {
             user: {
               email: "new@example.com",
               display_name: "Grace Hopper",
               title: "Admiral",
-              bio: "Compiler pioneer."
+              bio: "Compiler pioneer.",
+              skills: [
+                { name: "Product discovery", level: "advanced", note: "Customer interviews" }
+              ]
             }
           }
         end
@@ -81,14 +84,17 @@ RSpec.describe "Api::V1::Users", openapi_spec: "v1/openapi.yaml", type: :request
       response "200", "user updated" do
         schema "$ref" => "#/components/schemas/managed_user"
 
-        let(:id) { create(:user).id }
+        let(:id) { current_user.id }
         let(:request_params) do
           {
             user: {
               email: "new@example.com",
               display_name: "Grace Hopper",
               title: "Admiral",
-              bio: "Compiler pioneer."
+              bio: "Compiler pioneer.",
+              skills: [
+                { name: "Product discovery", level: "advanced", note: "Customer interviews" }
+              ]
             }
           }
         end

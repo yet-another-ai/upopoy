@@ -96,6 +96,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function replaceCurrentUser(updatedUser: User) {
+    if (user.value?.id !== updatedUser.id) return
+
+    user.value = updatedUser
+  }
+
   return {
     user,
     authenticated,
@@ -106,6 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
     signUp,
     acceptToken,
     failAuthentication,
+    replaceCurrentUser,
     logout,
   }
 })

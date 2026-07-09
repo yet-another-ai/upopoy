@@ -8,7 +8,7 @@ class UserPolicy < ApplicationPolicy
   end
 
   def update?
-    user.present?
+    user.present? && (user.system_admin? || record == user)
   end
 
   class Scope < ApplicationPolicy::Scope

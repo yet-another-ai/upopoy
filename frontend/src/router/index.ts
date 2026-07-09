@@ -55,6 +55,26 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/drive',
+    name: 'drive',
+    component: BoardWorkspaceView,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.drive',
+      contentClassKind: 'workspace',
+    },
+  },
+  {
+    path: '/drive/items/:driveItemId/edit',
+    name: 'drive-item-edit',
+    component: BoardWorkspaceView,
+    meta: {
+      requiresAuth: true,
+      titleKey: 'navigation.drive',
+      contentClassKind: 'workspace',
+    },
+  },
+  {
     path: '/projects',
     name: 'projects',
     component: ProjectsView,

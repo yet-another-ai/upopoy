@@ -1,6 +1,15 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Search", type: :request do
+  def search_result_slugs(query, user, resource_type: nil)
+    get "/api/v1/search",
+      params: { q: query, type: resource_type }.compact,
+      headers: auth_headers_for(user)
+
+    expect(response).to have_http_status(:ok)
+    json_response["results"].pluck("slug")
+  end
+
   describe "GET /api/v1/search" do
     it "returns an empty result set for a blank query" do
       get "/api/v1/search", params: { q: "" }, headers: auth_headers_for
@@ -47,6 +56,20 @@ RSpec.describe "Api::V1::Search", type: :request do
         "project:#{project.id}",
         "task:#{task.id}"
       )
+    end
+
+    it "searches drive folders and files visible to the current user" do
+      user = create(:user)
+      group = create(:group)
+      create(:group_membership, user:, group:)
+      project = create(:project, group:)
+      folder = create(:drive_item, project:, name: "Architecture")
+      file = create(:drive_item, :file, project:, name: "Budget.xlsx")
+      hidden_file = create(:drive_item, :file, name: "Budget hidden.xlsx")
+
+      expect(search_result_slugs("Architecture", user)).to include("drive_item:#{folder.id}")
+      expect(search_result_slugs("Budget", user, resource_type: "drive_item")).to include("drive_item:#{file.id}")
+      expect(json_response["results"].pluck("slug")).not_to include("drive_item:#{hidden_file.id}")
     end
 
     it "includes global users and member groups for authenticated users" do

@@ -84,6 +84,7 @@ function chooseActiveResult() {
 
 function resultTypeLabel(type: SearchResultType) {
   return {
+    drive_item: 'Drive',
     project: 'Project',
     task: 'Task',
     user: 'User',

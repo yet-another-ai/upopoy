@@ -48,6 +48,8 @@ RSpec.configure do |config|
 
   config.before do
     SearchDocument.delete_all
+    DriveItemVersion.delete_all
+    DriveItem.with_deleted.delete_all
     Task.delete_all
     Project.delete_all
     GroupHierarchy.delete_all

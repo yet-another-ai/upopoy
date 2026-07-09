@@ -9,6 +9,7 @@ import GlobalSearch from '@/components/search/GlobalSearch.vue'
 import { nextRouteForAccess } from '@/router/access'
 import { useAuthStore } from '@/stores/auth'
 import { useBoardStore } from '@/stores/board'
+import { useDriveStore } from '@/stores/drive'
 import { useProjectsStore } from '@/stores/projects'
 import { useToastsStore } from '@/stores/toasts'
 import { useUserGroupsStore } from '@/stores/userGroups'
@@ -18,6 +19,7 @@ import { SERVER_UNAVAILABLE_EVENT, type SearchResult } from '@/services/api'
 const authStore = useAuthStore()
 const projectsStore = useProjectsStore()
 const boardStore = useBoardStore()
+const driveStore = useDriveStore()
 const userGroupsStore = useUserGroupsStore()
 const toasts = useToastsStore()
 const auth = storeToRefs(authStore)
@@ -85,6 +87,7 @@ async function signOut() {
   await authStore.logout()
   projectsStore.clearProjects()
   boardStore.clearBoard()
+  driveStore.clearDrive()
   userGroupsStore.clearDirectory()
   toasts.clearToasts()
   await router.push({ name: 'auth' })
@@ -103,6 +106,14 @@ async function openSearchResult(result: SearchResult) {
     if (Number.isInteger(projectId) && projectId > 0) projectsStore.selectProject(projectId)
 
     await router.push({ name: 'task-detail', params: { taskId: result.id } })
+    return
+  }
+
+  if (result.type === 'drive_item') {
+    const projectId = Number(result.metadata.project_id)
+    if (Number.isInteger(projectId) && projectId > 0) projectsStore.selectProject(projectId)
+
+    await router.push({ name: 'drive' })
     return
   }
 

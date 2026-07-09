@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, shallowRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import DriveSidebar from '@/components/drive/DriveSidebar.vue'
+import DriveWorkspace from '@/components/drive/DriveWorkspace.vue'
 import IterationsView from '@/components/kanban/IterationsView.vue'
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue'
 import ProjectSidebar from '@/components/kanban/ProjectSidebar.vue'
@@ -10,21 +12,26 @@ import { useBoardStore } from '@/stores/board'
 import { useProjectsStore } from '@/stores/projects'
 import { useToastsStore } from '@/stores/toasts'
 import TaskDetailPage from '@/views/TaskDetailPage.vue'
+import MarkdownDriveEditorView from '@/views/MarkdownDriveEditorView.vue'
 import type { Task, TaskInput, TaskStatusOption } from '@/services/api'
 
-type BoardView = 'kanban' | 'iterations'
+type AppView = 'drive' | 'kanban' | 'iterations'
+type KanbanView = 'kanban' | 'iterations'
 
 const route = useRoute()
+const router = useRouter()
 const projectsStore = useProjectsStore()
 const boardStore = useBoardStore()
 const toasts = useToastsStore()
 const projects = storeToRefs(projectsStore)
 const board = storeToRefs(boardStore)
-const boardView = shallowRef<BoardView>('kanban')
+const boardView = shallowRef<AppView>(isDriveRoute(route.name) ? 'drive' : 'kanban')
 
 const taskDetailId = computed(() =>
   route.name === 'task-detail' ? positiveIntegerRouteParam(route, 'taskId') : null,
 )
+const isDriveEditorRoute = computed(() => route.name === 'drive-item-edit')
+const kanbanView = computed<KanbanView>(() => (boardView.value === 'iterations' ? 'iterations' : 'kanban'))
 
 onMounted(async () => {
   const selectedProjectIdBeforeLoad = projects.selectedProjectId.value
@@ -32,7 +39,8 @@ onMounted(async () => {
   if (projects.projects.value.length === 0) await projectsStore.loadProjects()
   if (
     projects.selectedProjectId.value &&
-    projects.selectedProjectId.value === selectedProjectIdBeforeLoad
+    projects.selectedProjectId.value === selectedProjectIdBeforeLoad &&
+    boardView.value !== 'drive'
   ) {
     await boardStore.loadBoard(projects.selectedProjectId.value)
   }
@@ -41,7 +49,14 @@ onMounted(async () => {
 watch(
   () => projects.selectedProjectId.value,
   (projectId) => {
-    if (projectId) void boardStore.loadBoard(projectId)
+    if (projectId && boardView.value !== 'drive') void boardStore.loadBoard(projectId)
+  },
+)
+
+watch(
+  () => route.name,
+  (routeName) => {
+    boardView.value = isDriveRoute(routeName) ? 'drive' : 'kanban'
   },
 )
 
@@ -100,16 +115,38 @@ async function deleteTask(taskId: number) {
 function notifyError(err: unknown, fallback: string) {
   toasts.error(fallback, err instanceof Error ? err.message : fallback)
 }
+
+async function selectKanbanView(view: KanbanView) {
+  boardView.value = view
+
+  if (isDriveRoute(route.name)) await router.push({ name: 'board' })
+
+  const projectId = projects.selectedProjectId.value
+  if (projectId) await boardStore.loadBoard(projectId)
+}
+
+function isDriveRoute(routeName: unknown) {
+  return routeName === 'drive' || routeName === 'drive-item-edit'
+}
 </script>
 
 <template>
-  <ProjectSidebar
+  <DriveSidebar
+    v-if="boardView === 'drive'"
     :projects="projects.projects.value"
     :selected-project-id="projects.selectedProjectId.value"
-    :active-view="boardView"
     :loading="projects.loading.value"
     @select-project="projectsStore.selectProject"
-    @select-view="boardView = $event"
+  />
+
+  <ProjectSidebar
+    v-else
+    :projects="projects.projects.value"
+    :selected-project-id="projects.selectedProjectId.value"
+    :active-view="kanbanView"
+    :loading="projects.loading.value"
+    @select-project="projectsStore.selectProject"
+    @select-view="selectKanbanView"
   />
 
   <TaskDetailPage
@@ -117,6 +154,14 @@ function notifyError(err: unknown, fallback: string) {
     :task-id="taskDetailId"
     @task-updated="refreshBoardAfterTaskUpdate"
   />
+
+  <DriveWorkspace
+    v-else-if="boardView === 'drive' && !isDriveEditorRoute"
+    :project="projects.selectedProject.value"
+    :projects-loading="projects.loading.value"
+  />
+
+  <MarkdownDriveEditorView v-else-if="boardView === 'drive' && isDriveEditorRoute" />
 
   <KanbanBoard
     v-else-if="boardView === 'kanban'"

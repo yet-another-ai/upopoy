@@ -239,6 +239,83 @@ RSpec.configure do |config|
             },
             required: %w[project]
           },
+          drive_item: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              project_id: { type: :integer },
+              parent_id: { type: :integer, nullable: true },
+              kind: { type: :string, enum: %w[folder file] },
+              name: { type: :string },
+              text_content_cache: { type: :string },
+              markdown: { type: :boolean },
+              content_type: { type: :string, nullable: true },
+              byte_size: { type: :integer, nullable: true },
+              download_path: { type: :string, nullable: true },
+              deleted_at: { type: :string, format: :"date-time", nullable: true },
+              versions_count: { type: :integer },
+              latest_version_number: { type: :integer, nullable: true },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id project_id parent_id kind name text_content_cache markdown content_type byte_size download_path deleted_at versions_count latest_version_number created_at updated_at]
+          },
+          drive_item_version: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              drive_item_id: { type: :integer },
+              version_number: { type: :integer },
+              name: { type: :string },
+              content_type: { type: :string, nullable: true },
+              byte_size: { type: :integer, nullable: true },
+              text_content_cache: { type: :string },
+              markdown: { type: :boolean },
+              download_path: { type: :string },
+              created_at: { type: :string, format: :"date-time" },
+              updated_at: { type: :string, format: :"date-time" }
+            },
+            required: %w[id drive_item_id version_number name content_type byte_size text_content_cache markdown download_path created_at updated_at]
+          },
+          drive_item_request: {
+            type: :object,
+            properties: {
+              drive_item: {
+                type: :object,
+                properties: {
+                  kind: { type: :string, enum: %w[folder file] },
+                  name: { type: :string },
+                  parent_id: { type: :integer, nullable: true },
+                  content: { type: :string },
+                  base_version_number: { type: :integer, nullable: true }
+                }
+              }
+            },
+            required: %w[drive_item]
+          },
+          drive_item_upload_request: {
+            type: :object,
+            properties: {
+              drive_item: {
+                type: :object,
+                properties: {
+                  kind: { type: :string, enum: %w[file] },
+                  name: { type: :string },
+                  parent_id: { type: :integer, nullable: true },
+                  file: { type: :string, format: :binary },
+                  base_version_number: { type: :integer, nullable: true }
+                }
+              }
+            },
+            required: %w[drive_item]
+          },
+          drive_item_content: {
+            type: :object,
+            properties: {
+              content: { type: :string }
+            },
+            required: %w[content]
+          },
           iteration: {
             type: :object,
             properties: {

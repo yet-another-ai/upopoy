@@ -29,6 +29,13 @@ frontend/src/assets/hero.png
 frontend/src/assets/vite.svg
 frontend/src/assets/vue.svg
 
+# VitePress documentation
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+docs/.vitepress/temp/
+docs/.vitepress/.temp/
+docs/node_modules/
+
 # Mise
 .mise.local.toml
 

@@ -12,6 +12,9 @@
     "frontend:format": "pnpm --filter frontend format",
     "frontend:format:check": "pnpm --filter frontend format:check",
     "frontend:build": "pnpm --filter frontend build",
-    "frontend:preview": "pnpm --filter frontend preview"
+    "frontend:preview": "pnpm --filter frontend preview",
+    "docs:dev": "pnpm --filter docs dev",
+    "docs:build": "pnpm --filter docs build",
+    "docs:preview": "pnpm --filter docs preview"
   }
 }

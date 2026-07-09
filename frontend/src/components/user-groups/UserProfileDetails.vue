@@ -67,8 +67,8 @@ const skillLevelLabels: Record<UserSkillLevel, string> = {
           <p class="text-muted-foreground text-xs font-medium uppercase">Skills</p>
           <div v-if="props.user.skills.length > 0" class="grid gap-2">
             <div
-              v-for="skill in props.user.skills"
-              :key="`${skill.name}-${skill.level}`"
+              v-for="(skill, index) in props.user.skills"
+              :key="`${skill.name}-${skill.level}-${index}`"
               class="border-border grid gap-1 rounded-lg border p-3"
             >
               <div class="flex flex-wrap items-center gap-2">

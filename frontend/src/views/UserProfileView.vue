@@ -14,6 +14,7 @@ const props = defineProps<{
   loading: boolean
   saving: boolean
   editing: boolean
+  canManageSystemAdmins: boolean
 }>()
 
 const emit = defineEmits<{
@@ -74,6 +75,7 @@ function loadProfile() {
       :user="user"
       :groups="props.groups"
       :saving="props.saving"
+      :can-manage-system-admins="props.canManageSystemAdmins"
       @save-user-profile="emit('saveUserProfile', $event.userId, $event.input)"
       @cancel-edit="emit('cancelEdit')"
     />

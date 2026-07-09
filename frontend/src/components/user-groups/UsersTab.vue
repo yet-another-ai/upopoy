@@ -49,6 +49,7 @@ function userGroupNames(user: ManagedUser) {
               <h3 class="truncate font-medium">
                 {{ user.display_name || user.email }}
               </h3>
+              <Badge v-if="user.system_admin">System admin</Badge>
             </div>
             <p class="text-muted-foreground mt-1 truncate text-sm">{{ user.email }}</p>
             <p v-if="user.title" class="text-muted-foreground mt-1 text-sm">{{ user.title }}</p>

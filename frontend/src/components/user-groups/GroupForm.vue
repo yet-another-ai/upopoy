@@ -35,12 +35,13 @@ const form = reactive({
   description: '',
   parentGroupId: noParentValue,
   userIds: [] as number[],
+  adminUserIds: [] as number[],
 })
 const selectedSearchResults = reactive(new Map<number, SearchResult>())
 
 const editing = computed(() => props.group !== null)
 const availableParentGroups = computed(() =>
-  props.groups.filter((group) => group.id !== props.group?.id),
+  props.groups.filter((group) => group.id !== props.group?.id && group.can_admin),
 )
 const userLookup = computed(() => new Map(props.users.map((user) => [user.id, user] as const)))
 const selectedMembers = computed(() =>
@@ -54,6 +55,7 @@ const selectedMembers = computed(() =>
       id: userId,
       label,
       detail: detail && detail !== label ? detail : null,
+      admin: form.adminUserIds.includes(userId),
     }
   }),
 )
@@ -65,6 +67,7 @@ watch(
     form.description = group?.description ?? ''
     form.parentGroupId = group?.parent_group_id ? String(group.parent_group_id) : noParentValue
     form.userIds = group?.user_ids ? [...group.user_ids] : []
+    form.adminUserIds = group?.admin_user_ids ? [...group.admin_user_ids] : []
     selectedSearchResults.clear()
   },
   { immediate: true },
@@ -81,6 +84,17 @@ function addUser(result: SearchResult) {
 
 function removeUser(userId: number) {
   form.userIds = form.userIds.filter((id) => id !== userId)
+  form.adminUserIds = form.adminUserIds.filter((id) => id !== userId)
+}
+
+function updateAdmin(userId: number, admin: boolean) {
+  if (admin) {
+    if (!form.userIds.includes(userId)) form.userIds = [...form.userIds, userId]
+    if (!form.adminUserIds.includes(userId)) form.adminUserIds = [...form.adminUserIds, userId]
+    return
+  }
+
+  form.adminUserIds = form.adminUserIds.filter((id) => id !== userId)
 }
 
 function submitGroup() {
@@ -93,6 +107,7 @@ function submitGroup() {
     parent_group_id:
       form.parentGroupId === noParentValue ? null : Number.parseInt(form.parentGroupId, 10),
     user_ids: form.userIds,
+    admin_user_ids: form.adminUserIds,
   })
 }
 
@@ -102,6 +117,7 @@ function resetForm() {
   form.description = ''
   form.parentGroupId = noParentValue
   form.userIds = []
+  form.adminUserIds = []
   selectedSearchResults.clear()
 }
 </script>
@@ -159,7 +175,23 @@ function resetForm() {
               {{ member.detail }}
             </span>
           </div>
-          <Badge variant="secondary" class="shrink-0">Member</Badge>
+          <Badge :variant="member.admin ? 'default' : 'secondary'" class="shrink-0">
+            {{ member.admin ? 'Admin' : 'Member' }}
+          </Badge>
+          <label class="inline-flex shrink-0 items-center gap-2">
+            <input
+              type="checkbox"
+              class="peer sr-only"
+              :checked="member.admin"
+              :disabled="props.saving"
+              @change="updateAdmin(member.id, ($event.target as HTMLInputElement).checked)"
+            >
+            <span
+              class="peer-checked:bg-primary bg-muted after:bg-background relative h-5 w-9 rounded-full transition after:absolute after:top-1 after:left-1 after:size-3 after:rounded-full after:transition peer-checked:after:translate-x-4"
+              aria-hidden="true"
+            />
+            <span class="text-xs">Admin</span>
+          </label>
           <Button
             type="button"
             size="icon-sm"

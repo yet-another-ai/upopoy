@@ -54,6 +54,18 @@ RSpec.describe "Api::V1::Projects", type: :request do
       expect(project.group).to eq(group)
     end
 
+    it "does not create a project for ordinary group members" do
+      user = create(:user)
+      group = create(:group)
+      create(:group_membership, user:, group:, admin: false)
+
+      post "/api/v1/projects",
+           params: { project: { name: "AI Ops", group_id: group.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
     it "creates a project in a descendant group" do
       user = create(:user)
       parent = create(:group)
@@ -66,6 +78,18 @@ RSpec.describe "Api::V1::Projects", type: :request do
 
       expect(response).to have_http_status(:created)
       expect(Project.find(json_response["id"]).group).to eq(child)
+    end
+
+    it "allows system admins to create a project in any group" do
+      user = create(:user, :system_admin)
+      group = create(:group)
+
+      post "/api/v1/projects",
+           params: { project: { name: "System Ops", group_id: group.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:created)
+      expect(Project.find(json_response["id"]).group).to eq(group)
     end
 
     it "does not create a project in a group the user does not belong to" do
@@ -138,6 +162,18 @@ RSpec.describe "Api::V1::Projects", type: :request do
       expect(json_response["name"]).to eq("Renamed")
     end
 
+    it "does not update project attributes for ordinary group members" do
+      project = create(:project)
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member, admin: false)
+
+      patch "/api/v1/projects/#{project.id}",
+            params: { project: { name: "Renamed" } },
+            headers: auth_headers_for(member)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
     it "does not move a project to a group the requester cannot access" do
       project = create(:project)
       inaccessible_group = create(:group)
@@ -162,28 +198,28 @@ RSpec.describe "Api::V1::Projects", type: :request do
       }.to change(Project, :count).by(-1)
       expect(response).to have_http_status(:no_content)
     end
+
+    it "does not delete a project for ordinary group members" do
+      project = create(:project)
+      member = create(:user)
+      create(:group_membership, group: project.group, user: member, admin: false)
+
+      expect {
+        delete "/api/v1/projects/#{project.id}", headers: auth_headers_for(member)
+      }.not_to change(Project, :count)
+      expect(response).to have_http_status(:forbidden)
+    end
   end
 
   describe "GET /api/v1/projects/:id/board" do
     it "groups tasks by fixed statuses" do
       project = create(:project)
-      iteration = create(:iteration, project:, name: "Sprint 1")
-      create(:task, project:, iteration:, status: "todo", title: "Plan", position: 2)
-      create(:task, project:, status: "in_progress", title: "Build", position: 1)
+      create_board_tasks(project)
 
       get "/api/v1/projects/#{project.id}/board", headers: auth_headers_for(project.user)
 
       expect(response).to have_http_status(:ok)
-      expect(json_response.dig("project", "id")).to eq(project.id)
-      expect(json_response.dig("inbox_iteration", "name")).to eq("Inbox")
-      expect(json_response["iterations"].pluck("name")).to include("Inbox", "Sprint 1")
-      expect(json_response["statuses"].map { |status| status["slug"] }).to eq(
-        %w[todo in_progress under_review done]
-      )
-      expect(json_response["statuses"].first["tasks"].pluck("title")).to eq([ "Plan" ])
-      expect(json_response["statuses"].first["tasks"].first["iteration_name"]).to eq("Sprint 1")
-      expect(json_response["statuses"].second["tasks"].pluck("title")).to eq([ "Build" ])
-      expect(json_response["statuses"].second["tasks"].first["iteration_name"]).to eq("Inbox")
+      expect_board_response(project)
     end
 
     it "localizes status names from the Accept-Language header" do
@@ -197,5 +233,23 @@ RSpec.describe "Api::V1::Projects", type: :request do
         %w[待办 进行中 待评审 完成]
       )
     end
+  end
+
+  def create_board_tasks(project)
+    iteration = create(:iteration, project:, name: "Sprint 1")
+
+    create(:task, project:, iteration:, status: "todo", title: "Plan", position: 2)
+    create(:task, project:, status: "in_progress", title: "Build", position: 1)
+  end
+
+  def expect_board_response(project)
+    expect(json_response.dig("project", "id")).to eq(project.id)
+    expect(json_response.dig("inbox_iteration", "name")).to eq("Inbox")
+    expect(json_response["iterations"].pluck("name")).to include("Inbox", "Sprint 1")
+    expect(json_response["statuses"].map { |status| status["slug"] }).to eq(%w[todo in_progress under_review done])
+    expect(json_response["statuses"].first["tasks"].pluck("title")).to eq([ "Plan" ])
+    expect(json_response["statuses"].first["tasks"].first["iteration_name"]).to eq("Sprint 1")
+    expect(json_response["statuses"].second["tasks"].pluck("title")).to eq([ "Build" ])
+    expect(json_response["statuses"].second["tasks"].first["iteration_name"]).to eq("Inbox")
   end
 end

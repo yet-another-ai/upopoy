@@ -9,6 +9,7 @@ import GroupsTab from '@/components/user-groups/GroupsTab.vue'
 import UsersTab from '@/components/user-groups/UsersTab.vue'
 import { positiveIntegerRouteParam } from '@/lib/route'
 import { useToastsStore } from '@/stores/toasts'
+import { useAuthStore } from '@/stores/auth'
 import { useUserGroupsStore } from '@/stores/userGroups'
 import GroupEditorView from '@/views/GroupEditorView.vue'
 import UserProfileView from '@/views/UserProfileView.vue'
@@ -16,8 +17,10 @@ import type { GroupInput, UserProfileInput } from '@/services/api'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const userGroupsStore = useUserGroupsStore()
 const toasts = useToastsStore()
+const auth = storeToRefs(authStore)
 const userGroups = storeToRefs(userGroupsStore)
 const { t } = useI18n()
 
@@ -31,6 +34,7 @@ const userId = computed(() => positiveIntegerRouteParam(route, 'userId'))
 const groupId = computed(() => positiveIntegerRouteParam(route, 'groupId'))
 const editingUser = computed(() => route.name === 'user-edit')
 const creatingGroup = computed(() => route.name === 'group-new')
+const canManageSystemAdmins = computed(() => Boolean(auth.user.value?.system_admin))
 
 onMounted(() => {
   void userGroupsStore.loadDirectory()
@@ -133,6 +137,7 @@ function notifyError(err: unknown, fallback: string) {
         :loading="userGroups.loadingUsers.value"
         :saving="userGroups.saving.value"
         :editing="editingUser"
+        :can-manage-system-admins="canManageSystemAdmins"
         @load-user="userGroupsStore.loadUser"
         @load-groups="userGroupsStore.loadGroups"
         @save-user-profile="saveUserProfile"

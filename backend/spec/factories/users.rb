@@ -6,5 +6,9 @@ FactoryBot.define do
     bio { "Keeps the work moving." }
     password { "password123" }
     password_confirmation { password }
+
+    trait :system_admin do
+      system_admin { true }
+    end
   end
 end

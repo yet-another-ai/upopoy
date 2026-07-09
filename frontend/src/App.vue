@@ -67,7 +67,7 @@ async function initializeApp() {
 }
 
 async function enforceRouteAccess() {
-  const nextRoute = nextRouteForAccess(route, auth.authenticated.value)
+  const nextRoute = nextRouteForAccess(route, auth.authenticated.value, auth.user.value)
   if (nextRoute) await router.replace(nextRoute)
 }
 

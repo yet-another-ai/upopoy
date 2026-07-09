@@ -13,6 +13,7 @@ export type ContentClassKind = 'default' | 'wide' | 'workspace'
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
+    requiresSystemAdmin?: boolean
     titleKey?: string
     contentClassKind?: ContentClassKind
   }
@@ -63,7 +64,7 @@ const routes: RouteRecordRaw[] = [
     path: '/admin-settings',
     name: 'admin-settings',
     component: AdminSettingsView,
-    meta: { requiresAuth: true, titleKey: 'navigation.adminSettings' },
+    meta: { requiresAuth: true, requiresSystemAdmin: true, titleKey: 'navigation.adminSettings' },
   },
   {
     path: '/users',

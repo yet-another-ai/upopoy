@@ -2,7 +2,7 @@ require "openapi_helper"
 
 # rubocop:disable RSpec/NestedGroups, RSpec/RepeatedExampleGroupBody, RSpec/VariableName
 RSpec.describe "Api::V1::Admin::Settings", openapi_spec: "v1/openapi.yaml", type: :request do
-  let(:current_user) { create(:user) }
+  let(:current_user) { create(:user, :system_admin) }
   let(:Authorization) { auth_headers_for(current_user).fetch("Authorization") }
 
   path "/api/v1/admin/settings" do

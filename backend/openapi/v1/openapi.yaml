@@ -54,6 +54,8 @@ components:
         bio:
           type: string
           nullable: true
+        system_admin:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -66,6 +68,7 @@ components:
       - display_name
       - title
       - bio
+      - system_admin
       - created_at
       - updated_at
     user_response:
@@ -163,6 +166,8 @@ components:
         bio:
           type: string
           nullable: true
+        system_admin:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -181,6 +186,7 @@ components:
       - display_name
       - title
       - bio
+      - system_admin
       - created_at
       - updated_at
       - group_ids
@@ -212,6 +218,8 @@ components:
               type: string
             bio:
               type: string
+            system_admin:
+              type: boolean
       required:
       - user
     pagination_meta:
@@ -252,6 +260,14 @@ components:
             type: integer
         users_count:
           type: integer
+        admin_user_ids:
+          type: array
+          items:
+            type: integer
+        admins_count:
+          type: integer
+        can_admin:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -266,6 +282,9 @@ components:
       - parent_group_name
       - user_ids
       - users_count
+      - admin_user_ids
+      - admins_count
+      - can_admin
       - created_at
       - updated_at
     group_request:
@@ -282,6 +301,10 @@ components:
               type: integer
               nullable: true
             user_ids:
+              type: array
+              items:
+                type: integer
+            admin_user_ids:
               type: array
               items:
                 type: integer

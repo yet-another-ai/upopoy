@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { FolderKanbanIcon, KanbanIcon, SettingsIcon, UsersRoundIcon } from '@lucide/vue'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
 const { t } = useI18n()
+const canManageAdminSettings = computed(() => Boolean(user.value?.system_admin))
 </script>
 
 <template>
@@ -70,6 +76,7 @@ const { t } = useI18n()
       </RouterLink>
 
       <RouterLink
+        v-if="canManageAdminSettings"
         :to="{ name: 'admin-settings' }"
         class="border-border bg-card text-card-foreground hover:border-primary/40 hover:bg-accent focus-visible:ring-ring grid min-h-36 gap-4 rounded-lg border p-5 transition outline-none focus-visible:ring-2"
         :aria-label="t('dashboard.openAdminSettings')"

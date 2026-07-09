@@ -148,17 +148,20 @@ function getChildren(node: GroupTreeNode) {
                     <UsersRoundIcon class="size-3.5" />
                     {{ node.value.users_count }} members
                   </span>
+                  <Badge v-if="node.value.admins_count > 0" variant="secondary">
+                    {{ node.value.admins_count }} admins
+                  </Badge>
                   <span v-if="node.value.description" class="truncate">
                     {{ node.value.description }}
                   </span>
                 </div>
               </div>
 
-              <div class="flex gap-1">
+              <div v-if="node.value.can_admin" class="flex gap-1">
                 <Button
                   size="icon-sm"
                   variant="ghost"
-                  aria-label="Edit group"
+                  aria-label="Manage group"
                   @click.stop="emit('selectGroup', node.value.id)"
                 >
                   <PencilIcon />

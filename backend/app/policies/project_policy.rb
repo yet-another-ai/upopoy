@@ -4,19 +4,28 @@ class ProjectPolicy < ApplicationPolicy
   end
 
   def show?
-    group_member?
+    project_accessible?
   end
 
   def create?
-    user.present? && record.user == user && group_admin?
+    return false if user.blank? || record.user != user
+
+    case record.owner
+    when User
+      record.owner == user || user.system_admin?
+    when Organization
+      user.can_admin_organization?(record.owner_id)
+    else
+      false
+    end
   end
 
   def update?
-    group_admin? && target_group_admin?
+    project_manageable? && target_owner_manageable?
   end
 
   def destroy?
-    group_admin?
+    project_manageable?
   end
 
   def board?
@@ -28,26 +37,51 @@ class ProjectPolicy < ApplicationPolicy
       return scope.none if user.blank?
       return scope.all if user.system_admin?
 
-      scope.where(group_id: GroupHierarchy.accessible_group_ids_for(user))
+      scope
+        .where(owner: user)
+        .or(scope.where(owner_type: "Organization", owner_id: OrganizationMembership.accessible_organization_ids_for(user)))
     end
   end
 
   private
 
-  def group_member?
-    return false if user.blank? || record.group_id.blank?
-
-    user.can_access_group?(record.group_id)
-  end
-
-  def group_admin?
+  def project_accessible?
     return false if user.blank?
 
-    group_id = record.group_id_in_database || record.group_id
-    group_id.present? && user.can_admin_group?(group_id)
+    case record.owner
+    when User
+      record.owner == user || user.system_admin?
+    when Organization
+      user.can_access_organization?(record.owner_id)
+    else
+      false
+    end
   end
 
-  def target_group_admin?
-    record.group_id.present? && user.can_admin_group?(record.group_id)
+  def project_manageable?
+    return false if user.blank?
+
+    owner_type = record.owner_type_in_database || record.owner_type
+    owner_id = record.owner_id_in_database || record.owner_id
+
+    case owner_type
+    when "User"
+      owner_id == user.id || user.system_admin?
+    when "Organization"
+      user.can_admin_organization?(owner_id)
+    else
+      false
+    end
+  end
+
+  def target_owner_manageable?
+    case record.owner
+    when User
+      record.owner == user || user.system_admin?
+    when Organization
+      user.can_admin_organization?(record.owner_id)
+    else
+      false
+    end
   end
 end

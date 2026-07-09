@@ -7,7 +7,7 @@ module Api
         def index
           @conversations = policy_scope(ChatConversation)
             .where(kind: %w[ direct channel ])
-            .includes(:group, :participants, :chat_channel, parent_message: :author)
+            .includes(:organization, :participants, :chat_channel, parent_message: :author)
             .order(Arel.sql("last_message_at DESC NULLS LAST"), created_at: :desc)
         end
 
@@ -19,7 +19,7 @@ module Api
 
         def set_conversation
           @conversation = policy_scope(ChatConversation)
-            .includes(:group, :participants, :chat_channel, parent_message: :author)
+            .includes(:organization, :participants, :chat_channel, parent_message: :author)
             .find(params[:id])
         end
       end

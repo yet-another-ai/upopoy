@@ -14,65 +14,65 @@ RSpec.describe User, type: :model do
     expect(user.errors[:email]).to be_present
   end
 
-  it "can belong to groups through memberships" do
+  it "can belong to organizations through memberships" do
     user = create(:user)
-    group = create(:group)
+    organization = create(:organization)
 
-    create(:group_membership, user:, group:)
+    create(:organization_membership, user:, organization:)
 
-    expect(user.groups).to contain_exactly(group)
+    expect(user.organizations).to contain_exactly(organization)
   end
 
-  it "inherits access to descendant groups" do
+  it "accesses organizations through direct memberships" do
     user = create(:user)
-    parent = create(:group)
-    child = create(:group, parent_group: parent)
-    grandchild = create(:group, parent_group: child)
+    organization = create(:organization)
+    other = create(:organization)
 
-    create(:group_membership, user:, group: parent)
+    create(:organization_membership, user:, organization:)
 
-    expect(user.accessible_group_ids).to contain_exactly(parent.id, child.id, grandchild.id)
-    expect(user.can_access_group?(grandchild.id)).to be(true)
+    expect(user.accessible_organization_ids).to contain_exactly(organization.id)
+    expect(user.can_access_organization?(organization.id)).to be(true)
+    expect(user.can_access_organization?(other.id)).to be(false)
   end
 
-  it "inherits group admin permissions to descendant groups" do
+  it "checks organization admin permissions through direct memberships" do
     user = create(:user)
-    parent = create(:group)
-    child = create(:group, parent_group: parent)
-    create(:group_membership, :admin, user:, group: parent)
+    organization = create(:organization)
+    other = create(:organization)
+    create(:organization_membership, :admin, user:, organization:)
 
-    expect(user.can_admin_group?(parent.id)).to be(true)
-    expect(user.can_admin_group?(child.id)).to be(true)
+    expect(user.can_admin_organization?(organization.id)).to be(true)
+    expect(user.can_admin_organization?(other.id)).to be(false)
   end
 
-  it "memoizes adminable group ids for repeated admin checks" do
+  it "memoizes adminable organization ids for repeated admin checks" do
     user = create(:user)
-    group = create(:group)
-    create(:group_membership, :admin, user:, group:)
+    organization = create(:organization)
+    create(:organization_membership, :admin, user:, organization:)
 
-    allow(GroupHierarchy).to receive(:adminable_group_ids_for).and_call_original
+    allow(OrganizationMembership).to receive(:adminable_organization_ids_for).and_call_original
 
-    expect(user.can_admin_group?(group.id)).to be(true)
-    expect(user.can_admin_group?(group.id)).to be(true)
-    expect(GroupHierarchy).to have_received(:adminable_group_ids_for).once
+    expect(user.can_admin_organization?(organization.id)).to be(true)
+    expect(user.can_admin_organization?(organization.id)).to be(true)
+    expect(OrganizationMembership).to have_received(:adminable_organization_ids_for).once
   end
 
-  it "treats system admins as admins of every group" do
+  it "treats system admins as admins of every organization" do
     user = create(:user, :system_admin)
-    group = create(:group)
+    organization = create(:organization)
 
-    expect(user.can_access_group?(group.id)).to be(true)
-    expect(user.can_admin_group?(group.id)).to be(true)
+    expect(user.can_access_organization?(organization.id)).to be(true)
+    expect(user.can_admin_organization?(organization.id)).to be(true)
   end
 
-  it "does not load group ids when checking system admin group access" do
+  it "does not load organization ids when checking system admin organization access" do
     user = build_stubbed(:user, :system_admin)
 
-    allow(Group).to receive(:ids).and_call_original
+    allow(Organization).to receive(:ids).and_call_original
 
-    expect(user.can_access_group?(1)).to be(true)
-    expect(user.can_admin_group?(1)).to be(true)
-    expect(Group).not_to have_received(:ids)
+    expect(user.can_access_organization?(1)).to be(true)
+    expect(user.can_admin_organization?(1)).to be(true)
+    expect(Organization).not_to have_received(:ids)
   end
 
   it "creates a user from an OmniAuth payload" do

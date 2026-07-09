@@ -28,7 +28,7 @@ Rails.application.routes.draw do
       end
 
       resources :users, only: [ :index, :show, :update ]
-      resources :groups, only: [ :index, :show, :create, :update, :destroy ] do
+      resources :organizations, only: [ :index, :show, :create, :update, :destroy ] do
         resources :chat_channels, only: [ :index, :create ]
       end
       get "search", to: "search#index"

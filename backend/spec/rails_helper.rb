@@ -52,9 +52,8 @@ RSpec.configure do |config|
     DriveItem.with_deleted.delete_all
     Task.delete_all
     Project.delete_all
-    GroupHierarchy.delete_all
-    GroupMembership.delete_all
-    Group.delete_all
+    OrganizationMembership.delete_all
+    Organization.delete_all
     OauthIdentity.delete_all
     User.delete_all
   end

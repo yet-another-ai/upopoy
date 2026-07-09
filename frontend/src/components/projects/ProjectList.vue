@@ -37,8 +37,8 @@ const emit = defineEmits<{
               <Badge v-if="project.id === props.selectedProjectId" variant="secondary">
                 Selected
               </Badge>
-              <Badge v-if="project.group_name" variant="outline">
-                {{ project.group_name }}
+              <Badge v-if="project.owner_name" variant="outline">
+                {{ project.owner_name }}
               </Badge>
             </div>
             <p v-if="project.description" class="text-muted-foreground mt-1 text-sm">

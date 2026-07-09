@@ -58,7 +58,7 @@ function submitForm() {
     <DialogScrollContent class="max-w-md">
       <DialogHeader>
         <DialogTitle>{{ props.channel ? 'Edit channel' : 'New channel' }}</DialogTitle>
-        <DialogDescription>Channels belong to a group and use Markdown messages.</DialogDescription>
+        <DialogDescription>Channels belong to a organization and use Markdown messages.</DialogDescription>
       </DialogHeader>
 
       <form class="grid gap-4" @submit.prevent="submitForm">

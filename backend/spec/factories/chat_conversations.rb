@@ -11,7 +11,7 @@ FactoryBot.define do
     trait :channel do
       kind { "channel" }
       direct_key { nil }
-      association :group
+      association :organization
     end
 
     trait :thread do

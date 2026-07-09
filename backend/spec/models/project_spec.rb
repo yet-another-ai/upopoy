@@ -15,11 +15,25 @@ RSpec.describe Project, type: :model do
     expect(project.errors[:user]).to be_present
   end
 
-  it "requires a group" do
-    project = build(:project, group: nil)
+  it "requires an owner" do
+    project = build(:project, owner: nil)
 
     expect(project).not_to be_valid
-    expect(project.errors[:group]).to be_present
+    expect(project.errors[:owner]).to be_present
+  end
+
+  it "can be owned by a user" do
+    user = create(:user)
+    project = create(:project, user:, owner: user)
+
+    expect(project.owner).to eq(user)
+  end
+
+  it "can be owned by an organization" do
+    organization = create(:organization)
+    project = create(:project, owner: organization)
+
+    expect(project.owner).to eq(organization)
   end
 
   it "can be persisted without project-specific task statuses" do

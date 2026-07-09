@@ -1,30 +1,28 @@
 class DriveItemVersionPolicy < ApplicationPolicy
   def content?
-    project_group_member?
+    project_accessible?
   end
 
   def download?
-    project_group_member?
+    project_accessible?
   end
 
   def restore?
-    project_group_member?
+    project_accessible?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
       return scope.none if user.blank?
 
-      scope.joins(drive_item: :project).where(projects: { group_id: GroupHierarchy.accessible_group_ids_for(user) })
+      project_ids = ProjectPolicy::Scope.new(user, Project).resolve.select(:id)
+      scope.joins(:drive_item).where(drive_items: { project_id: project_ids })
     end
   end
 
   private
 
-  def project_group_member?
-    return false if user.blank?
-
-    group_id = record.drive_item&.project&.group_id
-    user.can_access_group?(group_id)
+  def project_accessible?
+    ProjectPolicy.new(user, record.drive_item&.project).show?
   end
 end

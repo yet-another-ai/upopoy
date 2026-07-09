@@ -12,11 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import type { Group, ProjectInput } from '@/services/api'
+import type { Organization, ProjectInput, User } from '@/services/api'
 
 const props = defineProps<{
-  groups: readonly Group[]
-  loadingGroups: boolean
+  organizations: readonly Organization[]
+  currentUser: User | null
+  loadingOrganizations: boolean
 }>()
 
 const emit = defineEmits<{
@@ -26,29 +27,50 @@ const emit = defineEmits<{
 const form = reactive({
   name: '',
   description: '',
-  groupId: '',
+  ownerValue: '',
 })
 
-const adminGroups = computed(() => props.groups.filter((group) => group.can_admin))
-const canSubmit = computed(() => form.name.trim().length > 0 && form.groupId.length > 0)
+const ownerOptions = computed(() => {
+  const personal = props.currentUser
+    ? [
+        {
+          value: `User:${props.currentUser.id}`,
+          label: props.currentUser.display_name || props.currentUser.email,
+          detail: 'Personal',
+        },
+      ]
+    : []
+  const organizations = props.organizations
+    .filter((organization) => organization.can_admin)
+    .map((organization) => ({
+      value: `Organization:${organization.id}`,
+      label: organization.name,
+      detail: 'Organization',
+    }))
+
+  return [...personal, ...organizations]
+})
+const canSubmit = computed(() => form.name.trim().length > 0 && form.ownerValue.length > 0)
 
 watch(
-  adminGroups,
-  (groups) => {
-    if (form.groupId && groups.some((group) => String(group.id) === form.groupId)) return
+  ownerOptions,
+  (owners) => {
+    if (form.ownerValue && owners.some((owner) => owner.value === form.ownerValue)) return
 
-    form.groupId = groups[0] ? String(groups[0].id) : ''
+    form.ownerValue = owners[0]?.value ?? ''
   },
   { immediate: true },
 )
 
 function submitProject() {
   if (!canSubmit.value) return
+  const [ownerType, ownerId] = form.ownerValue.split(':')
 
   emit('createProject', {
     name: form.name.trim(),
     description: form.description.trim(),
-    group_id: Number.parseInt(form.groupId, 10),
+    owner_type: ownerType as ProjectInput['owner_type'],
+    owner_id: Number.parseInt(ownerId, 10),
   })
   form.name = ''
   form.description = ''
@@ -71,25 +93,25 @@ function submitProject() {
           <Textarea id="project-description" v-model="form.description" rows="4" />
         </div>
         <div class="grid gap-1.5">
-          <Label for="project-group">Group</Label>
+          <Label for="project-owner">Owner</Label>
           <Select
-            v-model="form.groupId"
-            :disabled="props.loadingGroups || adminGroups.length === 0"
+            v-model="form.ownerValue"
+            :disabled="props.loadingOrganizations || ownerOptions.length === 0"
           >
-            <SelectTrigger id="project-group" class="w-full" aria-label="Group">
-              <SelectValue placeholder="Select group" />
+            <SelectTrigger id="project-owner" class="w-full" aria-label="Owner">
+              <SelectValue placeholder="Select owner" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="group in adminGroups" :key="group.id" :value="String(group.id)">
-                {{ group.name }}
+              <SelectItem v-for="owner in ownerOptions" :key="owner.value" :value="owner.value">
+                {{ owner.label }} · {{ owner.detail }}
               </SelectItem>
             </SelectContent>
           </Select>
           <p
-            v-if="!props.loadingGroups && adminGroups.length === 0"
+            v-if="!props.loadingOrganizations && ownerOptions.length === 0"
             class="text-muted-foreground text-sm"
           >
-            You need group admin access before creating a project.
+            You need an account before creating a project.
           </p>
         </div>
         <Button type="submit" class="justify-self-start" :disabled="!canSubmit">

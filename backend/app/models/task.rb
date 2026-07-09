@@ -81,16 +81,12 @@ class Task < ApplicationRecord
     ].compact.join("\n")
   end
 
-  def search_owner_user_id
-    nil
-  end
-
-  def search_owner_group_id
-    project&.group_id
+  def search_owner
+    project&.owner
   end
 
   def search_metadata
-    { project_id: project_id, group_id: project&.group_id, iteration_id: iteration_id }
+    { project_id: project_id, owner_type: project&.owner_type, owner_id: project&.owner_id, iteration_id: iteration_id }
   end
 
   def search_api_path

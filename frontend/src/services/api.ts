@@ -1,6 +1,6 @@
 import { authApi } from './api/auth'
 import { chatsApi } from './api/chats'
-import { groupsApi } from './api/groups'
+import { organizationsApi } from './api/organizations'
 import { driveApi } from './api/drive'
 import { projectsApi } from './api/projects'
 import { searchApi } from './api/search'
@@ -16,7 +16,7 @@ export const api = {
   ...authApi,
   ...usersApi,
   ...chatsApi,
-  ...groupsApi,
+  ...organizationsApi,
   ...driveApi,
   ...searchApi,
   ...projectsApi,

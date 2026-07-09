@@ -10,7 +10,7 @@ import {
 
 export const useChatsStore = defineStore('chats', () => {
   const conversations = shallowRef<ChatConversation[]>([])
-  const channelsByGroupId = shallowRef<Record<number, ChatChannel[]>>({})
+  const channelsByOrganizationId = shallowRef<Record<number, ChatChannel[]>>({})
   const activeConversation = shallowRef<ChatConversation | null>(null)
   const messages = shallowRef<ChatMessage[]>([])
   const threadConversation = shallowRef<ChatConversation | null>(null)
@@ -64,23 +64,23 @@ export const useChatsStore = defineStore('chats', () => {
     return conversation
   }
 
-  async function loadChannels(groupId: number) {
-    const channels = await api.listChatChannels(groupId)
-    channelsByGroupId.value = {
-      ...channelsByGroupId.value,
-      [groupId]: channels,
+  async function loadChannels(organizationId: number) {
+    const channels = await api.listChatChannels(organizationId)
+    channelsByOrganizationId.value = {
+      ...channelsByOrganizationId.value,
+      [organizationId]: channels,
     }
     return channels
   }
 
-  async function createChannel(groupId: number, input: ChatChannelInput) {
+  async function createChannel(organizationId: number, input: ChatChannelInput) {
     saving.value = true
     error.value = null
 
     try {
-      const channel = await api.createChatChannel(groupId, input)
+      const channel = await api.createChatChannel(organizationId, input)
       await syncChannelConversation(channel)
-      await loadChannels(groupId)
+      await loadChannels(organizationId)
       return channel
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Unable to create channel'
@@ -97,7 +97,7 @@ export const useChatsStore = defineStore('chats', () => {
     try {
       const updated = await api.updateChatChannel(channel.id, input)
       await syncChannelConversation(updated)
-      await loadChannels(updated.group_id)
+      await loadChannels(updated.organization_id)
       return updated
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Unable to update channel'
@@ -113,9 +113,9 @@ export const useChatsStore = defineStore('chats', () => {
 
     try {
       await api.deleteChatChannel(channel.id)
-      channelsByGroupId.value = {
-        ...channelsByGroupId.value,
-        [channel.group_id]: (channelsByGroupId.value[channel.group_id] ?? []).filter(
+      channelsByOrganizationId.value = {
+        ...channelsByOrganizationId.value,
+        [channel.organization_id]: (channelsByOrganizationId.value[channel.organization_id] ?? []).filter(
           (item) => item.id !== channel.id,
         ),
       }
@@ -177,7 +177,7 @@ export const useChatsStore = defineStore('chats', () => {
 
   function clearChats() {
     conversations.value = []
-    channelsByGroupId.value = {}
+    channelsByOrganizationId.value = {}
     activeConversation.value = null
     messages.value = []
     threadConversation.value = null
@@ -233,7 +233,7 @@ export const useChatsStore = defineStore('chats', () => {
     conversations,
     directConversations,
     channelConversations,
-    channelsByGroupId,
+    channelsByOrganizationId,
     activeConversation,
     messages,
     threadConversation,

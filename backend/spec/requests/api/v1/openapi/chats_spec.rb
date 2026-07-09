@@ -63,10 +63,10 @@ RSpec.describe "Api::V1::Chats", openapi_spec: "v1/openapi.yaml", type: :request
     end
   end
 
-  path "/api/v1/groups/{group_id}/chat_channels" do
-    parameter name: :group_id, in: :path, type: :integer
+  path "/api/v1/organizations/{organization_id}/chat_channels" do
+    parameter name: :organization_id, in: :path, type: :integer
 
-    get "Lists group chat channels" do
+    get "Lists organization chat channels" do
       tags "Chat Channels"
       security [ bearer_auth: [] ]
       produces "application/json"
@@ -74,19 +74,19 @@ RSpec.describe "Api::V1::Chats", openapi_spec: "v1/openapi.yaml", type: :request
       response "200", "channels returned" do
         schema type: :array, items: { "$ref" => "#/components/schemas/chat_channel" }
 
-        let(:group) { create(:group) }
-        let(:group_id) { group.id }
+        let(:organization) { create(:organization) }
+        let(:organization_id) { organization.id }
 
         before do
-          create(:group_membership, user: current_user, group:)
-          Chats::ChannelCreator.call(group:, created_by: current_user, attributes: { name: "general" })
+          create(:organization_membership, user: current_user, organization:)
+          Chats::ChannelCreator.call(organization:, created_by: current_user, attributes: { name: "general" })
         end
 
         run_test!
       end
     end
 
-    post "Creates a group chat channel" do
+    post "Creates a organization chat channel" do
       tags "Chat Channels"
       security [ bearer_auth: [] ]
       consumes "application/json"
@@ -96,12 +96,12 @@ RSpec.describe "Api::V1::Chats", openapi_spec: "v1/openapi.yaml", type: :request
       response "201", "channel created" do
         schema "$ref" => "#/components/schemas/chat_channel"
 
-        let(:group) { create(:group) }
-        let(:group_id) { group.id }
+        let(:organization) { create(:organization) }
+        let(:organization_id) { organization.id }
         let(:request_params) { { chat_channel: { name: "general", description: "Team chat" } } }
 
         before do
-          create(:group_membership, :admin, user: current_user, group:)
+          create(:organization_membership, :admin, user: current_user, organization:)
         end
 
         run_test!
@@ -122,13 +122,13 @@ RSpec.describe "Api::V1::Chats", openapi_spec: "v1/openapi.yaml", type: :request
       response "200", "channel updated" do
         schema "$ref" => "#/components/schemas/chat_channel"
 
-        let(:group) { create(:group) }
-        let(:channel) { Chats::ChannelCreator.call(group:, created_by: current_user, attributes: { name: "general" }) }
+        let(:organization) { create(:organization) }
+        let(:channel) { Chats::ChannelCreator.call(organization:, created_by: current_user, attributes: { name: "general" }) }
         let(:id) { channel.id }
         let(:request_params) { { chat_channel: { name: "planning" } } }
 
         before do
-          create(:group_membership, :admin, user: current_user, group:)
+          create(:organization_membership, :admin, user: current_user, organization:)
         end
 
         run_test!
@@ -140,12 +140,12 @@ RSpec.describe "Api::V1::Chats", openapi_spec: "v1/openapi.yaml", type: :request
       security [ bearer_auth: [] ]
 
       response "204", "channel deleted" do
-        let(:group) { create(:group) }
-        let(:channel) { Chats::ChannelCreator.call(group:, created_by: current_user, attributes: { name: "general" }) }
+        let(:organization) { create(:organization) }
+        let(:channel) { Chats::ChannelCreator.call(organization:, created_by: current_user, attributes: { name: "general" }) }
         let(:id) { channel.id }
 
         before do
-          create(:group_membership, :admin, user: current_user, group:)
+          create(:organization_membership, :admin, user: current_user, organization:)
         end
 
         run_test!

@@ -39,14 +39,14 @@ RSpec.describe "Api::V1::Chats", type: :request do
     it "lists accessible direct and channel conversations but not threads" do
       current_user = create(:user)
       other_user = create(:user)
-      group = create(:group)
-      inaccessible_group = create(:group)
-      create(:group_membership, user: current_user, group:)
+      organization = create(:organization)
+      inaccessible_organization = create(:organization)
+      create(:organization_membership, user: current_user, organization:)
       direct = Chats::DirectConversationFinder.call(current_user:, other_user:)
-      channel = Chats::ChannelCreator.call(group:, created_by: current_user, attributes: { name: "general" })
+      channel = Chats::ChannelCreator.call(organization:, created_by: current_user, attributes: { name: "general" })
       parent = create(:chat_message, chat_conversation: direct, author: current_user)
       Chats::ThreadCreator.call(parent_message: parent, created_by: current_user)
-      Chats::ChannelCreator.call(group: inaccessible_group, created_by: other_user, attributes: { name: "private" })
+      Chats::ChannelCreator.call(organization: inaccessible_organization, created_by: other_user, attributes: { name: "private" })
 
       get "/api/v1/chats/conversations", headers: auth_headers_for(current_user)
 
@@ -56,12 +56,12 @@ RSpec.describe "Api::V1::Chats", type: :request do
   end
 
   describe "chat channels" do
-    it "allows group admins to create, update, and delete channels" do
+    it "allows organization admins to create, update, and delete channels" do
       current_user = create(:user)
-      group = create(:group)
-      create(:group_membership, :admin, user: current_user, group:)
+      organization = create(:organization)
+      create(:organization_membership, :admin, user: current_user, organization:)
 
-      post "/api/v1/groups/#{group.id}/chat_channels",
+      post "/api/v1/organizations/#{organization.id}/chat_channels",
         params: { chat_channel: { name: "general", description: "Team chat" } },
         headers: auth_headers_for(current_user)
 
@@ -82,27 +82,27 @@ RSpec.describe "Api::V1::Chats", type: :request do
       expect(ChatConversation.exists?(conversation_id)).to be(false)
     end
 
-    it "prevents ordinary group members from creating channels" do
+    it "prevents ordinary organization members from creating channels" do
       current_user = create(:user)
-      group = create(:group)
-      create(:group_membership, user: current_user, group:)
+      organization = create(:organization)
+      create(:organization_membership, user: current_user, organization:)
 
-      post "/api/v1/groups/#{group.id}/chat_channels",
+      post "/api/v1/organizations/#{organization.id}/chat_channels",
         params: { chat_channel: { name: "general" } },
         headers: auth_headers_for(current_user)
 
       expect(response).to have_http_status(:forbidden)
     end
 
-    it "lists channels for group members" do
+    it "lists channels for organization members" do
       current_user = create(:user)
       admin = create(:user)
-      group = create(:group)
-      create(:group_membership, user: current_user, group:)
-      create(:group_membership, :admin, user: admin, group:)
-      channel = Chats::ChannelCreator.call(group:, created_by: admin, attributes: { name: "general" })
+      organization = create(:organization)
+      create(:organization_membership, user: current_user, organization:)
+      create(:organization_membership, :admin, user: admin, organization:)
+      channel = Chats::ChannelCreator.call(organization:, created_by: admin, attributes: { name: "general" })
 
-      get "/api/v1/groups/#{group.id}/chat_channels", headers: auth_headers_for(current_user)
+      get "/api/v1/organizations/#{organization.id}/chat_channels", headers: auth_headers_for(current_user)
 
       expect(response).to have_http_status(:ok)
       expect(json_response.pluck("conversation_id")).to eq([ channel.chat_conversation_id ])

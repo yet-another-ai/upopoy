@@ -7,7 +7,7 @@ import ChatsView from '@/views/ChatsView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ProjectsView from '@/views/ProjectsView.vue'
 import ServerErrorView from '@/views/ServerErrorView.vue'
-import UserGroupsView from '@/views/UserGroupsView.vue'
+import OrganizationsView from '@/views/OrganizationsView.vue'
 
 export type ContentClassKind = 'default' | 'wide' | 'workspace'
 
@@ -100,63 +100,63 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/users',
     name: 'users',
-    component: UserGroupsView,
+    component: OrganizationsView,
     meta: {
       requiresAuth: true,
-      titleKey: 'navigation.usersAndGroups',
+      titleKey: 'navigation.usersAndOrganizations',
       contentClassKind: 'wide',
     },
   },
   {
     path: '/users/:userId',
     name: 'user-profile',
-    component: UserGroupsView,
+    component: OrganizationsView,
     props: true,
     meta: {
       requiresAuth: true,
-      titleKey: 'navigation.usersAndGroups',
+      titleKey: 'navigation.usersAndOrganizations',
       contentClassKind: 'wide',
     },
   },
   {
     path: '/users/:userId/edit',
     name: 'user-edit',
-    component: UserGroupsView,
+    component: OrganizationsView,
     props: true,
     meta: {
       requiresAuth: true,
-      titleKey: 'navigation.usersAndGroups',
+      titleKey: 'navigation.usersAndOrganizations',
       contentClassKind: 'wide',
     },
   },
   {
-    path: '/groups',
-    name: 'groups',
-    component: UserGroupsView,
+    path: '/organizations',
+    name: 'organizations',
+    component: OrganizationsView,
     meta: {
       requiresAuth: true,
-      titleKey: 'navigation.usersAndGroups',
+      titleKey: 'navigation.usersAndOrganizations',
       contentClassKind: 'wide',
     },
   },
   {
-    path: '/groups/new',
-    name: 'group-new',
-    component: UserGroupsView,
+    path: '/organizations/new',
+    name: 'organization-new',
+    component: OrganizationsView,
     meta: {
       requiresAuth: true,
-      titleKey: 'navigation.usersAndGroups',
+      titleKey: 'navigation.usersAndOrganizations',
       contentClassKind: 'wide',
     },
   },
   {
-    path: '/groups/:groupId',
-    name: 'group-detail',
-    component: UserGroupsView,
+    path: '/organizations/:organizationId',
+    name: 'organization-detail',
+    component: OrganizationsView,
     props: true,
     meta: {
       requiresAuth: true,
-      titleKey: 'navigation.usersAndGroups',
+      titleKey: 'navigation.usersAndOrganizations',
       contentClassKind: 'wide',
     },
   },

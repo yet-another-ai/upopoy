@@ -4,11 +4,11 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
-import { useUserGroupsStore } from '@/stores/userGroups'
+import { useOrganizationsStore } from '@/stores/organizations'
 
 const authStore = useAuthStore()
 const projectsStore = useProjectsStore()
-const userGroupsStore = useUserGroupsStore()
+const organizationsStore = useOrganizationsStore()
 const router = useRouter()
 const { t } = useI18n()
 const message = shallowRef(t('auth.finishingSignIn'))
@@ -24,7 +24,7 @@ onMounted(async () => {
     await authStore.acceptToken(token)
     await router.push({ name: 'home' })
     await projectsStore.loadProjects()
-    await userGroupsStore.loadGroups()
+    await organizationsStore.loadOrganizations()
     return
   }
 

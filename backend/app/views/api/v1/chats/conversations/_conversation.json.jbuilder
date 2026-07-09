@@ -11,12 +11,12 @@ title =
     "Thread"
   end
 
-json.extract! conversation, :id, :kind, :group_id, :last_message_at, :created_at, :updated_at
+json.extract! conversation, :id, :kind, :organization_id, :last_message_at, :created_at, :updated_at
 json.title title
-json.group_name conversation.group&.name
+json.organization_name conversation.organization&.name
 json.channel_id channel&.id
 json.channel_name channel&.name
-json.can_manage conversation.channel? && conversation.group_id.present? && viewer.can_admin_group?(conversation.group_id)
+json.can_manage conversation.channel? && conversation.organization_id.present? && viewer.can_admin_organization?(conversation.organization_id)
 json.participants participants do |participant|
   json.partial! "api/v1/users/user", user: participant
 end

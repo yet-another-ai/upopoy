@@ -2,11 +2,11 @@ require "rails_helper"
 
 RSpec.describe "Api::V1::Users", type: :request do
   describe "GET /api/v1/users" do
-    it "lists paginated users with group membership ids" do
+    it "lists paginated users with organization membership ids" do
       user = create(:user, email: "ada@example.com")
       other_user = create(:user, email: "grace@example.com")
-      group = create(:group)
-      create(:group_membership, user: other_user, group:)
+      organization = create(:organization)
+      create(:organization_membership, user: other_user, organization:)
 
       get "/api/v1/users", params: { page: 1, per_page: 1 }, headers: auth_headers_for(user)
 
@@ -17,8 +17,8 @@ RSpec.describe "Api::V1::Users", type: :request do
 
       get "/api/v1/users", params: { page: 2, per_page: 1 }, headers: auth_headers_for(user)
 
-      expect(json_response["users"].first["group_ids"]).to eq([ group.id ])
-      expect(json_response["users"].first["groups_count"]).to eq(1)
+      expect(json_response["users"].first["organization_ids"]).to eq([ organization.id ])
+      expect(json_response["users"].first["organizations_count"]).to eq(1)
     end
 
     it "requires authentication" do

@@ -38,7 +38,7 @@
     "kanban": "看板",
     "projectManagement": "项目管理",
     "projects": "项目",
-    "usersAndGroups": "用户与用户组"
+    "usersAndOrganizations": "用户与组织"
   },
   "dashboard": {
     "chooseApp": "选择一个应用继续。",
@@ -46,19 +46,19 @@
     "openKanban": "打开看板",
     "openDrive": "打开 Drive",
     "openChats": "打开 Chats",
-    "openUsersAndGroups": "打开用户与用户组",
+    "openUsersAndOrganizations": "打开用户与组织",
     "openAdminSettings": "打开管理员设置",
     "projectsDescription": "创建并选择工作区。",
     "kanbanDescription": "管理项目、任务和固定工作流。",
     "driveDescription": "管理项目文件夹、文件和 Markdown 文档。",
     "chatsDescription": "私聊、频道和会话线程。",
-    "usersAndGroupsDescription": "管理用户组和成员关系。",
+    "usersAndOrganizationsDescription": "管理组织和成员关系。",
     "adminSettingsDescription": "配置认证访问方式。"
   },
   "users": {
-    "sectionsLabel": "用户与用户组分区",
+    "sectionsLabel": "用户与组织分区",
     "users": "用户",
-    "groups": "用户组"
+    "organizations": "组织"
   },
   "tasks": {
     "board": "看板",

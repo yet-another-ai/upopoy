@@ -1,14 +1,19 @@
 FactoryBot.define do
   factory :project do
     association :user
-    association :group
+    association :owner, factory: :organization
     sequence(:name) { |index| "Project #{index}" }
     description { "A focused project workspace." }
 
-    after(:create) do |project|
-      next if GroupMembership.exists?(group: project.group, user: project.user)
+    trait :user_owned do
+      owner { user }
+    end
 
-      create(:group_membership, :admin, group: project.group, user: project.user)
+    after(:create) do |project|
+      next unless project.owner.is_a?(Organization)
+      next if OrganizationMembership.exists?(organization: project.owner, user: project.user)
+
+      create(:organization_membership, :admin, organization: project.owner, user: project.user)
     end
   end
 end

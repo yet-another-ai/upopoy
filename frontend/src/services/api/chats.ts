@@ -26,10 +26,10 @@ export const chatsApi = {
       method: 'POST',
       body: JSON.stringify({ user_id: userId }),
     }),
-  listChatChannels: (groupId: number) =>
-    request<ChatChannel[]>(`/api/v1/groups/${groupId}/chat_channels`),
-  createChatChannel: (groupId: number, chatChannel: ChatChannelInput) =>
-    request<ChatChannel>(`/api/v1/groups/${groupId}/chat_channels`, {
+  listChatChannels: (organizationId: number) =>
+    request<ChatChannel[]>(`/api/v1/organizations/${organizationId}/chat_channels`),
+  createChatChannel: (organizationId: number, chatChannel: ChatChannelInput) =>
+    request<ChatChannel>(`/api/v1/organizations/${organizationId}/chat_channels`, {
       method: 'POST',
       body: JSON.stringify({ chat_channel: chatChannel }),
     }),

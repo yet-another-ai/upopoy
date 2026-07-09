@@ -1,22 +1,22 @@
 module Api
   module V1
     class ChatChannelsController < BaseController
-      before_action :set_group, only: [ :index, :create ]
+      before_action :set_organization, only: [ :index, :create ]
       before_action :set_chat_channel, only: [ :update, :destroy ]
 
       def index
         authorize ChatChannel
-        @chat_channels = policy_scope(@group.chat_channels)
-          .includes(:group, :chat_conversation)
+        @chat_channels = policy_scope(@organization.chat_channels)
+          .includes(:organization, :chat_conversation)
           .order(:name)
       end
 
       def create
-        chat_channel = @group.chat_channels.new(channel_params.merge(created_by: current_user))
+        chat_channel = @organization.chat_channels.new(channel_params.merge(created_by: current_user))
         authorize chat_channel
 
         @chat_channel = ::Chats::ChannelCreator.call(
-          group: @group,
+          organization: @organization,
           created_by: current_user,
           attributes: channel_params
         )
@@ -44,8 +44,8 @@ module Api
 
       private
 
-      def set_group
-        @group = policy_scope(Group).find(params[:group_id])
+      def set_organization
+        @organization = policy_scope(Organization).find(params[:organization_id])
       end
 
       def set_chat_channel

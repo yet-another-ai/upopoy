@@ -29,7 +29,7 @@ const emit = defineEmits<{
         <p v-if="props.conversation" class="text-muted-foreground truncate text-xs">
           <template v-if="props.conversation.kind === 'direct'">Direct message</template>
           <template v-else-if="props.conversation.kind === 'channel'">
-            {{ props.conversation.group_name }}
+            {{ props.conversation.organization_name }}
           </template>
           <template v-else>Thread</template>
         </p>

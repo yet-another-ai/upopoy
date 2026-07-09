@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -42,6 +42,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+    t.index ["blob_id"], name: "index_active_storage_variant_records_on_blob_id"
   end
 
   create_table "application_settings", force: :cascade do |t|
@@ -58,13 +59,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
     t.text "description"
-    t.bigint "group_id", null: false
     t.string "name", null: false
+    t.bigint "organization_id", null: false
     t.datetime "updated_at", null: false
-    t.index "group_id, lower((name)::text)", name: "index_chat_channels_on_group_and_lower_name", unique: true
+    t.index "organization_id, lower((name)::text)", name: "index_chat_channels_on_organization_and_lower_name", unique: true
     t.index ["chat_conversation_id"], name: "index_chat_channels_on_chat_conversation_id", unique: true
     t.index ["created_by_id"], name: "index_chat_channels_on_created_by_id"
-    t.index ["group_id"], name: "index_chat_channels_on_group_id"
+    t.index ["organization_id"], name: "index_chat_channels_on_organization_id"
   end
 
   create_table "chat_conversation_participants", force: :cascade do |t|
@@ -80,16 +81,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
     t.string "direct_key"
-    t.bigint "group_id"
     t.string "kind", null: false
     t.datetime "last_message_at"
+    t.bigint "organization_id"
     t.bigint "parent_message_id"
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_chat_conversations_on_created_by_id"
     t.index ["direct_key"], name: "index_chat_conversations_on_direct_key", unique: true, where: "(direct_key IS NOT NULL)"
-    t.index ["group_id", "kind"], name: "index_chat_conversations_on_group_id_and_kind"
-    t.index ["group_id"], name: "index_chat_conversations_on_group_id"
     t.index ["kind"], name: "index_chat_conversations_on_kind"
+    t.index ["organization_id", "kind"], name: "index_chat_conversations_on_organization_id_and_kind"
+    t.index ["organization_id"], name: "index_chat_conversations_on_organization_id"
     t.index ["parent_message_id"], name: "index_chat_conversations_on_parent_message_id", unique: true, where: "(parent_message_id IS NOT NULL)"
   end
 
@@ -134,37 +135,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.index ["project_id"], name: "index_drive_items_on_project_id"
   end
 
-  create_table "group_hierarchies", force: :cascade do |t|
-    t.bigint "ancestor_group_id", null: false
-    t.datetime "created_at", null: false
-    t.integer "depth", null: false
-    t.bigint "descendant_group_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["ancestor_group_id", "descendant_group_id"], name: "index_group_hierarchies_on_ancestor_and_descendant", unique: true
-    t.index ["descendant_group_id"], name: "index_group_hierarchies_on_descendant_group_id"
-  end
-
-  create_table "group_memberships", force: :cascade do |t|
-    t.boolean "admin", default: false, null: false
-    t.datetime "created_at", null: false
-    t.bigint "group_id", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["group_id", "admin"], name: "index_group_memberships_on_group_id_and_admin"
-    t.index ["group_id", "user_id"], name: "index_group_memberships_on_group_id_and_user_id", unique: true
-    t.index ["group_id"], name: "index_group_memberships_on_group_id"
-    t.index ["user_id"], name: "index_group_memberships_on_user_id"
-  end
-
-  create_table "groups", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.text "description"
-    t.string "name", null: false
-    t.bigint "parent_group_id"
-    t.datetime "updated_at", null: false
-    t.index ["parent_group_id"], name: "index_groups_on_parent_group_id"
-  end
-
   create_table "iterations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "deadline"
@@ -188,9 +158,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.index ["user_id"], name: "index_oauth_identities_on_user_id"
   end
 
+  create_table "organization_memberships", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
+    t.datetime "created_at", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["organization_id", "admin"], name: "index_organization_memberships_on_organization_id_and_admin"
+    t.index ["organization_id", "user_id"], name: "index_organization_memberships_on_organization_id_and_user_id", unique: true
+    t.index ["organization_id"], name: "index_organization_memberships_on_organization_id"
+    t.index ["user_id"], name: "index_organization_memberships_on_user_id"
+  end
+
+  create_table "organizations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "pghero_query_stats", force: :cascade do |t|
     t.bigint "calls"
-    t.datetime "captured_at", precision: nil
+    t.datetime "captured_at"
     t.text "database"
     t.text "query"
     t.bigint "query_hash"
@@ -200,7 +189,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
   end
 
   create_table "pghero_space_stats", force: :cascade do |t|
-    t.datetime "captured_at", precision: nil
+    t.datetime "captured_at"
     t.text "database"
     t.text "relation"
     t.text "schema"
@@ -211,11 +200,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
   create_table "projects", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
-    t.bigint "group_id", null: false
     t.string "name", null: false
+    t.bigint "owner_id", null: false
+    t.string "owner_type", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["group_id"], name: "index_projects_on_group_id"
+    t.index ["owner_type", "owner_id"], name: "index_projects_on_owner_type_and_owner_id"
     t.index ["user_id"], name: "index_projects_on_user_id"
   end
 
@@ -223,8 +213,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.string "api_path", null: false
     t.text "content", default: "", null: false
     t.datetime "created_at", null: false
-    t.bigint "group_id"
     t.jsonb "metadata", default: {}, null: false
+    t.bigint "owner_id"
+    t.string "owner_type"
     t.string "resource_slug", null: false
     t.string "resource_type", null: false
     t.datetime "resource_updated_at", null: false
@@ -233,23 +224,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.string "searchable_type", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_id"
     t.index ["content"], name: "index_search_documents_on_content_trgm", opclass: :gin_trgm_ops, using: :gin
-    t.index ["group_id"], name: "index_search_documents_on_group_id"
     t.index ["metadata"], name: "index_search_documents_on_metadata", using: :gin
+    t.index ["owner_type", "owner_id"], name: "index_search_documents_on_owner_type_and_owner_id"
     t.index ["resource_slug"], name: "index_search_documents_on_resource_slug", unique: true
     t.index ["resource_slug"], name: "index_search_documents_on_resource_slug_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["resource_type"], name: "index_search_documents_on_resource_type"
     t.index ["search_vector"], name: "index_search_documents_on_search_vector", using: :gin
-    t.index ["searchable_type", "searchable_id"], name: "index_search_documents_on_searchable_type_and_searchable_id", unique: true
+    t.index ["searchable_type", "searchable_id"], name: "index_search_documents_on_searchable", unique: true
     t.index ["title"], name: "index_search_documents_on_title_trgm", opclass: :gin_trgm_ops, using: :gin
-    t.index ["user_id"], name: "index_search_documents_on_user_id"
   end
 
   create_table "task_developers", id: false, force: :cascade do |t|
     t.bigint "task_id", null: false
     t.bigint "user_id", null: false
     t.index ["task_id", "user_id"], name: "index_task_developers_on_task_id_and_user_id", unique: true
+    t.index ["task_id"], name: "index_task_developers_on_task_id"
     t.index ["user_id"], name: "index_task_developers_on_user_id"
   end
 
@@ -257,6 +247,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
     t.bigint "task_id", null: false
     t.bigint "user_id", null: false
     t.index ["task_id", "user_id"], name: "index_task_reviewers_on_task_id_and_user_id", unique: true
+    t.index ["task_id"], name: "index_task_reviewers_on_task_id"
     t.index ["user_id"], name: "index_task_reviewers_on_user_id"
   end
 
@@ -299,29 +290,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_09_110000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "chat_channels", "chat_conversations", on_delete: :cascade
-  add_foreign_key "chat_channels", "groups", on_delete: :cascade
+  add_foreign_key "chat_channels", "organizations", on_delete: :cascade
   add_foreign_key "chat_channels", "users", column: "created_by_id"
   add_foreign_key "chat_conversation_participants", "chat_conversations", on_delete: :cascade
   add_foreign_key "chat_conversation_participants", "users", on_delete: :cascade
   add_foreign_key "chat_conversations", "chat_messages", column: "parent_message_id", on_delete: :cascade
-  add_foreign_key "chat_conversations", "groups"
+  add_foreign_key "chat_conversations", "organizations"
   add_foreign_key "chat_conversations", "users", column: "created_by_id"
   add_foreign_key "chat_messages", "chat_conversations", on_delete: :cascade
   add_foreign_key "chat_messages", "users", column: "author_id"
   add_foreign_key "drive_item_versions", "drive_items", on_delete: :cascade
   add_foreign_key "drive_items", "drive_items", column: "parent_id", on_delete: :cascade
   add_foreign_key "drive_items", "projects", on_delete: :cascade
-  add_foreign_key "group_hierarchies", "groups", column: "ancestor_group_id", on_delete: :cascade
-  add_foreign_key "group_hierarchies", "groups", column: "descendant_group_id", on_delete: :cascade
-  add_foreign_key "group_memberships", "groups", on_delete: :cascade
-  add_foreign_key "group_memberships", "users", on_delete: :cascade
-  add_foreign_key "groups", "groups", column: "parent_group_id", on_delete: :nullify
   add_foreign_key "iterations", "projects", on_delete: :cascade
   add_foreign_key "oauth_identities", "users"
-  add_foreign_key "projects", "groups"
+  add_foreign_key "organization_memberships", "organizations", on_delete: :cascade
+  add_foreign_key "organization_memberships", "users", on_delete: :cascade
   add_foreign_key "projects", "users"
-  add_foreign_key "search_documents", "groups"
-  add_foreign_key "search_documents", "users"
   add_foreign_key "task_developers", "tasks", on_delete: :cascade
   add_foreign_key "task_developers", "users", on_delete: :cascade
   add_foreign_key "task_reviewers", "tasks", on_delete: :cascade

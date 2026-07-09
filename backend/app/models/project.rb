@@ -1,10 +1,12 @@
 class Project < ApplicationRecord
   include SearchableResource
 
-  search_index_attributes :name, :description, :user_id, :group_id
+  OWNER_TYPES = %w[User Organization].freeze
+
+  search_index_attributes :name, :description, :user_id, :owner_type, :owner_id
 
   belongs_to :user
-  belongs_to :group
+  belongs_to :owner, polymorphic: true
   has_many :iterations, dependent: :destroy
   has_many :tasks, dependent: :destroy
   has_many :drive_items, dependent: :destroy
@@ -12,6 +14,8 @@ class Project < ApplicationRecord
   after_create :ensure_inbox_iteration
 
   validates :name, presence: true
+  validates :owner_type, inclusion: { in: OWNER_TYPES }
+  validates :owner, presence: true
 
   def inbox_iteration
     iterations.find_or_create_by!(inbox: true) do |iteration|
@@ -28,15 +32,15 @@ class Project < ApplicationRecord
   end
 
   def search_owner_user_id
-    nil
+    owner_id if owner_type == "User"
   end
 
-  def search_owner_group_id
-    group_id
+  def search_owner
+    owner
   end
 
   def search_metadata
-    { group_id: group_id }
+    { owner_type:, owner_id: }
   end
 
   def search_api_path

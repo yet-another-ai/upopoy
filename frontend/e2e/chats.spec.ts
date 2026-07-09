@@ -18,8 +18,8 @@ interface ConversationPayload {
   id: number
   kind: string
   title: string
-  group_id: number | null
-  group_name: string | null
+  organization_id: number | null
+  organization_name: string | null
   channel_id: number | null
   channel_name: string | null
   participants: UserPayload[]
@@ -56,12 +56,10 @@ async function installMockApi(page: Page) {
   let nextMessageId = 30
   const currentUser = userPayload(1, 'founder@example.com', 'Founder')
   const otherUser = userPayload(2, 'teammate@example.com', 'Teammate')
-  const group = {
+  const organization = {
     id: 1,
     name: 'Engineering',
     description: null,
-    parent_group_id: null,
-    parent_group_name: null,
     user_ids: [1, 2],
     users_count: 2,
     admin_user_ids: [1],
@@ -75,8 +73,8 @@ async function installMockApi(page: Page) {
       id: 10,
       kind: 'channel',
       title: 'general',
-      group_id: 1,
-      group_name: 'Engineering',
+      organization_id: 1,
+      organization_name: 'Engineering',
       channel_id: 100,
       channel_name: 'general',
       can_manage: true,
@@ -85,7 +83,7 @@ async function installMockApi(page: Page) {
   const channels = [
     {
       id: 100,
-      group_id: 1,
+      organization_id: 1,
       name: 'general',
       description: 'Team chat',
       conversation_id: 10,
@@ -121,8 +119,8 @@ async function installMockApi(page: Page) {
     await json(route, [])
   })
 
-  await page.route('**/api/v1/groups', async (route) => {
-    await json(route, [group])
+  await page.route('**/api/v1/organizations', async (route) => {
+    await json(route, [organization])
   })
 
   await page.route('**/api/v1/search**', async (route) => {
@@ -159,7 +157,7 @@ async function installMockApi(page: Page) {
     await json(route, direct, 201)
   })
 
-  await page.route('**/api/v1/groups/1/chat_channels', async (route) => {
+  await page.route('**/api/v1/organizations/1/chat_channels', async (route) => {
     if (route.request().method() === 'GET') {
       await json(route, channels)
       return
@@ -168,7 +166,7 @@ async function installMockApi(page: Page) {
     const requestBody = route.request().postDataJSON() as { chat_channel: { name: string; description?: string } }
     const channel = {
       id: 101,
-      group_id: 1,
+      organization_id: 1,
       name: requestBody.chat_channel.name,
       description: requestBody.chat_channel.description ?? null,
       conversation_id: 12,
@@ -182,8 +180,8 @@ async function installMockApi(page: Page) {
         id: 12,
         kind: 'channel',
         title: channel.name,
-        group_id: 1,
-        group_name: 'Engineering',
+        organization_id: 1,
+        organization_name: 'Engineering',
         channel_id: channel.id,
         channel_name: channel.name,
         can_manage: true,
@@ -245,8 +243,8 @@ function conversationPayload(input: {
   id: number
   kind: string
   title: string
-  group_id?: number
-  group_name?: string
+  organization_id?: number
+  organization_name?: string
   channel_id?: number
   channel_name?: string
   participants?: UserPayload[]
@@ -258,8 +256,8 @@ function conversationPayload(input: {
     id: input.id,
     kind: input.kind,
     title: input.title,
-    group_id: input.group_id ?? null,
-    group_name: input.group_name ?? null,
+    organization_id: input.organization_id ?? null,
+    organization_name: input.organization_name ?? null,
     channel_id: input.channel_id ?? null,
     channel_name: input.channel_name ?? null,
     participants: input.participants ?? [],

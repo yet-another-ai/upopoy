@@ -174,11 +174,11 @@ components:
         updated_at:
           type: string
           format: date-time
-        group_ids:
+        organization_ids:
           type: array
           items:
             type: integer
-        groups_count:
+        organizations_count:
           type: integer
       required:
       - id
@@ -189,8 +189,8 @@ components:
       - system_admin
       - created_at
       - updated_at
-      - group_ids
-      - groups_count
+      - organization_ids
+      - organizations_count
     users_index:
       type: object
       properties:
@@ -238,7 +238,7 @@ components:
       - total_pages
       - total_count
       - per_page
-    group:
+    organization:
       type: object
       properties:
         id:
@@ -246,12 +246,6 @@ components:
         name:
           type: string
         description:
-          type: string
-          nullable: true
-        parent_group_id:
-          type: integer
-          nullable: true
-        parent_group_name:
           type: string
           nullable: true
         user_ids:
@@ -278,8 +272,6 @@ components:
       - id
       - name
       - description
-      - parent_group_id
-      - parent_group_name
       - user_ids
       - users_count
       - admin_user_ids
@@ -287,19 +279,16 @@ components:
       - can_admin
       - created_at
       - updated_at
-    group_request:
+    organization_request:
       type: object
       properties:
-        group:
+        organization:
           type: object
           properties:
             name:
               type: string
             description:
               type: string
-            parent_group_id:
-              type: integer
-              nullable: true
             user_ids:
               type: array
               items:
@@ -309,13 +298,13 @@ components:
               items:
                 type: integer
       required:
-      - group
+      - organization
     chat_channel:
       type: object
       properties:
         id:
           type: integer
-        group_id:
+        organization_id:
           type: integer
         name:
           type: string
@@ -334,7 +323,7 @@ components:
           format: date-time
       required:
       - id
-      - group_id
+      - organization_id
       - name
       - description
       - conversation_id
@@ -419,10 +408,10 @@ components:
           - thread
         title:
           type: string
-        group_id:
+        organization_id:
           type: integer
           nullable: true
-        group_name:
+        organization_name:
           type: string
           nullable: true
         channel_id:
@@ -457,8 +446,8 @@ components:
       - id
       - kind
       - title
-      - group_id
-      - group_name
+      - organization_id
+      - organization_name
       - channel_id
       - channel_name
       - participants
@@ -480,15 +469,19 @@ components:
       properties:
         id:
           type: integer
-        group_id:
+        owner_type:
+          type: string
+          enum:
+          - User
+          - Organization
+        owner_id:
           type: integer
+        owner_name:
+          type: string
           nullable: true
         name:
           type: string
         description:
-          type: string
-          nullable: true
-        group_name:
           type: string
           nullable: true
         created_at:
@@ -499,10 +492,11 @@ components:
           format: date-time
       required:
       - id
-      - group_id
+      - owner_type
+      - owner_id
+      - owner_name
       - name
       - description
-      - group_name
       - created_at
       - updated_at
     project_request:
@@ -515,9 +509,13 @@ components:
               type: string
             description:
               type: string
-            group_id:
+            owner_type:
+              type: string
+              enum:
+              - User
+              - Organization
+            owner_id:
               type: integer
-              nullable: true
       required:
       - project
     drive_item:
@@ -1179,15 +1177,15 @@ paths:
           application/json:
             schema:
               "$ref": "#/components/schemas/direct_conversation_request"
-  "/api/v1/groups/{group_id}/chat_channels":
+  "/api/v1/organizations/{organization_id}/chat_channels":
     parameters:
-    - name: group_id
+    - name: organization_id
       in: path
       required: true
       schema:
         type: integer
     get:
-      summary: Lists group chat channels
+      summary: Lists organization chat channels
       tags:
       - Chat Channels
       security:
@@ -1202,7 +1200,7 @@ paths:
                 items:
                   "$ref": "#/components/schemas/chat_channel"
     post:
-      summary: Creates a group chat channel
+      summary: Creates a organization chat channel
       tags:
       - Chat Channels
       security:
@@ -1588,108 +1586,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/drive_item"
-  "/api/v1/groups":
-    get:
-      summary: Lists accessible groups
-      tags:
-      - Groups
-      security:
-      - bearer_auth: []
-      responses:
-        '200':
-          description: groups returned
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  "$ref": "#/components/schemas/group"
-    post:
-      summary: Creates a group
-      tags:
-      - Groups
-      security:
-      - bearer_auth: []
-      parameters: []
-      responses:
-        '201':
-          description: group created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/group"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/group_request"
-  "/api/v1/groups/{id}":
-    parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
-    get:
-      summary: Returns a group
-      tags:
-      - Groups
-      security:
-      - bearer_auth: []
-      responses:
-        '200':
-          description: group returned
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/group"
-    patch:
-      summary: Updates a group
-      tags:
-      - Groups
-      security:
-      - bearer_auth: []
-      parameters: []
-      responses:
-        '200':
-          description: group updated
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/group"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/group_request"
-    put:
-      summary: Replaces a group
-      tags:
-      - Groups
-      security:
-      - bearer_auth: []
-      parameters: []
-      responses:
-        '200':
-          description: group updated
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/group"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/group_request"
-    delete:
-      summary: Deletes a group
-      tags:
-      - Groups
-      security:
-      - bearer_auth: []
-      responses:
-        '204':
-          description: group deleted
   "/api/v1/projects/{project_id}/iterations":
     parameters:
     - name: project_id
@@ -1798,6 +1694,108 @@ paths:
       responses:
         '204':
           description: iteration deleted
+  "/api/v1/organizations":
+    get:
+      summary: Lists accessible organizations
+      tags:
+      - Organizations
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: organizations returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/organization"
+    post:
+      summary: Creates a organization
+      tags:
+      - Organizations
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: organization created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/organization"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/organization_request"
+  "/api/v1/organizations/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Returns a organization
+      tags:
+      - Organizations
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: organization returned
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/organization"
+    patch:
+      summary: Updates a organization
+      tags:
+      - Organizations
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: organization updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/organization"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/organization_request"
+    put:
+      summary: Replaces a organization
+      tags:
+      - Organizations
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: organization updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/organization"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/organization_request"
+    delete:
+      summary: Deletes a organization
+      tags:
+      - Organizations
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: organization deleted
   "/api/v1/projects":
     get:
       summary: Lists accessible projects
@@ -1937,13 +1935,14 @@ paths:
         in: query
         required: false
         enum:
-        - group
+        - organization
         - project
         - task
         - user
         schema:
           type: string
-        description: ":\n * `group` \n * `project` \n * `task` \n * `user` \n "
+        description: ":\n * `organization` \n * `project` \n * `task` \n * `user`
+          \n "
       responses:
         '200':
           description: results returned

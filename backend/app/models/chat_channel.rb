@@ -1,9 +1,9 @@
 class ChatChannel < ApplicationRecord
-  belongs_to :group
+  belongs_to :organization
   belongs_to :chat_conversation
   belongs_to :created_by, class_name: "User"
 
-  validates :name, presence: true, uniqueness: { scope: :group_id, case_sensitive: false }
+  validates :name, presence: true, uniqueness: { scope: :organization_id, case_sensitive: false }
   validates :chat_conversation_id, uniqueness: true
   validate :conversation_must_be_channel
 

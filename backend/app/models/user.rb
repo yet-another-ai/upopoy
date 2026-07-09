@@ -14,8 +14,8 @@ class User < ApplicationRecord
          jwt_revocation_strategy: self
 
   has_many :projects, dependent: :destroy
-  has_many :group_memberships, dependent: :destroy
-  has_many :groups, through: :group_memberships
+  has_many :organization_memberships, dependent: :destroy
+  has_many :organizations, through: :organization_memberships
   has_many :created_chat_conversations,
            class_name: "ChatConversation",
            foreign_key: :created_by_id,
@@ -36,28 +36,28 @@ class User < ApplicationRecord
            inverse_of: :author
   has_many :oauth_identities, dependent: :destroy
 
-  def accessible_group_ids
-    return Group.ids if system_admin?
+  def accessible_organization_ids
+    return Organization.ids if system_admin?
 
-    @accessible_group_ids ||= GroupHierarchy.accessible_group_ids_for(self).pluck(:descendant_group_id)
+    @accessible_organization_ids ||= OrganizationMembership.accessible_organization_ids_for(self).pluck(:organization_id)
   end
 
-  def can_access_group?(group_id)
-    return group_id.present? if system_admin?
+  def can_access_organization?(organization_id)
+    return organization_id.present? if system_admin?
 
-    group_id.present? && accessible_group_ids.include?(group_id)
+    organization_id.present? && accessible_organization_ids.include?(organization_id)
   end
 
-  def adminable_group_ids
-    return Group.ids if system_admin?
+  def adminable_organization_ids
+    return Organization.ids if system_admin?
 
-    @adminable_group_ids ||= GroupHierarchy.adminable_group_ids_for(self).pluck(:descendant_group_id)
+    @adminable_organization_ids ||= OrganizationMembership.adminable_organization_ids_for(self).pluck(:organization_id)
   end
 
-  def can_admin_group?(group_id)
-    return group_id.present? if system_admin?
+  def can_admin_organization?(organization_id)
+    return organization_id.present? if system_admin?
 
-    group_id.present? && adminable_group_ids.include?(group_id)
+    organization_id.present? && adminable_organization_ids.include?(organization_id)
   end
 
   def self.from_omniauth(auth)

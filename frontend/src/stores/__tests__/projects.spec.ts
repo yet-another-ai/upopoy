@@ -13,8 +13,9 @@ vi.mock('@/services/api', () => ({
 const projects: Project[] = [
   {
     id: 1,
-    group_id: 1,
-    group_name: 'Engineering',
+    owner_type: 'Organization',
+    owner_id: 1,
+    owner_name: 'Engineering',
     name: 'MVP',
     description: 'Initial Kanban surface',
     created_at: '2026-07-06T00:00:00Z',
@@ -44,7 +45,7 @@ describe('useProjectsStore', () => {
     vi.mocked(api.createProject).mockResolvedValue(created)
     const store = useProjectsStore()
 
-    await store.createProject({ name: 'Agent workflows', group_id: 1 })
+    await store.createProject({ name: 'Agent workflows', owner_type: 'Organization', owner_id: 1 })
 
     expect(store.projects).toEqual([created])
     expect(store.selectedProjectId).toBe(2)

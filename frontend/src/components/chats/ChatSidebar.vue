@@ -3,26 +3,26 @@ import { computed } from 'vue'
 import { HashIcon, MessageCircleIcon, PencilIcon, PlusIcon, Trash2Icon } from '@lucide/vue'
 import { Button } from '@/components/ui/button'
 import ResourceSearch from '@/components/search/ResourceSearch.vue'
-import type { ChatChannel, ChatConversation, Group, SearchResult } from '@/services/api'
+import type { ChatChannel, ChatConversation, Organization, SearchResult } from '@/services/api'
 
 const props = defineProps<{
-  groups: readonly Group[]
+  organizations: readonly Organization[]
   directConversations: readonly ChatConversation[]
   channelConversations: readonly ChatConversation[]
-  channelsByGroupId: Record<number, ChatChannel[]>
+  channelsByOrganizationId: Record<number, ChatChannel[]>
   activeConversationId: number | null
 }>()
 
 const emit = defineEmits<{
   openConversation: [conversationId: number]
   startDirect: [userId: number]
-  newChannel: [group: Group]
+  newChannel: [organization: Organization]
   editChannel: [channel: ChatChannel]
   deleteChannel: [channel: ChatChannel]
 }>()
 
 const channelsByConversationId = computed(() => {
-  const channels = Object.values(props.channelsByGroupId).flat()
+  const channels = Object.values(props.channelsByOrganizationId).flat()
   return new Map(channels.map((channel) => [channel.conversation_id, channel]))
 })
 
@@ -30,8 +30,8 @@ function startDirect(result: SearchResult) {
   if (result.type === 'user') emit('startDirect', result.id)
 }
 
-function channelsForGroup(groupId: number) {
-  return props.channelConversations.filter((conversation) => conversation.group_id === groupId)
+function channelsForOrganization(organizationId: number) {
+  return props.channelConversations.filter((conversation) => conversation.organization_id === organizationId)
 }
 </script>
 
@@ -40,7 +40,7 @@ function channelsForGroup(groupId: number) {
     <header class="border-border grid gap-3 border-b p-4">
       <div>
         <h2 class="text-base font-semibold">Chats</h2>
-        <p class="text-muted-foreground text-xs">Direct messages and group channels</p>
+        <p class="text-muted-foreground text-xs">Direct messages and organization channels</p>
       </div>
       <ResourceSearch
         type="user"
@@ -75,25 +75,25 @@ function channelsForGroup(groupId: number) {
       </section>
 
       <section class="mt-5 grid gap-3">
-        <div v-for="group in props.groups" :key="group.id" class="grid gap-1">
+        <div v-for="organization in props.organizations" :key="organization.id" class="grid gap-1">
           <div class="flex min-w-0 items-center gap-2 px-2">
             <p class="text-muted-foreground min-w-0 flex-1 truncate text-xs font-medium uppercase">
-              {{ group.name }}
+              {{ organization.name }}
             </p>
             <Button
-              v-if="group.can_admin"
+              v-if="organization.can_admin"
               type="button"
               size="icon-sm"
               variant="ghost"
-              :aria-label="`New channel in ${group.name}`"
-              @click="emit('newChannel', group)"
+              :aria-label="`New channel in ${organization.name}`"
+              @click="emit('newChannel', organization)"
             >
               <PlusIcon />
             </Button>
           </div>
 
           <div
-            v-for="conversation in channelsForGroup(group.id)"
+            v-for="conversation in channelsForOrganization(organization.id)"
             :key="conversation.id"
             class="group hover:bg-sidebar-accent grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center rounded-md"
             :class="{ 'bg-sidebar-accent': props.activeConversationId === conversation.id }"
@@ -131,7 +131,7 @@ function channelsForGroup(groupId: number) {
           </div>
 
           <p
-            v-if="channelsForGroup(group.id).length === 0"
+            v-if="channelsForOrganization(organization.id).length === 0"
             class="text-muted-foreground px-2 py-1 text-xs"
           >
             No channels.

@@ -5,7 +5,7 @@ module Api
 
       def index
         @users = policy_scope(User)
-          .includes(:groups)
+          .includes(:organizations)
           .order(:email)
           .page(page_param)
           .per(per_page_param)

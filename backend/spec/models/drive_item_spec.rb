@@ -6,7 +6,7 @@ RSpec.describe DriveItem, type: :model do
       resource_type: "drive_item",
       title: drive_item.name,
       content: drive_item.text_content_cache,
-      group_id: drive_item.project.group_id,
+      owner_id: drive_item.project.owner_id,
       api_path: "/api/v1/drive_items/#{drive_item.id}"
     )
   end
@@ -107,7 +107,7 @@ RSpec.describe DriveItem, type: :model do
   end
 
   describe "search indexing" do
-    it "indexes folders and files with group visibility and metadata" do
+    it "indexes folders and files with organization visibility and metadata" do
       project = create(:project)
       folder = create(:drive_item, project:, name: "Architecture")
       file = create(:drive_item, :file, project:, name: "Budget.xlsx")

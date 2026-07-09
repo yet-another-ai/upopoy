@@ -7,24 +7,24 @@ import ChatSidebar from '@/components/chats/ChatSidebar.vue'
 import ChatThreadPanel from '@/components/chats/ChatThreadPanel.vue'
 import { useChatsStore } from '@/stores/chats'
 import { useToastsStore } from '@/stores/toasts'
-import { useUserGroupsStore } from '@/stores/userGroups'
-import type { ChatChannel, ChatChannelInput, Group } from '@/services/api'
+import { useOrganizationsStore } from '@/stores/organizations'
+import type { ChatChannel, ChatChannelInput, Organization } from '@/services/api'
 
 const chatsStore = useChatsStore()
-const userGroupsStore = useUserGroupsStore()
+const organizationsStore = useOrganizationsStore()
 const toasts = useToastsStore()
 const chats = storeToRefs(chatsStore)
-const userGroups = storeToRefs(userGroupsStore)
+const organizations = storeToRefs(organizationsStore)
 const channelDialogOpen = shallowRef(false)
-const selectedGroup = shallowRef<Group | null>(null)
+const selectedOrganization = shallowRef<Organization | null>(null)
 const editingChannel = shallowRef<ChatChannel | null>(null)
 
 const activeConversationId = computed(() => chats.activeConversation.value?.id ?? null)
 
 onMounted(async () => {
-  if (userGroups.groups.value.length === 0) await userGroupsStore.loadGroups()
+  if (organizations.organizations.value.length === 0) await organizationsStore.loadOrganizations()
   await chatsStore.loadConversations()
-  await Promise.all(userGroups.groups.value.map((group) => chatsStore.loadChannels(group.id)))
+  await Promise.all(organizations.organizations.value.map((organization) => chatsStore.loadChannels(organization.id)))
 })
 
 async function openConversation(conversationId: number) {
@@ -43,14 +43,14 @@ async function startDirect(userId: number) {
   }
 }
 
-function openNewChannel(group: Group) {
-  selectedGroup.value = group
+function openNewChannel(organization: Organization) {
+  selectedOrganization.value = organization
   editingChannel.value = null
   channelDialogOpen.value = true
 }
 
 function openEditChannel(channel: ChatChannel) {
-  selectedGroup.value = userGroups.groups.value.find((group) => group.id === channel.group_id) ?? null
+  selectedOrganization.value = organizations.organizations.value.find((organization) => organization.id === channel.organization_id) ?? null
   editingChannel.value = channel
   channelDialogOpen.value = true
 }
@@ -59,8 +59,8 @@ async function saveChannel(input: ChatChannelInput) {
   try {
     if (editingChannel.value) {
       await chatsStore.updateChannel(editingChannel.value, input)
-    } else if (selectedGroup.value) {
-      await chatsStore.createChannel(selectedGroup.value.id, input)
+    } else if (selectedOrganization.value) {
+      await chatsStore.createChannel(selectedOrganization.value.id, input)
     }
     closeChannelDialog()
   } catch (err) {
@@ -80,7 +80,7 @@ async function deleteChannel(channel: ChatChannel) {
 
 function closeChannelDialog() {
   channelDialogOpen.value = false
-  selectedGroup.value = null
+  selectedOrganization.value = null
   editingChannel.value = null
 }
 
@@ -116,10 +116,10 @@ function notifyError(err: unknown, fallback: string) {
 <template>
   <main class="flex min-h-0 flex-1 flex-col lg:flex-row">
     <ChatSidebar
-      :groups="userGroups.groups.value"
+      :organizations="organizations.organizations.value"
       :direct-conversations="chats.directConversations.value"
       :channel-conversations="chats.channelConversations.value"
-      :channels-by-group-id="chats.channelsByGroupId.value"
+      :channels-by-organization-id="chats.channelsByOrganizationId.value"
       :active-conversation-id="activeConversationId"
       @open-conversation="openConversation"
       @start-direct="startDirect"

@@ -1,22 +1,22 @@
 module Chats
   class ChannelCreator
-    def self.call(group:, created_by:, attributes:)
-      new(group:, created_by:, attributes:).call
+    def self.call(organization:, created_by:, attributes:)
+      new(organization:, created_by:, attributes:).call
     end
 
-    def initialize(group:, created_by:, attributes:)
-      @group = group
+    def initialize(organization:, created_by:, attributes:)
+      @organization = organization
       @created_by = created_by
       @attributes = attributes
     end
 
     def call
       ChatConversation.transaction do
-        conversation = group.chat_conversations.create!(
+        conversation = organization.chat_conversations.create!(
           kind: "channel",
           created_by:
         )
-        group.chat_channels.create!(
+        organization.chat_channels.create!(
           attributes.merge(chat_conversation: conversation, created_by:)
         )
       end
@@ -24,6 +24,6 @@ module Chats
 
     private
 
-    attr_reader :group, :created_by, :attributes
+    attr_reader :organization, :created_by, :attributes
   end
 end

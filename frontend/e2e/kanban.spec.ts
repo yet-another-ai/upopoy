@@ -23,6 +23,7 @@ interface UserPayload {
   display_name: string | null
   title: string | null
   bio: string | null
+  system_admin: boolean
   created_at: string
   updated_at: string
 }
@@ -100,6 +101,7 @@ async function installMockApi(page: Page) {
       display_name: null,
       title: null,
       bio: null,
+      system_admin: true,
       created_at: timestamp,
       updated_at: timestamp,
     },
@@ -109,6 +111,7 @@ async function installMockApi(page: Page) {
       display_name: 'Ada Lovelace',
       title: 'Engineer',
       bio: null,
+      system_admin: false,
       created_at: timestamp,
       updated_at: timestamp,
     },
@@ -211,6 +214,10 @@ async function installMockApi(page: Page) {
         user: {
           id: 1,
           email: 'founder@example.com',
+          display_name: null,
+          title: null,
+          bio: null,
+          system_admin: true,
           created_at: timestamp,
           updated_at: timestamp,
         },
@@ -227,6 +234,10 @@ async function installMockApi(page: Page) {
         user: {
           id: 1,
           email: 'founder@example.com',
+          display_name: null,
+          title: null,
+          bio: null,
+          system_admin: true,
           created_at: timestamp,
           updated_at: timestamp,
         },
@@ -246,6 +257,10 @@ async function installMockApi(page: Page) {
       user: {
         id: 1,
         email: 'founder@example.com',
+        display_name: null,
+        title: null,
+        bio: null,
+        system_admin: true,
         created_at: timestamp,
         updated_at: timestamp,
       },
@@ -281,6 +296,9 @@ async function installMockApi(page: Page) {
         parent_group_name: null,
         user_ids: [1],
         users_count: 1,
+        admin_user_ids: [1],
+        admins_count: 1,
+        can_admin: true,
         created_at: timestamp,
         updated_at: timestamp,
       },

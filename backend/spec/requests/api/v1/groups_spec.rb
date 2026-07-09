@@ -54,6 +54,7 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response).to have_http_status(:created)
       expect(json_response["name"]).to eq("Product")
       expect(json_response["user_ids"]).to contain_exactly(user.id, member.id)
+      expect(json_response["admin_user_ids"]).to contain_exactly(user.id)
     end
 
     it "does not create a child group under an inaccessible parent" do
@@ -67,11 +68,23 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
 
-    it "creates a child group under an inherited parent" do
+    it "does not create a child group for ordinary ancestor members" do
+      user = create(:user)
+      parent = create(:group)
+      create(:group_membership, user:, group: parent, admin: false)
+
+      post "/api/v1/groups",
+           params: { group: { name: "Nested", parent_group_id: parent.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "creates a child group under an inherited admin parent" do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
+      create(:group_membership, :admin, user:, group: parent)
 
       post "/api/v1/groups",
            params: { group: { name: "Nested", parent_group_id: child.id } },
@@ -79,16 +92,29 @@ RSpec.describe "Api::V1::Groups", type: :request do
 
       expect(response).to have_http_status(:created)
       expect(json_response["parent_group_id"]).to eq(child.id)
+      expect(json_response["admin_user_ids"]).to include(user.id)
+    end
+
+    it "allows system admins to create a child group anywhere" do
+      user = create(:user, :system_admin)
+      parent = create(:group)
+
+      post "/api/v1/groups",
+           params: { group: { name: "System child", parent_group_id: parent.id } },
+           headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:created)
+      expect(json_response["parent_group_id"]).to eq(parent.id)
     end
   end
 
   describe "PATCH /api/v1/groups/:id" do
-    it "updates group attributes and members" do
+    it "updates group attributes, members, and admins" do
       user = create(:user)
       member = create(:user)
       group = create(:group)
-      create(:group_membership, user:, group:)
-      group_params = { group: { name: "Renamed", user_ids: [ member.id ] } }
+      create(:group_membership, :admin, user:, group:)
+      group_params = { group: { name: "Renamed", user_ids: [ member.id ], admin_user_ids: [ member.id ] } }
 
       patch "/api/v1/groups/#{group.id}",
             params: group_params,
@@ -97,14 +123,29 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response).to have_http_status(:ok)
       expect(json_response["name"]).to eq("Renamed")
       expect(json_response["user_ids"]).to eq([ member.id ])
+      expect(json_response["admin_user_ids"]).to eq([ member.id ])
+    end
+
+    it "rejects removing the final direct admin" do
+      user = create(:user)
+      group = create(:group)
+      create(:group_membership, :admin, user:, group:)
+
+      patch "/api/v1/groups/#{group.id}",
+            params: { group: { admin_user_ids: [] } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(json_response.dig("errors", "admin_user_ids")).to be_present
+      expect(group.group_memberships.where(admin: true).pluck(:user_id)).to eq([ user.id ])
     end
 
     it "rejects parent cycles" do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
-      create(:group_membership, user:, group: child)
+      create(:group_membership, :admin, user:, group: parent)
+      create(:group_membership, :admin, user:, group: child)
 
       patch "/api/v1/groups/#{parent.id}",
             params: { group: { parent_group_id: child.id } },
@@ -125,11 +166,24 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
-    it "updates a descendant group for ancestor members" do
+    it "does not update a descendant group for ordinary ancestor members" do
       user = create(:user)
       parent = create(:group)
       child = create(:group, parent_group: parent)
-      create(:group_membership, user:, group: parent)
+      create(:group_membership, user:, group: parent, admin: false)
+
+      patch "/api/v1/groups/#{child.id}",
+            params: { group: { name: "Renamed child" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "updates a child group for direct child admins without parent admin rights" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, :admin, user:, group: child)
 
       patch "/api/v1/groups/#{child.id}",
             params: { group: { name: "Renamed child" } },
@@ -138,13 +192,54 @@ RSpec.describe "Api::V1::Groups", type: :request do
       expect(response).to have_http_status(:ok)
       expect(json_response["name"]).to eq("Renamed child")
     end
+
+    it "does not move a group under a parent the requester cannot admin" do
+      user = create(:user)
+      child = create(:group)
+      new_parent = create(:group)
+      create(:group_membership, :admin, user:, group: child)
+
+      patch "/api/v1/groups/#{child.id}",
+            params: { group: { parent_group_id: new_parent.id } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "updates a descendant group for ancestor admins" do
+      user = create(:user)
+      parent = create(:group)
+      child = create(:group, parent_group: parent)
+      create(:group_membership, :admin, user:, group: parent)
+      create(:group_membership, :admin, group: child)
+
+      patch "/api/v1/groups/#{child.id}",
+            params: { group: { name: "Renamed child" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["name"]).to eq("Renamed child")
+    end
+
+    it "allows system admins to update any group" do
+      user = create(:user, :system_admin)
+      group = create(:group)
+      create(:group_membership, :admin, group:)
+
+      patch "/api/v1/groups/#{group.id}",
+            params: { group: { name: "System renamed" } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["name"]).to eq("System renamed")
+    end
   end
 
   describe "DELETE /api/v1/groups/:id" do
     it "deletes a group" do
       user = create(:user)
       group = create(:group)
-      create(:group_membership, user:, group:)
+      create(:group_membership, :admin, user:, group:)
 
       expect {
         delete "/api/v1/groups/#{group.id}", headers: auth_headers_for(user)

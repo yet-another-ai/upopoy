@@ -33,7 +33,10 @@ module Api
       end
 
       def user_params
-        params.require(:user).permit(:email, :display_name, :title, :bio)
+        permitted_fields = [ :email, :display_name, :title, :bio ]
+        permitted_fields << :system_admin if current_user.system_admin?
+
+        params.require(:user).permit(*permitted_fields)
       end
 
       def page_param

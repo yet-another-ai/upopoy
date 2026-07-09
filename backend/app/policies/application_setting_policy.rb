@@ -4,6 +4,6 @@ class ApplicationSettingPolicy < ApplicationPolicy
   end
 
   def update?
-    user.present?
+    user&.system_admin?
   end
 end

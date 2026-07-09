@@ -24,6 +24,7 @@ const users: ManagedUser[] = [
     display_name: 'Ada Lovelace',
     title: null,
     bio: null,
+    system_admin: false,
     group_ids: [],
     groups_count: 0,
     created_at: timestamp,
@@ -50,6 +51,9 @@ const groups: Group[] = [
     parent_group_name: null,
     user_ids: [],
     users_count: 0,
+    admin_user_ids: [],
+    admins_count: 0,
+    can_admin: false,
     created_at: timestamp,
     updated_at: timestamp,
   },
@@ -61,6 +65,9 @@ const groups: Group[] = [
     parent_group_name: null,
     user_ids: [1],
     users_count: 1,
+    admin_user_ids: [1],
+    admins_count: 1,
+    can_admin: true,
     created_at: timestamp,
     updated_at: timestamp,
   },
@@ -85,7 +92,16 @@ describe('useUserGroupsStore', () => {
   })
 
   it('syncs user memberships when creating a group', async () => {
-    const group = { ...groups[0], id: 3, name: 'Research', user_ids: [1], users_count: 1 }
+    const group = {
+      ...groups[0],
+      id: 3,
+      name: 'Research',
+      user_ids: [1],
+      users_count: 1,
+      admin_user_ids: [1],
+      admins_count: 1,
+      can_admin: true,
+    }
     vi.mocked(api.createGroup).mockResolvedValue(group)
     const store = useUserGroupsStore()
     store.users = users
@@ -93,6 +109,8 @@ describe('useUserGroupsStore', () => {
     await store.createGroup({ name: 'Research', user_ids: [1] })
 
     expect(store.groups.map((item) => item.name)).toEqual(['Research'])
+    expect(store.groups[0].admin_user_ids).toEqual([1])
+    expect(store.groups[0].can_admin).toBe(true)
     expect(store.users[0].group_ids).toEqual([3])
     expect(store.users[0].groups_count).toBe(1)
   })

@@ -13,6 +13,7 @@ const props = defineProps<{
   user: ManagedUser | null
   groups: readonly Group[]
   saving: boolean
+  canManageSystemAdmins: boolean
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +26,7 @@ const form = reactive({
   displayName: '',
   title: '',
   bio: '',
+  systemAdmin: false,
 })
 
 const groupNames = computed(
@@ -45,6 +47,7 @@ watch(
     form.displayName = user?.display_name ?? ''
     form.title = user?.title ?? ''
     form.bio = user?.bio ?? ''
+    form.systemAdmin = user?.system_admin ?? false
   },
   { immediate: true },
 )
@@ -52,14 +55,17 @@ watch(
 function submitProfile() {
   if (!props.user || !form.email.trim()) return
 
+  const input: UserProfileInput = {
+    email: form.email.trim(),
+    display_name: form.displayName.trim(),
+    title: form.title.trim(),
+    bio: form.bio.trim(),
+  }
+  if (props.canManageSystemAdmins) input.system_admin = form.systemAdmin
+
   emit('saveUserProfile', {
     userId: props.user.id,
-    input: {
-      email: form.email.trim(),
-      display_name: form.displayName.trim(),
-      title: form.title.trim(),
-      bio: form.bio.trim(),
-    },
+    input,
   })
 }
 </script>
@@ -102,6 +108,31 @@ function submitProfile() {
             </span>
           </div>
         </div>
+
+        <label
+          v-if="props.canManageSystemAdmins"
+          class="border-border grid gap-4 rounded-lg border p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+        >
+          <span class="min-w-0">
+            <span class="block text-sm font-medium">System admin</span>
+            <span class="text-muted-foreground mt-1 block text-sm">
+              Can update application-level admin settings.
+            </span>
+          </span>
+          <span class="inline-flex items-center gap-2 justify-self-start sm:justify-self-end">
+            <input
+              v-model="form.systemAdmin"
+              type="checkbox"
+              class="peer sr-only"
+              :disabled="props.saving"
+            >
+            <span
+              class="peer-checked:bg-primary bg-muted after:bg-background relative h-6 w-10 rounded-full transition after:absolute after:top-1 after:left-1 after:size-4 after:rounded-full after:transition peer-checked:after:translate-x-4"
+              aria-hidden="true"
+            />
+            <span class="text-sm">{{ form.systemAdmin ? 'Enabled' : 'Disabled' }}</span>
+          </span>
+        </label>
 
         <div class="flex flex-wrap gap-2">
           <Button type="submit" :disabled="props.saving">

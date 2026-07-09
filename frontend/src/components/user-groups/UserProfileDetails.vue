@@ -42,6 +42,14 @@ const memberships = computed(() =>
         </div>
 
         <div class="grid gap-1">
+          <p class="text-muted-foreground text-xs font-medium uppercase">Access</p>
+          <div>
+            <Badge v-if="props.user.system_admin">System admin</Badge>
+            <span v-else class="text-sm">Standard user</span>
+          </div>
+        </div>
+
+        <div class="grid gap-1">
           <p class="text-muted-foreground text-xs font-medium uppercase">Bio</p>
           <p class="text-muted-foreground whitespace-pre-wrap text-sm">
             {{ props.user.bio || 'No bio yet.' }}

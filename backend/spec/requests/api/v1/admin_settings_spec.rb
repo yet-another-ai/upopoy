@@ -23,8 +23,8 @@ RSpec.describe "Api::V1::Admin::Settings", type: :request do
   end
 
   describe "PATCH /api/v1/admin/settings" do
-    it "updates authentication settings" do
-      user = create(:user)
+    it "updates authentication settings for system admins" do
+      user = create(:user, :system_admin)
       settings_params = { registration_enabled: false, email_login_enabled: false }
 
       patch "/api/v1/admin/settings",
@@ -34,6 +34,17 @@ RSpec.describe "Api::V1::Admin::Settings", type: :request do
       expect(response).to have_http_status(:ok)
       expect(json_response).to include("registration_enabled" => false, "email_login_enabled" => false)
       expect(ApplicationSetting.current).to have_attributes(settings_params)
+    end
+
+    it "rejects regular users" do
+      user = create(:user)
+
+      patch "/api/v1/admin/settings",
+            params: { settings: { registration_enabled: false } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:forbidden)
+      expect(ApplicationSetting.current.registration_enabled).to be(true)
     end
   end
 end

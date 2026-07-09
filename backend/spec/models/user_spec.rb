@@ -35,6 +35,46 @@ RSpec.describe User, type: :model do
     expect(user.can_access_group?(grandchild.id)).to be(true)
   end
 
+  it "inherits group admin permissions to descendant groups" do
+    user = create(:user)
+    parent = create(:group)
+    child = create(:group, parent_group: parent)
+    create(:group_membership, :admin, user:, group: parent)
+
+    expect(user.can_admin_group?(parent.id)).to be(true)
+    expect(user.can_admin_group?(child.id)).to be(true)
+  end
+
+  it "memoizes adminable group ids for repeated admin checks" do
+    user = create(:user)
+    group = create(:group)
+    create(:group_membership, :admin, user:, group:)
+
+    allow(GroupHierarchy).to receive(:adminable_group_ids_for).and_call_original
+
+    expect(user.can_admin_group?(group.id)).to be(true)
+    expect(user.can_admin_group?(group.id)).to be(true)
+    expect(GroupHierarchy).to have_received(:adminable_group_ids_for).once
+  end
+
+  it "treats system admins as admins of every group" do
+    user = create(:user, :system_admin)
+    group = create(:group)
+
+    expect(user.can_access_group?(group.id)).to be(true)
+    expect(user.can_admin_group?(group.id)).to be(true)
+  end
+
+  it "does not load group ids when checking system admin group access" do
+    user = build_stubbed(:user, :system_admin)
+
+    allow(Group).to receive(:ids).and_call_original
+
+    expect(user.can_access_group?(1)).to be(true)
+    expect(user.can_admin_group?(1)).to be(true)
+    expect(Group).not_to have_received(:ids)
+  end
+
   it "creates a user from an OmniAuth payload" do
     auth = OmniAuth::AuthHash.new(
       provider: "developer",

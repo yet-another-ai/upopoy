@@ -14,6 +14,13 @@ class GroupHierarchy < ApplicationRecord
       .select(:descendant_group_id)
   end
 
+  def self.adminable_group_ids_for(user)
+    joins(ancestor_group: :group_memberships)
+      .where(group_memberships: { user_id: user.id, admin: true })
+      .distinct
+      .select(:descendant_group_id)
+  end
+
   def self.rebuild!
     transaction do
       delete_all

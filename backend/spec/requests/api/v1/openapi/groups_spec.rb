@@ -86,7 +86,7 @@ RSpec.describe "Api::V1::Groups", openapi_spec: "v1/openapi.yaml", type: :reques
         let(:request_params) { { group: { name: "Renamed", user_ids: [ current_user.id ] } } }
 
         before do
-          create(:group_membership, user: current_user, group:)
+          create(:group_membership, :admin, user: current_user, group:)
         end
 
         run_test!
@@ -108,7 +108,7 @@ RSpec.describe "Api::V1::Groups", openapi_spec: "v1/openapi.yaml", type: :reques
         let(:request_params) { { group: { name: "Renamed", user_ids: [ current_user.id ] } } }
 
         before do
-          create(:group_membership, user: current_user, group:)
+          create(:group_membership, :admin, user: current_user, group:)
         end
 
         run_test!
@@ -124,7 +124,7 @@ RSpec.describe "Api::V1::Groups", openapi_spec: "v1/openapi.yaml", type: :reques
         let(:id) { group.id }
 
         before do
-          create(:group_membership, user: current_user, group:)
+          create(:group_membership, :admin, user: current_user, group:)
         end
 
         run_test!

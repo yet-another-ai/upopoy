@@ -29,10 +29,11 @@ const form = reactive({
   groupId: '',
 })
 
+const adminGroups = computed(() => props.groups.filter((group) => group.can_admin))
 const canSubmit = computed(() => form.name.trim().length > 0 && form.groupId.length > 0)
 
 watch(
-  () => props.groups,
+  adminGroups,
   (groups) => {
     if (form.groupId && groups.some((group) => String(group.id) === form.groupId)) return
 
@@ -73,22 +74,22 @@ function submitProject() {
           <Label for="project-group">Group</Label>
           <Select
             v-model="form.groupId"
-            :disabled="props.loadingGroups || props.groups.length === 0"
+            :disabled="props.loadingGroups || adminGroups.length === 0"
           >
             <SelectTrigger id="project-group" class="w-full" aria-label="Group">
               <SelectValue placeholder="Select group" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="group in props.groups" :key="group.id" :value="String(group.id)">
+              <SelectItem v-for="group in adminGroups" :key="group.id" :value="String(group.id)">
                 {{ group.name }}
               </SelectItem>
             </SelectContent>
           </Select>
           <p
-            v-if="!props.loadingGroups && props.groups.length === 0"
+            v-if="!props.loadingGroups && adminGroups.length === 0"
             class="text-muted-foreground text-sm"
           >
-            Create a group before creating a project.
+            You need group admin access before creating a project.
           </p>
         </div>
         <Button type="submit" class="justify-self-start" :disabled="!canSubmit">

@@ -14,6 +14,7 @@ export interface User {
   display_name: string | null
   title: string | null
   bio: string | null
+  system_admin: boolean
   created_at: string
   updated_at: string
 }
@@ -31,6 +32,9 @@ export interface Group {
   parent_group_name: string | null
   user_ids: number[]
   users_count: number
+  admin_user_ids: number[]
+  admins_count: number
+  can_admin: boolean
   created_at: string
   updated_at: string
 }
@@ -169,6 +173,7 @@ export interface GroupInput {
   description?: string
   parent_group_id?: number | null
   user_ids?: number[]
+  admin_user_ids?: number[]
 }
 
 export interface UserProfileInput {
@@ -176,6 +181,7 @@ export interface UserProfileInput {
   display_name?: string
   title?: string
   bio?: string
+  system_admin?: boolean
 }
 
 export interface UserPaginationMeta {

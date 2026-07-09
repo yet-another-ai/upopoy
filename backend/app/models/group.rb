@@ -1,6 +1,8 @@
 class Group < ApplicationRecord
   include SearchableResource
 
+  attr_accessor :admin_user_ids
+
   search_index_attributes :name, :description
 
   belongs_to :parent_group,

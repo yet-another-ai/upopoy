@@ -54,10 +54,11 @@ RSpec.configure do |config|
               display_name: { type: :string, nullable: true },
               title: { type: :string, nullable: true },
               bio: { type: :string, nullable: true },
+              system_admin: { type: :boolean },
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" }
             },
-            required: %w[id email display_name title bio created_at updated_at]
+            required: %w[id email display_name title bio system_admin created_at updated_at]
           },
           user_response: {
             type: :object,
@@ -132,12 +133,13 @@ RSpec.configure do |config|
               display_name: { type: :string, nullable: true },
               title: { type: :string, nullable: true },
               bio: { type: :string, nullable: true },
+              system_admin: { type: :boolean },
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" },
               group_ids: { type: :array, items: { type: :integer } },
               groups_count: { type: :integer }
             },
-            required: %w[id email display_name title bio created_at updated_at group_ids groups_count]
+            required: %w[id email display_name title bio system_admin created_at updated_at group_ids groups_count]
           },
           users_index: {
             type: :object,
@@ -159,7 +161,8 @@ RSpec.configure do |config|
                   email: { type: :string, format: :email },
                   display_name: { type: :string },
                   title: { type: :string },
-                  bio: { type: :string }
+                  bio: { type: :string },
+                  system_admin: { type: :boolean }
                 }
               }
             },
@@ -185,10 +188,13 @@ RSpec.configure do |config|
               parent_group_name: { type: :string, nullable: true },
               user_ids: { type: :array, items: { type: :integer } },
               users_count: { type: :integer },
+              admin_user_ids: { type: :array, items: { type: :integer } },
+              admins_count: { type: :integer },
+              can_admin: { type: :boolean },
               created_at: { type: :string, format: :"date-time" },
               updated_at: { type: :string, format: :"date-time" }
             },
-            required: %w[id name description parent_group_id parent_group_name user_ids users_count created_at updated_at]
+            required: %w[id name description parent_group_id parent_group_name user_ids users_count admin_user_ids admins_count can_admin created_at updated_at]
           },
           group_request: {
             type: :object,
@@ -199,7 +205,8 @@ RSpec.configure do |config|
                   name: { type: :string },
                   description: { type: :string },
                   parent_group_id: { type: :integer, nullable: true },
-                  user_ids: { type: :array, items: { type: :integer } }
+                  user_ids: { type: :array, items: { type: :integer } },
+                  admin_user_ids: { type: :array, items: { type: :integer } }
                 }
               }
             },

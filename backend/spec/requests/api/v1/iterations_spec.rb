@@ -19,21 +19,10 @@ RSpec.describe "Api::V1::Iterations", type: :request do
     it "creates an iteration with a start time and deadline" do
       project = create(:project)
 
-      post "/api/v1/projects/#{project.id}/iterations",
-           params: {
-             iteration: {
-               name: "Sprint 1",
-               starts_at: "2026-07-25T10:00:00Z",
-               deadline: "2026-08-01T10:00:00Z"
-             }
-           },
-           headers: auth_headers_for(project.user)
+      post_iteration(project, name: "Sprint 1")
 
       expect(response).to have_http_status(:created)
-      expect(json_response["name"]).to eq("Sprint 1")
-      expect(json_response["starts_at"]).to eq("2026-07-25T10:00:00Z")
-      expect(json_response["deadline"]).to eq("2026-08-01T10:00:00Z")
-      expect(json_response["inbox"]).to eq(false)
+      expect_created_iteration
     end
 
     it "rejects an iteration without a start time" do
@@ -52,20 +41,41 @@ RSpec.describe "Api::V1::Iterations", type: :request do
     it "updates an iteration" do
       iteration = create(:iteration)
 
-      patch "/api/v1/iterations/#{iteration.id}",
-            params: {
-              iteration: {
-                name: "Renamed",
-                starts_at: "2026-08-01T10:00:00Z",
-                deadline: "2026-08-08T10:00:00Z"
-              }
-            },
-            headers: auth_headers_for(iteration.project.user)
+      patch_iteration(iteration)
 
       expect(response).to have_http_status(:ok)
       expect(json_response["name"]).to eq("Renamed")
       expect(json_response["starts_at"]).to eq("2026-08-01T10:00:00Z")
       expect(json_response["deadline"]).to eq("2026-08-08T10:00:00Z")
     end
+  end
+
+  def post_iteration(project, name:)
+    post "/api/v1/projects/#{project.id}/iterations",
+         params: iteration_params(name:, starts_at: "2026-07-25T10:00:00Z", deadline: "2026-08-01T10:00:00Z"),
+         headers: auth_headers_for(project.user)
+  end
+
+  def patch_iteration(iteration)
+    patch "/api/v1/iterations/#{iteration.id}",
+          params: iteration_params(name: "Renamed", starts_at: "2026-08-01T10:00:00Z", deadline: "2026-08-08T10:00:00Z"),
+          headers: auth_headers_for(iteration.project.user)
+  end
+
+  def iteration_params(name:, starts_at:, deadline:)
+    {
+      iteration: {
+        name:,
+        starts_at:,
+        deadline:
+      }
+    }
+  end
+
+  def expect_created_iteration
+    expect(json_response["name"]).to eq("Sprint 1")
+    expect(json_response["starts_at"]).to eq("2026-07-25T10:00:00Z")
+    expect(json_response["deadline"]).to eq("2026-08-01T10:00:00Z")
+    expect(json_response["inbox"]).to be(false)
   end
 end

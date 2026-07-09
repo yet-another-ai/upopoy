@@ -19,11 +19,27 @@ class User < ApplicationRecord
   has_many :oauth_identities, dependent: :destroy
 
   def accessible_group_ids
+    return Group.ids if system_admin?
+
     @accessible_group_ids ||= GroupHierarchy.accessible_group_ids_for(self).pluck(:descendant_group_id)
   end
 
   def can_access_group?(group_id)
+    return group_id.present? if system_admin?
+
     group_id.present? && accessible_group_ids.include?(group_id)
+  end
+
+  def adminable_group_ids
+    return Group.ids if system_admin?
+
+    @adminable_group_ids ||= GroupHierarchy.adminable_group_ids_for(self).pluck(:descendant_group_id)
+  end
+
+  def can_admin_group?(group_id)
+    return group_id.present? if system_admin?
+
+    group_id.present? && adminable_group_ids.include?(group_id)
   end
 
   def self.from_omniauth(auth)

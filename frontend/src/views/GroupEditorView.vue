@@ -60,6 +60,16 @@ function saveGroup(groupId: number | null, input: GroupInput) {
 
     <p v-if="props.loading && !group" class="text-muted-foreground text-sm">Loading group...</p>
 
+    <div
+      v-else-if="group && !group.can_admin"
+      class="border-border bg-card text-card-foreground rounded-lg border p-5"
+    >
+      <h3 class="text-base font-medium">Group management unavailable</h3>
+      <p class="text-muted-foreground mt-1 text-sm">
+        You can view this group in the hierarchy, but only group admins can manage its settings.
+      </p>
+    </div>
+
     <Card v-else-if="group" class="rounded-lg shadow-none">
       <CardHeader>
         <CardTitle class="text-base">Group profile</CardTitle>

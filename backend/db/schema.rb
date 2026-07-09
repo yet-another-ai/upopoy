@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_08_032000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_091000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -35,10 +35,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_032000) do
   end
 
   create_table "group_memberships", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
     t.bigint "group_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["group_id", "admin"], name: "index_group_memberships_on_group_id_and_admin"
     t.index ["group_id", "user_id"], name: "index_group_memberships_on_group_id_and_user_id", unique: true
     t.index ["group_id"], name: "index_group_memberships_on_group_id"
     t.index ["user_id"], name: "index_group_memberships_on_user_id"
@@ -175,6 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_032000) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.boolean "system_admin", default: false, null: false
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true

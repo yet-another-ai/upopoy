@@ -10,20 +10,21 @@ class GroupPolicy < ApplicationPolicy
   def create?
     return false if user.blank?
 
-    record.parent_group_id.blank? || user.can_access_group?(record.parent_group_id)
+    record.parent_group_id.blank? || user.can_admin_group?(record.parent_group_id)
   end
 
   def update?
-    group_member? && allowed_parent_group?
+    group_admin? && allowed_parent_group?
   end
 
   def destroy?
-    group_member?
+    group_admin?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
       return scope.none if user.blank?
+      return scope.all if user.system_admin?
 
       scope.where(id: GroupHierarchy.accessible_group_ids_for(user))
     end
@@ -35,7 +36,13 @@ class GroupPolicy < ApplicationPolicy
     user.present? && record.id.present? && user.can_access_group?(record.id)
   end
 
+  def group_admin?
+    user.present? && record.id.present? && user.can_admin_group?(record.id)
+  end
+
   def allowed_parent_group?
-    record.parent_group_id.blank? || user.can_access_group?(record.parent_group_id)
+    return true unless record.will_save_change_to_parent_group_id?
+
+    record.parent_group_id.blank? || user.can_admin_group?(record.parent_group_id)
   end
 end

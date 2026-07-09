@@ -45,6 +45,32 @@ RSpec.describe "Api::V1::Users", type: :request do
       expect(response).to have_http_status(:ok)
       expect(json_response).to include(user_params.stringify_keys)
     end
+
+    it "allows system admins to update system admin status" do
+      user = create(:user, :system_admin)
+      target = create(:user)
+
+      patch "/api/v1/users/#{target.id}",
+            params: { user: { email: target.email, system_admin: true } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["system_admin"]).to be(true)
+      expect(target.reload).to be_system_admin
+    end
+
+    it "does not allow regular users to update system admin status" do
+      user = create(:user)
+      target = create(:user)
+
+      patch "/api/v1/users/#{target.id}",
+            params: { user: { email: target.email, system_admin: true } },
+            headers: auth_headers_for(user)
+
+      expect(response).to have_http_status(:ok)
+      expect(json_response["system_admin"]).to be(false)
+      expect(target.reload).not_to be_system_admin
+    end
   end
 
   describe "GET /api/v1/users/:id" do

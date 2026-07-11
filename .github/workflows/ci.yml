@@ -90,6 +90,9 @@ jobs:
       - name: Run frontend tests
         run: pnpm --filter frontend test
 
+      - name: Build documentation
+        run: pnpm --filter docs build
+
   docker:
     name: Docker build
     runs-on: ubuntu-latest

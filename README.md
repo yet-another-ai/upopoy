@@ -64,3 +64,6 @@ mise run frontend-lint
 The frontend is a pnpm workspace package. From the repository root, use
 `pnpm --filter frontend <script>` or the root aliases such as
 `pnpm frontend:build`.
+
+Agent-facing development notes live in [AGENT.md](AGENT.md). The `docs/`
+directory is reserved for VitePress deployment and usage documentation.

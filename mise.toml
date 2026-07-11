@@ -16,6 +16,10 @@ run = "bundle exec falcon serve --bind http://127.0.0.1:3001 --config config.ru 
 description = "Run the Vite frontend"
 run = "pnpm --filter frontend dev --host 0.0.0.0"
 
+[tasks.docs]
+description = "Run the VitePress documentation site"
+run = "pnpm --filter docs dev"
+
 [tasks.dev]
 description = "Run backend and frontend together with Falcon host"
 run = "cd backend && bundle exec falcon host ../falcon.rb"

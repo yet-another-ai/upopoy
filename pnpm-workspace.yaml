@@ -1,5 +1,6 @@
 packages:
   - frontend
+  - docs
 
 allowBuilds:
   esbuild: true

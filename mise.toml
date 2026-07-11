@@ -18,7 +18,7 @@ run = "pnpm --filter frontend dev --host 0.0.0.0"
 
 [tasks.docs]
 description = "Run the VitePress documentation site"
-run = "pnpm --filter docs dev --host 0.0.0.0"
+run = "pnpm --filter docs dev"
 
 [tasks.dev]
 description = "Run backend and frontend together with Falcon host"
